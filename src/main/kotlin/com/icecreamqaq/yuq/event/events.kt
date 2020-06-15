@@ -38,7 +38,8 @@ open class GroupInviteEvent(val group: Long, val qq: Long, message: String) : Ne
 open class GroupMemberEvent(val group: Group) : Event()
 open class GroupMemberRequestEvent(group: Group, val qq: Long, val name: String, val message: String) : GroupMemberEvent(group), CancelEvent {
     override fun cancelAble() = true
-    var accept = false
+    var accept:Boolean? = null
+    val blackList = false
 }
 
 open class GroupMemberJoinEvent(group: Group, val member: Member) : GroupMemberEvent(group)
