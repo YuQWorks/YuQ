@@ -1,6 +1,7 @@
 package com.icecreamqaq.yuq.message
 
 import com.IceCreamQAQ.Yu.entity.Result
+import java.lang.StringBuilder
 
 interface MessagePlus {
     operator fun plus(item: MessageItem): Message
@@ -52,5 +53,21 @@ abstract class Message : Result(), MessagePlus {
 
     fun recall():Int {
         return source.recall()
+    }
+
+    override fun toString(): String {
+        val sb = StringBuilder("Sender: $qq, ")
+        if (group != null) sb.append("Group: $group, ")
+        if (temp) sb.append("Temp Message, ")
+        if (reply != null) sb.append("Reply To: ${reply!!.id}, ")
+        if (at) sb.append("At them, ")
+        if (body.size > 0) {
+            sb.append("Body: [ ${body[0].toPath()}")
+            for (i in 1 until body.size) {
+                sb.append(", ${body[i].toPath()}")
+            }
+            sb.append(" ]")
+        }
+        return sb.toString()
     }
 }
