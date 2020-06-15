@@ -53,7 +53,7 @@ open class GroupBanBotEvent(val member: Member, val operator: Member, val time: 
 open class GroupUnBanBotEvent(val member: Member, val operator: Member) : Event()
 
 open class ContextSessionCreateEvent(session: ContextSession) : Event()
-open class ActionContextInvokeEvent(actionContext: BotActionContext) : Event() {
+open class ActionContextInvokeEvent(val actionContext: BotActionContext) : Event() {
     open class Per(actionContext: BotActionContext) : ActionContextInvokeEvent(actionContext), CancelEvent {
         override fun cancelAble() = true
     }
