@@ -12,7 +12,7 @@ interface MessageItemFactory {
     fun image(file: File): Image
     fun image(url: String): Image
     fun voice(file: File): Voice
-    fun xmlEx(value: String): XmlEx
+    fun xmlEx(serviceId: Int, value: String): XmlEx
     fun jsonEx(value: String): JsonEx
 
 }

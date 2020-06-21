@@ -29,6 +29,7 @@ interface Image : MessageItem {
 }
 
 interface XmlEx : MessageItem {
+    val serviceId: Int
     val value: String
 }
 
