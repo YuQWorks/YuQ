@@ -4,6 +4,7 @@ import com.IceCreamQAQ.Yu.event.events.CancelEvent
 import com.IceCreamQAQ.Yu.event.events.Event
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
+import com.icecreamqaq.yuq.controller.NewBotActionContext
 import com.icecreamqaq.yuq.entity.Friend
 import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.entity.Member
@@ -54,10 +55,10 @@ open class GroupBanBotEvent(val member: Member, val operator: Member, val time: 
 open class GroupUnBanBotEvent(val member: Member, val operator: Member) : Event()
 
 open class ContextSessionCreateEvent(session: ContextSession) : Event()
-open class ActionContextInvokeEvent(val actionContext: BotActionContext) : Event() {
-    open class Per(actionContext: BotActionContext) : ActionContextInvokeEvent(actionContext), CancelEvent {
+open class ActionContextInvokeEvent(val actionContext: NewBotActionContext) : Event() {
+    open class Per(actionContext: NewBotActionContext) : ActionContextInvokeEvent(actionContext), CancelEvent {
         override fun cancelAble() = true
     }
 
-    open class Post(actionContext: BotActionContext) : ActionContextInvokeEvent(actionContext)
+    open class Post(actionContext: NewBotActionContext) : ActionContextInvokeEvent(actionContext)
 }

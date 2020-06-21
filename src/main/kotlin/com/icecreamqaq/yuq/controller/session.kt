@@ -3,7 +3,10 @@ package com.icecreamqaq.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.controller.ActionContext
+import com.IceCreamQAQ.Yu.controller.NewActionContext
 import com.IceCreamQAQ.Yu.controller.router.MethodInvoker
+import com.IceCreamQAQ.Yu.controller.router.NewMethodInvoker
+import com.IceCreamQAQ.Yu.controller.router.NewRouter
 import com.IceCreamQAQ.Yu.controller.router.RouterPlus
 import com.IceCreamQAQ.Yu.di.YuContext
 import com.IceCreamQAQ.Yu.loader.LoadItem
@@ -18,12 +21,12 @@ class ContextRouter {
 
     val routers: MutableMap<String, ContextAction> = ConcurrentHashMap()
 
-    fun invoke(path: String, context: ActionContext) = this.routers[path]?.invoker?.invoke("", context) ?: false
+    fun invoke(path: String, context: NewActionContext) = this.routers[path]?.invoker?.invoke("", context) ?: false
 }
 
-data class ContextAction(val invoker: RouterPlus, val tips: Map<Int, String>)
+data class ContextAction(val invoker: NewRouter, val tips: Map<Int, String>)
 
-class BotContextControllerLoader : BotControllerLoader() {
+class BotContextControllerLoader : NewBotControllerLoader() {
 
     @Inject
     private lateinit var context: YuContext
@@ -41,11 +44,11 @@ class BotContextControllerLoader : BotControllerLoader() {
         val controllerClass = instance::class.java
 
         val methods = controllerClass.methods
-        val befores = ArrayList<MethodInvoker>()
+        val befores = ArrayList<NewMethodInvoker>()
         for (method in methods) {
             val before = method.getAnnotation(Before::class.java)
             if (before != null) {
-                val beforeInvoker = createMethodInvoker_(instance, method)
+                val beforeInvoker = createMethodInvoker(instance, method)
                 befores.add(beforeInvoker)
             }
         }
@@ -55,8 +58,8 @@ class BotContextControllerLoader : BotControllerLoader() {
             if (action != null) {
                 val path: String = action.value
 
-                val methodInvoker = createMethodInvoker_(instance, method)
-                val actionInvoker = createActionInvoker_(1, method)
+                val methodInvoker = createMethodInvoker(instance, method)
+                val actionInvoker = createActionInvoker(1, method)
 
                 actionInvoker.invoker = methodInvoker
                 actionInvoker.befores = before
