@@ -62,9 +62,9 @@ abstract class Message : Result(), MessagePlus {
         if (reply != null) sb.append("Reply To: ${reply!!.id}, ")
         if (at) sb.append("At them, ")
         if (body.size > 0) {
-            sb.append("Body: [ ${body[0].toPath()}")
+            sb.append("Body: [ ${body[0]}")
             for (i in 1 until body.size) {
-                sb.append(", ${body[i].toPath()}")
+                sb.append(", ${body[i]}")
             }
             sb.append(" ]")
         }
