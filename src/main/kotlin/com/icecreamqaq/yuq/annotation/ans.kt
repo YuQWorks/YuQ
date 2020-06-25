@@ -5,18 +5,17 @@ import com.IceCreamQAQ.Yu.annotation.LoadBy
 import com.IceCreamQAQ.Yu.loader.enchant.MethodParaNamedEnchanter
 import com.icecreamqaq.yuq.controller.BotContextControllerLoader
 import com.icecreamqaq.yuq.controller.BotControllerLoader
-import com.icecreamqaq.yuq.controller.NewBotControllerLoader
 
 import java.lang.annotation.Repeatable
 import javax.inject.Named
 
 
-@LoadBy(NewBotControllerLoader::class)
+@LoadBy(BotControllerLoader::class)
 @EnchantBy(MethodParaNamedEnchanter::class)
 @Named("group")
 annotation class GroupController
 
-@LoadBy(NewBotControllerLoader::class)
+@LoadBy(BotControllerLoader::class)
 @EnchantBy(MethodParaNamedEnchanter::class)
 @Named("priv")
 annotation class PrivateController

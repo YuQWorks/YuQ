@@ -6,7 +6,7 @@
 
     <groupId>com.IceCreamQAQ</groupId>
     <artifactId>YuQ</artifactId>
-    <version>0.0.1.5-SNAPSHOT</version>
+    <version>0.0.1.6-SNAPSHOT</version>
 
     <parent>
         <groupId>com.IceCreamQAQ</groupId>

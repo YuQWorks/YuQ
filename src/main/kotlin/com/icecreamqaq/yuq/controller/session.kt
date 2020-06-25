@@ -2,12 +2,9 @@ package com.icecreamqaq.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
-import com.IceCreamQAQ.Yu.controller.ActionContext
 import com.IceCreamQAQ.Yu.controller.NewActionContext
-import com.IceCreamQAQ.Yu.controller.router.MethodInvoker
 import com.IceCreamQAQ.Yu.controller.router.NewMethodInvoker
 import com.IceCreamQAQ.Yu.controller.router.NewRouter
-import com.IceCreamQAQ.Yu.controller.router.RouterPlus
 import com.IceCreamQAQ.Yu.di.YuContext
 import com.IceCreamQAQ.Yu.loader.LoadItem
 import com.icecreamqaq.yuq.annotation.ContextTip
@@ -26,7 +23,7 @@ class ContextRouter {
 
 data class ContextAction(val invoker: NewRouter, val tips: Map<Int, String>)
 
-class BotContextControllerLoader : NewBotControllerLoader() {
+class BotContextControllerLoader : BotControllerLoader() {
 
     @Inject
     private lateinit var context: YuContext

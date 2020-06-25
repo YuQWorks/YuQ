@@ -2,8 +2,6 @@ package com.icecreamqaq.yuq.controller
 
 import com.IceCreamQAQ.Yu.controller.NewActionContext
 import com.IceCreamQAQ.Yu.controller.NewControllerLoader
-import com.IceCreamQAQ.Yu.controller.router.DefaultActionInvoker
-import com.IceCreamQAQ.Yu.controller.router.MethodInvoker
 import com.IceCreamQAQ.Yu.controller.router.NewActionInvoker
 import com.IceCreamQAQ.Yu.controller.router.NewMethodInvoker
 import com.IceCreamQAQ.Yu.entity.*
@@ -18,7 +16,7 @@ import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import javax.inject.Named
 
-class NewBotActionContext : NewActionContext {
+class BotActionContext : NewActionContext {
     override lateinit var path: Array<String>
     lateinit var session: ContextSession
 
@@ -97,7 +95,7 @@ class NewBotActionContext : NewActionContext {
     }
 }
 
-class NewBotReflectMethodInvoker(private val method: Method, private val instance: Any) : NewMethodInvoker {
+class BotReflectMethodInvoker(private val method: Method, private val instance: Any) : NewMethodInvoker {
 
     private var returnFlag: Boolean = false
     private var mps: Array<MethodPara?>? = null
@@ -132,7 +130,7 @@ class NewBotReflectMethodInvoker(private val method: Method, private val instanc
     }
 
     override fun invoke(context: NewActionContext): Any? {
-        if (context !is NewBotActionContext) return null
+        if (context !is BotActionContext) return null
         val mps = mps!!
         val paras = arrayOfNulls<Any>(mps.size)
 
@@ -178,14 +176,14 @@ class NewBotReflectMethodInvoker(private val method: Method, private val instanc
     data class Saves(val i: Int, val name: String)
 }
 
-open class NewBotActionInvoker(level: Int) : NewActionInvoker(level) {
+open class BotActionInvoker(level: Int) : NewActionInvoker(level) {
 
     var at: Boolean = false
     var reply: Boolean = false
     var nextContext: NextActionContext? = null
 
     override fun invoke(path: String, context: NewActionContext): Boolean {
-        if (context !is NewBotActionContext) return false
+        if (context !is BotActionContext) return false
 //        if (super.invoke(path, context)) return true
         var reMessage: Message? = null
         try {
@@ -224,12 +222,12 @@ open class NewBotActionInvoker(level: Int) : NewActionInvoker(level) {
     }
 }
 
-open class NewBotControllerLoader : NewControllerLoader() {
+open class BotControllerLoader : NewControllerLoader() {
 
-    override fun createMethodInvoker(obj: Any, method: Method) = NewBotReflectMethodInvoker(method, obj)
+    override fun createMethodInvoker(obj: Any, method: Method) = BotReflectMethodInvoker(method, obj)
 
     override fun createActionInvoker(level: Int, actionMethod: Method): NewActionInvoker {
-        val ai = NewBotActionInvoker(level)
+        val ai = BotActionInvoker(level)
         ai.nextContext = {
             val nc = actionMethod.getAnnotation(NextContext::class.java)
             if (nc == null) null
