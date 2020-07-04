@@ -1,17 +1,18 @@
 package com.icecreamqaq.yuq.controller
 
+import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.controller.NewActionContext
 import com.IceCreamQAQ.Yu.controller.NewControllerLoader
 import com.IceCreamQAQ.Yu.controller.router.NewActionInvoker
 import com.IceCreamQAQ.Yu.controller.router.NewMethodInvoker
-import com.IceCreamQAQ.Yu.entity.*
+import com.IceCreamQAQ.Yu.entity.DoNone
+import com.IceCreamQAQ.Yu.entity.Result
 import com.icecreamqaq.yuq.annotation.NextContext
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.annotation.Save
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItem
-import java.lang.Exception
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import javax.inject.Named
@@ -65,7 +66,7 @@ class BotActionContext : NewActionContext {
                     this.reMessage = buildResult(e)
                     reMessage
                 }
-                is NextActionContext ->{
+                is NextActionContext -> {
                     this.nextContext = e
                     null
                 }
@@ -95,38 +96,116 @@ class BotActionContext : NewActionContext {
     }
 }
 
-class BotReflectMethodInvoker(private val method: Method, private val instance: Any) : NewMethodInvoker {
+data class PathVarItem(val value: Int, val type: PathVar.Type)
+
+class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Method, val instance: Any?, level: Int? = null) : NewMethodInvoker {
 
     private var returnFlag: Boolean = false
     private var mps: Array<MethodPara?>? = null
     private val saves: Array<Saves>
 
     init {
-        returnFlag = (method.returnType?.name ?: "void") != "void"
+        if (instance != null) {
+            returnFlag = (method.returnType?.name ?: "void") != "void"
 
-        val paras = method.parameters!!
-        val mps = arrayOfNulls<MethodPara>(paras.size)
+            val paras = method.parameters!!
+            val mps = arrayOfNulls<MethodPara>(paras.size)
 
-        val saves = ArrayList<Saves>(paras.size)
-        for (i in paras.indices) {
-            val para = paras[i]!!
-            val name = para.getAnnotation(Named::class.java)!!.value
-            val save = para.getAnnotation(Save::class.java)
-            if (save != null) {
-                saves.add(Saves(i, name))
+            val saves = ArrayList<Saves>(paras.size)
+
+            val action = method.getAnnotation(Action::class.java)
+            val isAction = action != null && level != null
+            val actionPaths = action?.value?.split(" ", "/")
+            val needMatch = (actionPaths?.size ?: 0 > 1) && isAction
+            val l = if (needMatch) level!! - actionPaths!!.size - 1 else 0
+
+            para@ for ((i, para) in paras.withIndex()) {
+//                val para = paras[i]!!
+                val name = para.getAnnotation(Named::class.java)!!.value
+                val save = para.getAnnotation(Save::class.java)
+                if (save != null) {
+                    saves.add(Saves(i, name))
+                }
+
+                val pathVar = para.getAnnotation(PathVar::class.java)
+                if (pathVar != null) {
+                    mps[i] = MethodPara(para.type, 1, pathVar)
+                    continue
+                }
+
+                if (needMatch) {
+                    for ((ii, actionPath) in actionPaths!!.withIndex()) {
+                        if (actionPath.startsWith("{") && actionPath.endsWith("}")) {
+                            val needName = actionPath.subSequence(1, actionPath.length - 1)
+                            if (name == needName) {
+                                var type: PathVar.Type? = null
+
+                                val pt = para.type
+
+                                if (searchInterface(pt, "com.icecreamqaq.yuq.message.MessageItem")) type = PathVar.Type.Source
+
+                                if (type == null) {
+                                    val ptn = pt.name
+                                    type = when (ptn) {
+                                        "int" -> PathVar.Type.Integer
+                                        "java.lang.Integer" -> PathVar.Type.Integer
+
+                                        "long" -> PathVar.Type.Long
+                                        "java.lang.long" -> PathVar.Type.Long
+
+                                        "double" -> PathVar.Type.Double
+                                        "java.lang.double" -> PathVar.Type.Double
+
+                                        "boolean" -> PathVar.Type.Switch
+                                        "java.lang.Boolean" -> PathVar.Type.Switch
+
+                                        else -> PathVar.Type.String
+                                    }
+                                }
+
+
+                                mps[i] = MethodPara(para.type, 2, PathVarItem(l + ii, type))
+                                continue@para
+                            }
+                        }
+                    }
+//                    val actionPath = actionPaths!![i]
+                }
+
+                mps[i] = MethodPara(para.type, 0, name)
             }
 
-            val pathVar = para.getAnnotation(PathVar::class.java)
-            if (pathVar != null) {
-                mps[i] = MethodPara(para.type, 1, pathVar)
-                continue
-            }
+//            for (i in paras.indices) {
+//                val para = paras[i]!!
+//                val name = para.getAnnotation(Named::class.java)!!.value
+//                val save = para.getAnnotation(Save::class.java)
+//                if (save != null) {
+//                    saves.add(Saves(i, name))
+//                }
+//
+//                val pathVar = para.getAnnotation(PathVar::class.java)
+//                if (pathVar != null) {
+//                    mps[i] = MethodPara(para.type, 1, pathVar)
+//                    continue
+//                }
+//
+//                mps[i] = MethodPara(para.type, 0, name)
+//            }
 
-            mps[i] = MethodPara(para.type, 0, name)
+            this.mps = mps
+            this.saves = saves.toTypedArray()
+        } else {
+            saves = ArrayList<Saves>().toTypedArray()
         }
+    }
 
-        this.mps = mps
-        this.saves = saves.toTypedArray()
+    fun searchInterface(clazz: Class<*>, interfaceName: String): Boolean {
+        if (clazz.name == interfaceName) return true
+        for (i in clazz.interfaces) {
+            if (i.name == interfaceName) return true
+            if (searchInterface(i, interfaceName)) return true
+        }
+        return searchInterface(clazz.superclass ?: return false, interfaceName)
     }
 
     override fun invoke(context: NewActionContext): Any? {
@@ -134,12 +213,21 @@ class BotReflectMethodInvoker(private val method: Method, private val instance: 
         val mps = mps!!
         val paras = arrayOfNulls<Any>(mps.size)
 
+
         for (i in mps.indices) {
             val mp = mps[i] ?: continue
             paras[i] = when (mp.type) {
                 0 -> context[mp.data as String]
                 1 -> {
                     val pv = mp.data as PathVar
+                    when {
+                        context.message!!.path.size <= pv.value -> null
+                        pv.type == PathVar.Type.Source -> context.message!!.path[pv.value]
+                        else -> context.message!!.path[pv.value].convertByPathVar(pv.type)
+                    }
+                }
+                2 -> {
+                    val pv = mp.data as PathVarItem
                     when {
                         context.message!!.path.size <= pv.value -> null
                         pv.type == PathVar.Type.Source -> context.message!!.path[pv.value]
@@ -176,11 +264,17 @@ class BotReflectMethodInvoker(private val method: Method, private val instance: 
     data class Saves(val i: Int, val name: String)
 }
 
-open class BotActionInvoker(level: Int) : NewActionInvoker(level) {
+open class BotActionInvoker(level: Int, val method: Method) : NewActionInvoker(level) {
 
     var at: Boolean = false
     var reply: Boolean = false
     var nextContext: NextActionContext? = null
+
+    override var invoker: NewMethodInvoker = BotReflectMethodInvoker(method, null, level)
+        set(value) {
+            field = BotReflectMethodInvoker(method, (value as BotReflectMethodInvoker).instance, level)
+        }
+
 
     override fun invoke(path: String, context: NewActionContext): Boolean {
         if (context !is BotActionContext) return false
@@ -195,9 +289,10 @@ open class BotActionInvoker(level: Int) : NewActionInvoker(level) {
             if (nextContext != null && context.nextContext == null) context.nextContext = nextContext
             reMessage = context.onSuccess(re ?: return true) as Message
         } catch (e: Exception) {
-            when (val r = context.onError(e)){
-                null -> {}
-                is Message -> reMessage=r
+            when (val r = context.onError(e)) {
+                null -> {
+                }
+                is Message -> reMessage = r
                 else -> throw r
             }
         }
@@ -224,10 +319,12 @@ open class BotActionInvoker(level: Int) : NewActionInvoker(level) {
 
 open class BotControllerLoader : NewControllerLoader() {
 
+    override val separationCharacter: Array<String> = arrayOf(" ", "/")
+
     override fun createMethodInvoker(obj: Any, method: Method) = BotReflectMethodInvoker(method, obj)
 
     override fun createActionInvoker(level: Int, actionMethod: Method): NewActionInvoker {
-        val ai = BotActionInvoker(level)
+        val ai = BotActionInvoker(level, actionMethod)
         ai.nextContext = {
             val nc = actionMethod.getAnnotation(NextContext::class.java)
             if (nc == null) null
