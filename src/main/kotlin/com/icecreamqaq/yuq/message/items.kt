@@ -1,7 +1,6 @@
 package com.icecreamqaq.yuq.message
 
 import com.icecreamqaq.yuq.annotation.PathVar
-import com.IceCreamQAQ.Yu.entity.Result
 
 interface MessageItem : MessagePlus {
     fun toLocal(source: Any, message: Message): Any

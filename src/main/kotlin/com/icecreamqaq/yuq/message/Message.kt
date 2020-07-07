@@ -1,7 +1,6 @@
 package com.icecreamqaq.yuq.message
 
 import com.IceCreamQAQ.Yu.entity.Result
-import java.lang.StringBuilder
 
 interface MessagePlus {
     operator fun plus(item: MessageItem): Message
@@ -12,7 +11,7 @@ interface MessagePlus {
 interface MessageSource {
     val id: Int
 
-    fun recall():Int
+    fun recall(): Int
 }
 
 abstract class Message : Result(), MessagePlus {
@@ -23,13 +22,13 @@ abstract class Message : Result(), MessagePlus {
     var qq: Long? = null
     var group: Long? = null
 
-    lateinit var source:MessageSource
+    lateinit var source: MessageSource
     var reply: MessageSource? = null
     var at = false
 
     lateinit var sourceMessage: Any
     var body = ArrayList<MessageItem>()
-    lateinit var path:List<MessageItem>
+    lateinit var path: List<MessageItem>
 
     fun toPath(): List<String> {
         val paths = ArrayList<String>()
@@ -49,9 +48,9 @@ abstract class Message : Result(), MessagePlus {
         return this
     }
 
-    abstract fun newMessage():Message
+    abstract fun newMessage(): Message
 
-    fun recall():Int {
+    fun recall(): Int {
         return source.recall()
     }
 
@@ -69,5 +68,15 @@ abstract class Message : Result(), MessagePlus {
             sb.append(" ]")
         }
         return sb.toString()
+    }
+
+    open fun bodyEquals(other: Any?): Boolean {
+        if (other !is Message) return false
+        if (body.size != other.body.size) return false
+        for ((i,item) in body.withIndex()) {
+            val oi = other.body[i]
+            if (item != oi)return false
+        }
+        return true
     }
 }
