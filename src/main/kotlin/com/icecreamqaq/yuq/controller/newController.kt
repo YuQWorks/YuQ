@@ -11,8 +11,13 @@ import com.icecreamqaq.yuq.annotation.NextContext
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.annotation.Save
+import com.icecreamqaq.yuq.entity.Friend
+import com.icecreamqaq.yuq.entity.Group
+import com.icecreamqaq.yuq.entity.Member
+import com.icecreamqaq.yuq.entity.User
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItem
+import com.icecreamqaq.yuq.yuq
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import javax.inject.Named
@@ -96,13 +101,14 @@ class BotActionContext : NewActionContext {
     }
 }
 
-data class PathVarItem(val value: Int, val type: PathVar.Type)
 
 class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Method, val instance: Any?, level: Int? = null) : NewMethodInvoker {
 
     private var returnFlag: Boolean = false
     private var mps: Array<MethodPara?>? = null
     private val saves: Array<Saves>
+
+    data class ParaItem(val value: Int, val type: PathVar.Type)
 
     init {
         if (instance != null) {
@@ -138,33 +144,8 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
                         if (actionPath.startsWith("{") && actionPath.endsWith("}")) {
                             val needName = actionPath.subSequence(1, actionPath.length - 1)
                             if (name == needName) {
-                                var type: PathVar.Type? = null
-
-                                val pt = para.type
-
-                                if (searchInterface(pt, "com.icecreamqaq.yuq.message.MessageItem")) type = PathVar.Type.Source
-
-                                if (type == null) {
-                                    val ptn = pt.name
-                                    type = when (ptn) {
-                                        "int" -> PathVar.Type.Integer
-                                        "java.lang.Integer" -> PathVar.Type.Integer
-
-                                        "long" -> PathVar.Type.Long
-                                        "java.lang.long" -> PathVar.Type.Long
-
-                                        "double" -> PathVar.Type.Double
-                                        "java.lang.double" -> PathVar.Type.Double
-
-                                        "boolean" -> PathVar.Type.Switch
-                                        "java.lang.Boolean" -> PathVar.Type.Switch
-
-                                        else -> PathVar.Type.String
-                                    }
-                                }
-
-
-                                mps[i] = MethodPara(para.type, 2, PathVarItem(l + ii, type))
+                                val type = toTyped(para.type)
+                                mps[i] = MethodPara(para.type, 2, ParaItem(l + ii, type))
                                 continue@para
                             }
                         }
@@ -172,8 +153,15 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
 //                    val actionPath = actionPaths!![i]
                 }
 
-                mps[i] = MethodPara(para.type, 0, name)
+                val pt = when (name) {
+                    "qq" -> MethodPara(para.type, 11, toTyped(para.type))
+                    "group" -> MethodPara(para.type, 12, toTyped(para.type))
+                    else -> null
+                }
+                if (pt!=null) mps[i] = pt
+                else mps[i] = MethodPara(para.type, 0, name)
             }
+
 
 //            for (i in paras.indices) {
 //                val para = paras[i]!!
@@ -199,6 +187,38 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
         }
     }
 
+    fun toTyped(pt: Class<*>): PathVar.Type {
+        var type: PathVar.Type? = null
+
+        if (searchInterface(pt, MessageItem::class.java.name)) type = PathVar.Type.Source
+
+        if (searchInterface(pt, User::class.java.name)) type = PathVar.Type.User
+        if (searchInterface(pt, Friend::class.java.name)) type = PathVar.Type.Friend
+        if (searchInterface(pt, Group::class.java.name)) type = PathVar.Type.Group
+        if (searchInterface(pt, Member::class.java.name)) type = PathVar.Type.Member
+
+        if (type == null) {
+            val ptn = pt.name
+            type = when (ptn) {
+                "int" -> PathVar.Type.Integer
+                "java.lang.Integer" -> PathVar.Type.Integer
+
+                "long" -> PathVar.Type.Long
+                "java.lang.long" -> PathVar.Type.Long
+
+                "double" -> PathVar.Type.Double
+                "java.lang.double" -> PathVar.Type.Double
+
+                "boolean" -> PathVar.Type.Switch
+                "java.lang.Boolean" -> PathVar.Type.Switch
+
+                else -> PathVar.Type.String
+            }
+        }
+
+        return type
+    }
+
     fun searchInterface(clazz: Class<*>, interfaceName: String): Boolean {
         if (clazz.name == interfaceName) return true
         for (i in clazz.interfaces) {
@@ -206,6 +226,19 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
             if (searchInterface(i, interfaceName)) return true
         }
         return searchInterface(clazz.superclass ?: return false, interfaceName)
+    }
+
+    private fun getByPathVar(num: Int, type: PathVar.Type, context: BotActionContext): Any? {
+        val message = context.message!!
+
+        return when {
+            message.path.size <= num -> null
+            type == PathVar.Type.Source -> message.path[num]
+            type == PathVar.Type.Friend -> yuq.friends[message.path[num].convertByPathVar(PathVar.Type.Long)]
+            type == PathVar.Type.Group -> yuq.groups[message.path[num].convertByPathVar(PathVar.Type.Long)]
+            type == PathVar.Type.Member -> yuq.groups[message.group!!]!![message.path[num].convertByPathVar(PathVar.Type.Long) as Long]
+            else -> context.message!!.path[num].convertByPathVar(type)
+        }
     }
 
     override fun invoke(context: NewActionContext): Any? {
@@ -220,18 +253,29 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
                 0 -> context[mp.data as String]
                 1 -> {
                     val pv = mp.data as PathVar
-                    when {
-                        context.message!!.path.size <= pv.value -> null
-                        pv.type == PathVar.Type.Source -> context.message!!.path[pv.value]
-                        else -> context.message!!.path[pv.value].convertByPathVar(pv.type)
-                    }
+                    getByPathVar(pv.value, pv.type, context)
                 }
                 2 -> {
-                    val pv = mp.data as PathVarItem
-                    when {
-                        context.message!!.path.size <= pv.value -> null
-                        pv.type == PathVar.Type.Source -> context.message!!.path[pv.value]
-                        else -> context.message!!.path[pv.value].convertByPathVar(pv.type)
+                    val pv = mp.data as ParaItem
+                    getByPathVar(pv.value, pv.type, context)
+                }
+
+                11 -> {
+                    when (mp.data as PathVar.Type) {
+                        PathVar.Type.Long -> context.message!!.qq
+                        PathVar.Type.Member -> {
+                            val message = context.message!!
+                            yuq.groups[message.group!!]!![message.qq!!]
+                        }
+                        PathVar.Type.Friend -> yuq.friends[context.message!!.qq]
+                        else -> null
+                    }
+                }
+                12 -> {
+                    when (mp.data as PathVar.Type) {
+                        PathVar.Type.Long -> context.message!!.group
+                        PathVar.Type.Group -> yuq.groups[context.message!!.qq]
+                        else -> null
                     }
                 }
                 else -> null
@@ -264,16 +308,13 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
     data class Saves(val i: Int, val name: String)
 }
 
-open class BotActionInvoker(level: Int, val method: Method) : NewActionInvoker(level) {
+open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActionInvoker(level, method, instance) {
 
     var at: Boolean = false
     var reply: Boolean = false
     var nextContext: NextActionContext? = null
 
-    override var invoker: NewMethodInvoker = BotReflectMethodInvoker(method, null, level)
-        set(value) {
-            field = BotReflectMethodInvoker(method, (value as BotReflectMethodInvoker).instance, level)
-        }
+    override val invoker: NewMethodInvoker = BotReflectMethodInvoker(method, instance, level)
 
 
     override fun invoke(path: String, context: NewActionContext): Boolean {
@@ -323,8 +364,8 @@ open class BotControllerLoader : NewControllerLoader() {
 
     override fun createMethodInvoker(obj: Any, method: Method) = BotReflectMethodInvoker(method, obj)
 
-    override fun createActionInvoker(level: Int, actionMethod: Method): NewActionInvoker {
-        val ai = BotActionInvoker(level, actionMethod)
+    override fun createActionInvoker(level: Int, actionMethod: Method, instance: Any): NewActionInvoker {
+        val ai = BotActionInvoker(level, actionMethod, instance)
         ai.nextContext = {
             val nc = actionMethod.getAnnotation(NextContext::class.java)
             if (nc == null) null

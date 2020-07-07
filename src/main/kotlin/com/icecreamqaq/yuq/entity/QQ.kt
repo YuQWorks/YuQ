@@ -19,7 +19,16 @@ interface Contact {
 
 }
 
-interface Friend : Contact {
+interface User {
+    val id: Long
+    val avatar: String
+    val name: String
+
+    fun isFriend(): Boolean
+    fun canSendMessage(): Boolean
+}
+
+interface Friend : Contact, User {
 
     override fun convertMessage(message: Message): Message {
         message.temp = false
@@ -27,12 +36,14 @@ interface Friend : Contact {
         return message
     }
 
+    override fun isFriend() = true
+    override fun canSendMessage() = true
 }
 
 interface Group : Contact {
 
     val members: Map<Long, Member>
-    val bot:Member
+    val bot: Member
 
     operator fun get(qq: Long): Member {
         return members[qq] ?: error("Member $qq Not Found!")
@@ -46,7 +57,7 @@ interface Group : Contact {
 
 }
 
-interface Member : Contact {
+interface Member : Contact, User {
 
     val group: Group
     val permission: Int
@@ -56,8 +67,11 @@ interface Member : Contact {
 
     val ban: Int
     fun isBan() = ban > 0
-    fun ban(time:Int)
+    fun ban(time: Int)
     fun unBan()
+
+    override fun isFriend() = true
+    override fun canSendMessage() = true
 
     override fun convertMessage(message: Message): Message {
         message.temp = true

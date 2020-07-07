@@ -9,10 +9,14 @@ import com.IceCreamQAQ.Yu.di.YuContext
 import com.IceCreamQAQ.Yu.loader.LoadItem
 import com.icecreamqaq.yuq.annotation.ContextTip
 import com.icecreamqaq.yuq.annotation.ContextTips
-import java.lang.RuntimeException
-import java.util.ArrayList
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import kotlin.collections.HashMap
+import kotlin.collections.Map
+import kotlin.collections.MutableMap
+import kotlin.collections.set
+import kotlin.collections.toTypedArray
 
 class ContextRouter {
 
@@ -55,10 +59,9 @@ class BotContextControllerLoader : BotControllerLoader() {
             if (action != null) {
                 val path: String = action.value
 
-                val methodInvoker = createMethodInvoker(instance, method)
-                val actionInvoker = createActionInvoker(1, method)
+//                val methodInvoker = createMethodInvoker(instance, method)
+                val actionInvoker = createActionInvoker(1, method, instance)
 
-                actionInvoker.invoker = methodInvoker
                 actionInvoker.befores = before
 
                 val tip = HashMap<Int, String>()
