@@ -1,5 +1,6 @@
 package com.icecreamqaq.yuq
 
+import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageFactory
 import com.icecreamqaq.yuq.message.MessageItem
@@ -15,3 +16,4 @@ fun String.toText() = mif.text(this)
 fun String.toMessage() = this.toText().toMessage()
 
 fun Message.send() = yuq.sendMessage(this)
+fun Message.firstString() = this.body[0].convertByPathVar(PathVar.Type.String) as String

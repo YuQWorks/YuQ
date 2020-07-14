@@ -46,6 +46,7 @@ class BotActionContext : NewActionContext {
 
             saved["temp"] = message.temp
             saved["qq"] = message.qq
+            saved["sender"] = message.qq
             saved["group"] = message.group
 
             saved["sourceMessage"] = message.sourceMessage
@@ -78,8 +79,10 @@ class BotActionContext : NewActionContext {
                 else -> e
             }
 
-    override fun onSuccess(result: Any): Any? {
+    override fun onSuccess(result: Any?): Any? {
+        if (result == null)return null
         this.reMessage = buildResult(result)
+        saved["reMessage"] = reMessage
         return reMessage
     }
 
@@ -155,6 +158,7 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
 
                 val pt = when (name) {
                     "qq" -> MethodPara(para.type, 11, toTyped(para.type))
+                    "sender" -> MethodPara(para.type, 11, toTyped(para.type))
                     "group" -> MethodPara(para.type, 12, toTyped(para.type))
                     else -> null
                 }
@@ -329,6 +333,10 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActi
             val re = invoker.invoke(context)
             if (nextContext != null && context.nextContext == null) context.nextContext = nextContext
             reMessage = context.onSuccess(re ?: return true) as Message
+            for (after in afters) {
+                val o = after.invoke(context)
+                if (o != null) context[toLowerCaseFirstOne(o::class.java.simpleName)] = o
+            }
         } catch (e: Exception) {
             when (val r = context.onError(e)) {
                 null -> {
