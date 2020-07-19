@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>YuQ</artifactId>
-    <version>0.0.5.1</version>
+    <version>0.0.6.0</version>
 
     <name>YuQ QQ Robot API</name>
     <description>YuQ is a simple qq robot develop framework.</description>
@@ -33,7 +33,7 @@
     <properties>
         <kotlin.version>1.3.72</kotlin.version>
 
-        <Yu-Core.version>0.1.3.0</Yu-Core.version>
+        <Yu-Core.version>0.1.4.1</Yu-Core.version>
 
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
     </properties>

@@ -208,10 +208,10 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
                 "java.lang.Integer" -> PathVar.Type.Integer
 
                 "long" -> PathVar.Type.Long
-                "java.lang.long" -> PathVar.Type.Long
+                "java.lang.Long" -> PathVar.Type.Long
 
                 "double" -> PathVar.Type.Double
-                "java.lang.double" -> PathVar.Type.Double
+                "java.lang.Double" -> PathVar.Type.Double
 
                 "boolean" -> PathVar.Type.Switch
                 "java.lang.Boolean" -> PathVar.Type.Switch
