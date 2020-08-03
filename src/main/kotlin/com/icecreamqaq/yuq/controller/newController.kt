@@ -11,50 +11,72 @@ import com.icecreamqaq.yuq.annotation.NextContext
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.annotation.Save
-import com.icecreamqaq.yuq.entity.Friend
-import com.icecreamqaq.yuq.entity.Group
-import com.icecreamqaq.yuq.entity.Member
-import com.icecreamqaq.yuq.entity.User
+import com.icecreamqaq.yuq.entity.*
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItem
+import com.icecreamqaq.yuq.toFriend
 import com.icecreamqaq.yuq.yuq
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import javax.inject.Named
 
-class BotActionContext : NewActionContext {
-    override lateinit var path: Array<String>
-    lateinit var session: ContextSession
+class BotActionContext(
+        val source: Contact,
+        val sender: Contact,
+        val message: Message,
+        var session: ContextSession,
+        override var path: Array<String> = message.toPath().toTypedArray()
+) : NewActionContext {
+
 
     var reMessage: Message? = null
 
     var nextContext: NextActionContext? = null
+
     private val saved = HashMap<String, Any?>()
 
     init {
         saved["actionContext"] = this
         saved["context"] = this
+
+        saved["session"] = session
+        saved["contextSession"] = session
+
+        saved["path"] = path
+
+//        saved["messageId"] = message.id
+//
+//        saved["temp"] = message.temp
+//        saved["qq"] = message.qq
+//        saved["sender"] = message.qq
+//        saved["group"] = message.group
+
+        saved["sourceMessage"] = message.sourceMessage
+
+        saved["reply"] = message.reply
+
+        saved["message"] = message
     }
 
-    var message: Message? = null
-        set(message) {
-            field = message!!
-
-            path = message.toPath().toTypedArray()
-
-            saved["messageId"] = message.id
-
-            saved["temp"] = message.temp
-            saved["qq"] = message.qq
-            saved["sender"] = message.qq
-            saved["group"] = message.group
-
-            saved["sourceMessage"] = message.sourceMessage
-
-            saved["reply"] = message.reply
-
-            saved["message"] = message
-        }
+//    var message: Message? = null
+//        set(message) {
+//            field = message!!
+//
+//            path = message.toPath().toTypedArray()
+//
+//            saved["messageId"] = message.id
+//
+//            saved["temp"] = message.temp
+//            saved["qq"] = message.qq
+//            saved["sender"] = message.qq
+//            saved["group"] = message.group
+//
+//            saved["sourceMessage"] = message.sourceMessage
+//
+//            saved["reply"] = message.reply
+//
+//            saved["message"] = message
+//        }
 
 
     override fun get(name: String): Any? {
@@ -80,7 +102,7 @@ class BotActionContext : NewActionContext {
             }
 
     override fun onSuccess(result: Any?): Any? {
-        if (result == null)return null
+        if (result == null) return null
         this.reMessage = buildResult(result)
         saved["reMessage"] = reMessage
         return reMessage
@@ -103,7 +125,6 @@ class BotActionContext : NewActionContext {
         }
     }
 }
-
 
 class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Method, val instance: Any?, level: Int? = null) : NewMethodInvoker {
 
@@ -162,7 +183,7 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
                     "group" -> MethodPara(para.type, 12, toTyped(para.type))
                     else -> null
                 }
-                if (pt!=null) mps[i] = pt
+                if (pt != null) mps[i] = pt
                 else mps[i] = MethodPara(para.type, 0, name)
             }
 
@@ -197,6 +218,7 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
         if (searchInterface(pt, MessageItem::class.java.name)) type = PathVar.Type.Source
 
         if (searchInterface(pt, User::class.java.name)) type = PathVar.Type.User
+        if (searchInterface(pt, Contact::class.java.name)) type = PathVar.Type.Contact
         if (searchInterface(pt, Friend::class.java.name)) type = PathVar.Type.Friend
         if (searchInterface(pt, Group::class.java.name)) type = PathVar.Type.Group
         if (searchInterface(pt, Member::class.java.name)) type = PathVar.Type.Member
@@ -233,15 +255,16 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
     }
 
     private fun getByPathVar(num: Int, type: PathVar.Type, context: BotActionContext): Any? {
-        val message = context.message!!
+        val message = context.message
 
         return when {
             message.path.size <= num -> null
             type == PathVar.Type.Source -> message.path[num]
+
             type == PathVar.Type.Friend -> yuq.friends[message.path[num].convertByPathVar(PathVar.Type.Long)]
             type == PathVar.Type.Group -> yuq.groups[message.path[num].convertByPathVar(PathVar.Type.Long)]
             type == PathVar.Type.Member -> yuq.groups[message.group!!]!![message.path[num].convertByPathVar(PathVar.Type.Long) as Long]
-            else -> context.message!!.path[num].convertByPathVar(type)
+            else -> context.message.path[num].convertByPathVar(type)
         }
     }
 
@@ -266,21 +289,27 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
 
                 11 -> {
                     when (mp.data as PathVar.Type) {
-                        PathVar.Type.Long -> context.message!!.qq
-                        PathVar.Type.Member -> {
-                            val message = context.message!!
-                            yuq.groups[message.group!!]!![message.qq!!]
-                        }
-                        PathVar.Type.Friend -> yuq.friends[context.message!!.qq]
+                        PathVar.Type.Long -> context.sender.id
+                        PathVar.Type.Contact -> context.sender
+                        PathVar.Type.Member -> if (context.sender is Member) context.sender else null
+                        PathVar.Type.Friend ->
+                            when (context.sender) {
+                                is Friend -> context.sender
+                                is Member -> context.sender.toFriend()
+                                else -> null
+                            }
                         else -> null
                     }
                 }
                 12 -> {
-                    when (mp.data as PathVar.Type) {
-                        PathVar.Type.Long -> context.message!!.group
-                        PathVar.Type.Group -> yuq.groups[context.message!!.qq]
-                        else -> null
-                    }
+                    if (context.source is Group)
+                        when (mp.data as PathVar.Type) {
+                            PathVar.Type.Long -> context.source.id
+                            PathVar.Type.Contact -> context.source
+                            PathVar.Type.Group -> context.source
+                            else -> null
+                        }
+                    else null
                 }
                 else -> null
             }

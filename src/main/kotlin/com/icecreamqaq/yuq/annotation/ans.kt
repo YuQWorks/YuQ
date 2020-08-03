@@ -36,6 +36,6 @@ annotation class QMsg(val at: Boolean = false, val reply: Boolean = false)
 
 annotation class PathVar(val value: Int, val type: Type = Type.String) {
     enum class Type {
-        Source, String, Integer, Switch, Long, Double, Friend, Group, Member,User
+        Source, String, Integer, Switch, Long, Double,Contact, Friend, Group, Member,User
     }
 }

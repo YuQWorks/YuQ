@@ -1,9 +1,10 @@
 package com.icecreamqaq.yuq.message
 
 import com.icecreamqaq.yuq.annotation.PathVar
+import com.icecreamqaq.yuq.entity.Contact
 
 interface MessageItem : MessagePlus {
-    fun toLocal(source: Any, message: Message): Any
+    fun toLocal(contact: Contact): Any
     fun toPath(): String
     fun convertByPathVar(type: PathVar.Type): Any?
 

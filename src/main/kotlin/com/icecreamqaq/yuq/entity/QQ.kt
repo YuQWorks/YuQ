@@ -3,17 +3,14 @@ package com.icecreamqaq.yuq.entity
 import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageSource
+import com.icecreamqaq.yuq.yuq
 
 interface Contact {
     val id: Long
     val avatar: String
     val name: String
 
-    val yuq: YuQ
-
-    fun sendMessage(message: Message): MessageSource {
-        return yuq.sendMessage(convertMessage(message))
-    }
+    fun sendMessage(message: Message): MessageSource
 
     fun convertMessage(message: Message): Message
 
@@ -38,6 +35,8 @@ interface Friend : Contact, User {
 
     override fun isFriend() = true
     override fun canSendMessage() = true
+
+    fun delete()
 }
 
 interface Group : Contact {
@@ -55,6 +54,8 @@ interface Group : Contact {
         return message
     }
 
+    fun leave()
+
 }
 
 interface Member : Contact, User {
@@ -62,7 +63,7 @@ interface Member : Contact, User {
     val group: Group
     val permission: Int
 
-    val nameCard: String
+    var nameCard: String
     val title: String
 
     val ban: Int

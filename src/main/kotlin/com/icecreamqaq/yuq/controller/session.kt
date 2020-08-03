@@ -172,7 +172,7 @@ class ContextSession(val id: String, private val saves: MutableMap<String, Any> 
      */
     @JvmOverloads
     @Throws(WaitNextMessageTimeoutException::class)
-    fun waitNextMessage(maxTime: Long = 300000): Message =
+    fun waitNextMessage(maxTime: Long = 30000): Message =
             runBlocking {
                 val message = suspendCoroutine<Message> {
                     suspendCoroutineIt = it
