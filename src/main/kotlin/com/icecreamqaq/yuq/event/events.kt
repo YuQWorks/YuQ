@@ -35,7 +35,7 @@ open class NewRequestEvent(val message: String) : Event(), CancelEvent {
 }
 open class NewFriendRequestEvent(val qq: Long, message: String) : NewRequestEvent(message)
 open class GroupInviteEvent(val group: Long, val qq: Long, message: String) : NewRequestEvent(message)
-open class GroupMemberRequestEvent(group: Group, val qq: Long, val name: String, message: String) : NewRequestEvent(message), CancelEvent {
+open class GroupMemberRequestEvent(val group: Group, val qq: Long, val name: String, message: String) : NewRequestEvent(message), CancelEvent {
     override fun cancelAble() = true
     val blackList = false
 }
