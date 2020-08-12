@@ -38,6 +38,21 @@ open class Message : Result(), MessagePlus {
     var body = ArrayList<MessageItem>()
     lateinit var path: List<MessageItem>
 
+    fun getLogString():String{
+        val sb = StringBuilder("(")
+        if (reply != null) sb.append("Reply To: ${reply!!.id}, ")
+        if (at) sb.append("At them, ")
+        if (body.size > 0) {
+            sb.append("[ ${body[0]}")
+            for (i in 1 until body.size) {
+                sb.append(", ${body[i]}")
+            }
+            sb.append(" ]")
+        }
+        sb.append(")")
+        return sb.toString()
+    }
+
     fun toPath(): List<String> {
         val paths = ArrayList<String>()
         for (item in path) {

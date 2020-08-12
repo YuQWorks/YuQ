@@ -1,19 +1,16 @@
 package com.icecreamqaq.yuq.entity
 
-import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageSource
-import com.icecreamqaq.yuq.yuq
 
-interface Contact {
-    val id: Long
-    val avatar: String
-    val name: String
+interface Contact : User {
 
     fun sendMessage(message: Message): MessageSource
 
     fun convertMessage(message: Message): Message
 
+    fun toLogString(): String
+    override fun canSendMessage() = true
 }
 
 interface User {
@@ -25,7 +22,7 @@ interface User {
     fun canSendMessage(): Boolean
 }
 
-interface Friend : Contact, User {
+interface Friend : Contact {
 
     override fun convertMessage(message: Message): Message {
         message.temp = false
@@ -35,6 +32,8 @@ interface Friend : Contact, User {
 
     override fun isFriend() = true
     override fun canSendMessage() = true
+
+    override fun toLogString() = "$name($id)"
 
     fun delete()
 }
@@ -56,6 +55,8 @@ interface Group : Contact {
 
     fun leave()
 
+    override fun toLogString() = "$name($id)"
+
 }
 
 interface Member : Contact, User {
@@ -74,6 +75,8 @@ interface Member : Contact, User {
 
     override fun isFriend() = true
     override fun canSendMessage() = true
+
+    override fun toLogString() = "${nameCardOrName()}($id)[${group.name}(${group.id})]"
 
     override fun convertMessage(message: Message): Message {
         message.temp = true
