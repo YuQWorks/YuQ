@@ -6,6 +6,7 @@ import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageFactory
 import com.icecreamqaq.yuq.message.MessageItemFactory
+import com.icecreamqaq.yuq.message.Text
 
 lateinit var yuq:YuQ
 @Deprecated("相关 API 变动，Message 已经不再承载消息目标，请直接 new Message。")
@@ -18,7 +19,12 @@ fun String.toMessage() = this.toText().toMessage()
 
 @Deprecated("相关 API 变动，Message 已经不再承载消息目标，请直接 new Message。")
 fun Message.send() = yuq.sendMessage(this)
-fun Message.firstString() = this.body[0].convertByPathVar(PathVar.Type.String) as String
+fun Message.firstString(): String {
+    for (item in body) {
+        if (item is Text) return item.text
+    }
+    error("消息不包含任何一个文本串。")
+}
 
 
 
