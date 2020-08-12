@@ -70,6 +70,7 @@ interface Member : Contact, User {
     fun isBan() = ban > 0
     fun ban(time: Int)
     fun unBan()
+    fun nameCardOrName() = if (nameCard == "") name else nameCard
 
     override fun isFriend() = true
     override fun canSendMessage() = true
