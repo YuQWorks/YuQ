@@ -16,6 +16,7 @@ import com.icecreamqaq.yuq.message.Message
 import org.slf4j.LoggerFactory
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.coroutines.resume
 
 open class RainBot {
 
@@ -56,13 +57,17 @@ open class RainBot {
 
     open fun NewRouter.todo(context: BotActionContext) {
         if (context.path.isEmpty()) return
+        if (context.session.suspendCoroutineIt != null) {
+            context.session.suspendCoroutineIt!!.resume(context.message)
+        }
         if (eventBus.post(ActionContextInvokeEvent.Per(context))) return
         val session = context.session
         if (session.context != null) contextRouter.invoke(session.context!!, context)
         else this.invoke(context.path[0], context)
         if (eventBus.post(ActionContextInvokeEvent.Post(context))) return
-        if (session.context != null) {
-            val msg = contextRouter.routers[session.context!!]?.tips?.get(context.nextContext?.status)
+        session.context = context.nextContext?.router
+        if (context.nextContext != null) {
+            val msg = contextRouter.routers[context.nextContext?.router]?.tips?.get(context.nextContext?.status)
             if (msg != null) context.source.sendMessage(msg.toMessage())
         }
         context.source.sendMessage(context.reMessage ?: return)
