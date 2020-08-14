@@ -3,6 +3,7 @@ package com.icecreamqaq.yuq
 import com.IceCreamQAQ.Yu.annotation.AutoBind
 import com.icecreamqaq.yuq.entity.Friend
 import com.icecreamqaq.yuq.entity.Group
+import com.icecreamqaq.yuq.entity.User
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageFactory
 import com.icecreamqaq.yuq.message.MessageItemFactory
@@ -19,6 +20,11 @@ interface YuQ {
      * 机器人的 QQ 号码
      */
     val botId: Long
+
+    /***
+     * 机器人的个人信息
+     */
+    val botInfo : User
 
     /***
      * 好友列表
