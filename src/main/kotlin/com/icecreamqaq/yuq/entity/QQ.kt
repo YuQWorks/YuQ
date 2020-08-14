@@ -55,6 +55,8 @@ interface Group : Contact {
     }
 
     fun leave()
+    fun banAll()
+    fun unBanAll()
 
     override fun toLogString() = "$name($id)"
 
