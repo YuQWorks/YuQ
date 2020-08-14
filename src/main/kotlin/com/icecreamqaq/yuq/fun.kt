@@ -3,10 +3,8 @@ package com.icecreamqaq.yuq
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.entity.Friend
 import com.icecreamqaq.yuq.entity.Member
-import com.icecreamqaq.yuq.message.Message
-import com.icecreamqaq.yuq.message.MessageFactory
-import com.icecreamqaq.yuq.message.MessageItemFactory
-import com.icecreamqaq.yuq.message.Text
+import com.icecreamqaq.yuq.message.*
+import java.lang.StringBuilder
 
 lateinit var yuq:YuQ
 @Deprecated("相关 API 变动，Message 已经不再承载消息目标，请直接 new Message。")
@@ -24,6 +22,21 @@ fun Message.firstString(): String {
         if (item is Text) return item.text
     }
     error("消息不包含任何一个文本串。")
+}
+
+fun Message.toCodeString() :String{
+    val sb = StringBuilder()
+    if (reply != null)sb.append("<Rain:Reply:$id>")
+
+    for (item in body) {
+        when(item){
+            is Text -> sb.append(item.text)
+            is At -> sb.append("<Rain:At:${item.user}>")
+            is Face -> sb.append("<Rain:Face:${item.faceId}>")
+            is Image -> sb.append("<Rain:Image:${item.id}${if (item is FlashImage) ", Flash>" else ">"}")
+        }
+    }
+    return sb.toString()
 }
 
 
