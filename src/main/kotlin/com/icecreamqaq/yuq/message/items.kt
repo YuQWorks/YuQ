@@ -9,7 +9,6 @@ abstract class MessageItemBase : MessageItem {
     override operator fun plus(item: String): Message = toMessage() + item
     override operator fun plus(item: Message): Message = toMessage() + item
     override fun toMessage(): Message = Message() + this
-    override fun toString() = toPath()
 
     override fun equals(other: Any?): Boolean {
         if (other == null)return false
@@ -29,7 +28,7 @@ interface MessageItem : MessagePlus {
     fun convertByPathVar(type: PathVar.Type): Any?
 
     fun toMessage(): Message
-    fun toLogString() = toString()
+    fun toLogString(): String = toPath()
 
     fun equal(other: MessageItem): Boolean
 }
@@ -114,6 +113,14 @@ interface Image : MessageItem {
     override fun equal(other: MessageItem): Boolean {
         if (other !is Image) return false
         return id == other.id
+    }
+}
+
+interface FlashImage : Image{
+    override fun convertByPathVar(type: PathVar.Type): Any? = when (type) {
+        PathVar.Type.String -> "闪照"
+        PathVar.Type.Source -> this
+        else -> null
     }
 }
 

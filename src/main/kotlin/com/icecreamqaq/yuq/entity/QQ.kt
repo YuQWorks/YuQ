@@ -1,5 +1,6 @@
 package com.icecreamqaq.yuq.entity
 
+import com.icecreamqaq.yuq.message.At
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageSource
 
@@ -77,6 +78,7 @@ interface Member : Contact, User {
     override fun canSendMessage() = true
 
     override fun toLogString() = "${nameCardOrName()}($id)[${group.name}(${group.id})]"
+    fun toLogStringSingle() = "${nameCardOrName()}($id)"
 
     override fun convertMessage(message: Message): Message {
         message.temp = true
@@ -84,6 +86,8 @@ interface Member : Contact, User {
         message.qq = id
         return message
     }
+
+    fun at(): At
 
     fun isAdmin() = permission > 0
     fun isOwner() = permission == 2
