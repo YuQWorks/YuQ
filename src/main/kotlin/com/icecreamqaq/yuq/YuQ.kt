@@ -24,7 +24,7 @@ interface YuQ {
     /***
      * 机器人的个人信息
      */
-    val botInfo : User
+    val botInfo: User
 
     /***
      * 好友列表
@@ -57,5 +57,16 @@ interface YuQ {
      */
     @Deprecated("建议直接使用 Message 或 MessageSource 的 recall 方法。")
     fun recallMessage(messageSource: MessageSource): Int
+
+    val cookieEx: QQCookie
+
+    interface QQCookie {
+        val skey: String
+        val gtk: Long
+        val pskeyMap: Map<String, Pskey>
+
+        data class Pskey(val pskey: String, val gtk: Long)
+    }
+
 
 }
