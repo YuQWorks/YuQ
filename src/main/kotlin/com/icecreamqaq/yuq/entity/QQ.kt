@@ -43,6 +43,7 @@ interface Group : Contact {
 
     val members: Map<Long, Member>
     val bot: Member
+    val maxCount:Int
 
     operator fun get(qq: Long): Member {
         return members[qq] ?: error("Member $qq Not Found!")
@@ -57,6 +58,7 @@ interface Group : Contact {
     fun leave()
     fun banAll()
     fun unBanAll()
+//    fun getMaxMemberCount(): Int
 
     override fun toLogString() = "$name($id)"
 
