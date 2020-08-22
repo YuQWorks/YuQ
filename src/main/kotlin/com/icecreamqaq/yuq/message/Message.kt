@@ -38,7 +38,7 @@ open class Message : Result(), MessagePlus {
     var body = ArrayList<MessageItem>()
     lateinit var path: List<MessageItem>
 
-    fun toLongString():String{
+    fun toLogString():String{
         val sb = StringBuilder("(")
         if (reply != null) sb.append("Reply To: ${reply!!.id}, ")
         if (at) sb.append("At them, ")

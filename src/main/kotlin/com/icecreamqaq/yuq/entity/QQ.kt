@@ -55,6 +55,9 @@ interface Group : Contact {
         return message
     }
 
+    /***
+     * 离开本群，当机器人是群主的时候解析为解散。
+     */
     fun leave()
     fun banAll()
     fun unBanAll()

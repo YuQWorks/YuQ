@@ -42,14 +42,14 @@ open class RainBot {
 
 
     open fun receivePrivateMessage(sender: Contact, message: Message) {
-        log.info("${sender.toLogString()} -> ${message.toLongString()}")
+        log.info("${sender.toLogString()} -> ${message.toLogString()}")
         if (eventBus.post(PrivateMessageEvent(sender, message))) return
         val context = BotActionContext(sender, sender, message, getContextSession(sender.id.toString()))
         priv.todo(context)
     }
 
     open fun receiveGroupMessage(sender: Member, message: Message) {
-        log.info("[${sender.group.toLogString()}]${sender.toLogStringSingle()} -> ${message.toLongString()}")
+        log.info("[${sender.group.toLogString()}]${sender.toLogStringSingle()} -> ${message.toLogString()}")
         if (eventBus.post(GroupMessageEvent(sender, sender.group, message))) return
         val context = BotActionContext(sender.group, sender, message, getContextSession("${sender.group.id}_${sender.id}"))
         group.todo(context)
