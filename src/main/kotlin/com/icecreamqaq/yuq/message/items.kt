@@ -20,6 +20,8 @@ abstract class MessageItemBase : MessageItem {
     override fun hashCode(): Int {
         return javaClass.hashCode()
     }
+
+    override fun toString() = toPath()
 }
 
 interface MessageItem : MessagePlus {
@@ -117,6 +119,14 @@ interface Image : MessageItem {
 }
 
 interface FlashImage : Image{
+    val image:Image
+
+    override val id: String
+        get() = image.id
+    override val url: String
+        get() = image.url
+
+
     override fun convertByPathVar(type: PathVar.Type): Any? = when (type) {
         PathVar.Type.String -> "闪照"
         PathVar.Type.Source -> this
@@ -160,6 +170,21 @@ interface JsonEx : MessageItem {
 interface Voice : MessageItem {
     val id:String
     val url: String
+
+    override fun toPath(): String {
+        return "Voice_$id"
+    }
+
+    override fun convertByPathVar(type: PathVar.Type): Any? = when (type) {
+        PathVar.Type.String -> "语音"
+        PathVar.Type.Source -> this
+        else -> null
+    }
+
+    override fun equal(other: MessageItem): Boolean {
+        if (other !is Voice) return false
+        return id == other.id
+    }
 }
 
 interface NoImplItem : MessageItem {
