@@ -4,9 +4,9 @@ import com.IceCreamQAQ.Yu.util.Web
 import com.icecreamqaq.yuq.entity.Friend
 import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.message.*
-import java.lang.StringBuilder
 
-lateinit var yuq:YuQ
+lateinit var yuq: YuQ
+
 @Deprecated("相关 API 变动，Message 已经不再承载消息目标，请直接 new Message。")
 lateinit var mf: MessageFactory
 lateinit var mif: MessageItemFactory
@@ -25,20 +25,106 @@ fun Message.firstString(): String {
     error("消息不包含任何一个文本串。")
 }
 
-fun Message.toCodeString() :String{
+fun Message.toCodeString(): String {
     val sb = StringBuilder()
-    if (reply != null)sb.append("<Rain:Reply:$id>")
+    if (reply != null) sb.append("<Rain:Reply:$id>")
 
     for (item in body) {
-        when(item){
-            is Text -> sb.append(item.text)
-            is At -> sb.append("<Rain:At:${item.user}>")
-            is Face -> sb.append("<Rain:Face:${item.faceId}>")
-            is Image -> sb.append("<Rain:Image:${item.id}${if (item is FlashImage) ", Flash>" else ">"}")
-        }
+        sb.append(
+                when (item) {
+                    is Text -> item.text
+                    is At -> "<Rain:At:${item.user}>"
+                    is Face -> "<Rain:Face:${item.faceId}>"
+                    is Image -> "<Rain:Image:${item.id}${if (item is FlashImage) ", Flash>" else ">"}"
+                    else -> "<Rain:NoImpl:${item.toPath()}"
+                }
+        )
     }
     return sb.toString()
 }
+
+fun String.toMessageByRainCode(): Message {
+    val codeStart = "<Rain:"
+
+    var message = Message()
+    val t = StringBuilder()
+    val m = StringBuilder()
+
+    var rf = false
+    var rc = false
+
+    for (c in this) {
+        if (rf) {
+            if (rc) {
+                if (c != '>') m.append(c)
+                else {
+                    if (t.isNotEmpty()) {
+                        message += mif.text(t.toString())
+                        t.clear()
+                    }
+                    val codeStr = m.toString()
+                    val code = codeStr.split(":")
+                    if (code.size < 3) {
+                        t.append(codeStr).append(">")
+                        m.clear()
+                        rf = false
+                        rc = false
+                        continue
+                    }
+                    val type = code[1]
+                    val data = code[2]
+                    message += when (type) {
+                        "At" -> mif.at(data.toLong())
+                        "Face" -> mif.face(data.toInt())
+                        "Image" -> {
+                            val p = data.indexOf(',')
+                            if (p == -1) mif.imageById(data)
+                            else {
+                                val id = data.substring(0,p)
+                                mif.imageById(id).toFlash()
+                            }
+                        }
+                        else -> mif.text("$codeStr>")
+                    }
+
+                    m.clear()
+                    rf = false
+                    rc = false
+                }
+            } else {
+                if (m.length < 6) m.append(c)
+                else {
+                    val ms = m.toString()
+                    if (codeStart == ms) {
+                        rc = true
+                        m.append(c)
+                    } else {
+                        t.append(ms)
+                        m.clear()
+                        rf = false
+                        rc = false
+                        continue
+                    }
+                }
+            }
+        } else {
+            if (c != '<') t.append(c)
+            else {
+                m.append(c)
+                rf = true
+            }
+        }
+
+    }
+
+    if (m.isNotEmpty()) t.append(m)
+    if (t.isNotEmpty()) message += mif.text(t.toString())
+
+    return message
+}
+
+fun Image.toFlash() = mif.imageToFlash(this)
+
 fun Member.toFriend(): Friend? = yuq.friends[id]
 
 fun Web.getWithQQKey(url: String) = this.get(convertUrl(url))
