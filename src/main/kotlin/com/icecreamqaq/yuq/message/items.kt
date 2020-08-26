@@ -158,6 +158,7 @@ interface JsonEx : MessageItem {
 }
 
 interface Voice : MessageItem {
+    val id:String
     val url: String
 }
 
