@@ -1,7 +1,9 @@
 package com.icecreamqaq.yuq.message
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
+import java.awt.image.BufferedImage
 import java.io.File
+import java.io.InputStream
 
 @AutoBind
 /***
@@ -32,13 +34,25 @@ interface MessageItemFactory {
      * 发送一个图片。
      * @param file 图片的位置（File 对象）。
      */
-    fun image(file: File): Image
+    @Deprecated("Image 创建 API 调整，使得命名语义更加清晰。", ReplaceWith("imageByFile(file)"))
+    fun image(file: File) = imageByFile(file)
+    fun imageByFile(file: File): Image
 
     /***
      * 发送一个网络图片
      * @param url 图片的下载地址。
      */
-    fun image(url: String): Image
+    @Deprecated("Image 创建 API 调整，使得命名语义更加清晰。", ReplaceWith("imageByUrl(url)"))
+    fun image(url: String) = imageByUrl(url)
+    fun imageByUrl(url: String): Image
+
+    fun imageById(id: String): Image
+
+    fun imageByBufferedImage(bufferedImage: BufferedImage): Image
+
+    fun imageByInputStream(inputStream: InputStream): Image
+
+    fun imageToFlash(image: Image): FlashImage
 
     /***
      * 发送一段语音
