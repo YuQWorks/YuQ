@@ -28,7 +28,10 @@ open class FriendDeleteEvent(val friend: Friend) : FriendListEvent()
 
 open class GroupListEvent : Event()
 open class BotJoinGroupEvent(val group: Group) : GroupListEvent()
-open class BotLevelGroupEvent(val group: Group) : GroupListEvent()
+open class BotLevelGroupEvent(val group: Group) : GroupListEvent(){
+    open class Level(group: Group):BotLevelGroupEvent(group)
+    open class Kick(val operator: Member):BotLevelGroupEvent(operator.group)
+}
 
 open class NewRequestEvent(val message: String) : Event(), CancelEvent {
     override fun cancelAble() = true
