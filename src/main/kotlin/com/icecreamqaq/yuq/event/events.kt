@@ -25,9 +25,9 @@ open class FriendDeleteEvent(val friend: Friend) : FriendListEvent()
 
 open class GroupListEvent : Event()
 open class BotJoinGroupEvent(val group: Group) : GroupListEvent()
-open class BotLevelGroupEvent(val group: Group) : GroupListEvent() {
-    open class Leave(group: Group) : BotLevelGroupEvent(group)
-    open class Kick(val operator: Member) : BotLevelGroupEvent(operator.group)
+open class BotLeaveGroupEvent(val group: Group) : GroupListEvent() {
+    open class Leave(group: Group) : BotLeaveGroupEvent(group)
+    open class Kick(val operator: Member) : BotLeaveGroupEvent(operator.group)
 }
 
 open class NewRequestEvent(val message: String) : Event(), CancelEvent {
