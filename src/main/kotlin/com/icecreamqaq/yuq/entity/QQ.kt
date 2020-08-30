@@ -3,6 +3,7 @@ package com.icecreamqaq.yuq.entity
 import com.icecreamqaq.yuq.message.At
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageSource
+import com.icecreamqaq.yuq.yuq
 
 interface Contact : User {
 
@@ -43,7 +44,7 @@ interface Group : Contact {
 
     val members: Map<Long, Member>
     val bot: Member
-    val maxCount:Int
+    val maxCount: Int
 
     operator fun get(qq: Long): Member {
         return members[qq] ?: error("Member $qq Not Found!")
@@ -102,3 +103,56 @@ interface Member : Contact, User {
     fun kick(message: String = "")
 
 }
+
+enum class UserSex {
+    man, woman, none
+}
+
+data class UserInfo(
+        override val id: Long,
+        override val avatar: String,
+        override val name: String,
+        val sex: UserSex,
+        val age: Int,
+        val qqAge: Int,
+        val level: Int,
+        val loginDays: Int,
+
+        val vips: List<UserVip>
+) : User {
+    override fun isFriend() = yuq.friends.containsKey(id)
+
+    override fun canSendMessage() = false
+}
+
+data class GroupInfo(
+        val id:Long,
+        val name:String,
+        val maxCount: Int,
+
+        val owner:User,
+        val admin:List<User>
+)
+
+//interface UserInfo : User {
+//
+//    val sex: String
+//    val age: Int
+//    val qAge: Int
+//
+//    val level: Int
+//
+//    val loginDays: Int
+//
+//
+//}
+
+data class UserVip(
+        val id: Int,
+        val name: Int,
+        val ipSuper: Int,
+        val desc: String,
+        val level: Int,
+        val yearFlag: Boolean,
+        val para: String
+)
