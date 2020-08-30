@@ -6,3 +6,5 @@ open class YuQRuntimeException(message: String? = null, cause: Throwable? = null
 open class ImageTypedException(message: String) : YuQRuntimeException(message)
 
 open class WaitNextMessageTimeoutException : YuQRuntimeException()
+
+open class SendMessageFailedByCancel: YuQRuntimeException()
