@@ -28,10 +28,11 @@ class BotActionContext(
         override var path: Array<String> = message.toPath().toTypedArray()
 ) : NewActionContext {
 
-
     var reMessage: Message? = null
 
     var nextContext: NextActionContext? = null
+
+    lateinit var actionInvoker: BotActionInvoker
 
     private val saved = HashMap<String, Any?>()
 
@@ -355,6 +356,7 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActi
 //        if (super.invoke(path, context)) return true
         var reMessage: Message? = null
         try {
+            context.actionInvoker = this
             for (before in befores) {
                 val o = before.invoke(context)
                 if (o != null) context[toLowerCaseFirstOne(o::class.java.simpleName)] = o
