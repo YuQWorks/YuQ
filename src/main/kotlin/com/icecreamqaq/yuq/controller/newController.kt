@@ -368,6 +368,8 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActi
                 val o = after.invoke(context)
                 if (o != null) context[toLowerCaseFirstOne(o::class.java.simpleName)] = o
             }
+            if (reply) reMessage.reply = context.message.source
+            if (at) reMessage.at = true
         } catch (e: Exception) {
             when (val r = context.onError(e)) {
                 null -> {
@@ -378,7 +380,7 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActi
         }
         if (reMessage != null)
             if (reMessage.qq == null && reMessage.group == null) {
-                val message = context.message!!
+                val message = context.message
 
                 reMessage.temp = message.temp
                 reMessage.qq = message.qq
@@ -386,8 +388,7 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActi
             }
 //        context.result = reMessage
 
-        if (reply) reMessage?.reply = context.message?.source
-        if (at) reMessage?.at = true
+
         return true
     }
 
