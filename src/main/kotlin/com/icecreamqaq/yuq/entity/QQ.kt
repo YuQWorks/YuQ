@@ -104,6 +104,13 @@ interface Member : Contact, User {
 
 }
 
+interface AnonymousMember: Member{
+
+    override fun canSendMessage() = false
+    override fun isFriend() = false
+
+}
+
 enum class UserSex {
     man, woman, none
 }
