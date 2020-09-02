@@ -18,7 +18,7 @@ class RainInfo {
     @Cron("10m")
     fun upInfo() {
         web.postJSON(
-                "http://127.0.0.1:5460/YuQ/runInfo",
+                "http://yuq.icecreamqaq.com/YuQ/runInfo",
                 mapOf(
                         "uid" to yuq.botId,
                         "yv" to version.apiVersion(),
