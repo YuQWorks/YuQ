@@ -1,6 +1,7 @@
 package com.icecreamqaq.yuq.message
 
 import com.IceCreamQAQ.Yu.entity.Result
+import com.icecreamqaq.yuq.entity.MessageAt
 import com.icecreamqaq.yuq.toText
 
 interface MessagePlus {
@@ -32,16 +33,16 @@ open class Message : Result(), MessagePlus {
     lateinit var source: MessageSource
 
     var reply: MessageSource? = null
-    var at = false
+    var at: MessageAt? = null
 
     lateinit var sourceMessage: Any
     var body = ArrayList<MessageItem>()
     lateinit var path: List<MessageItem>
 
-    fun toLogString():String{
+    fun toLogString(): String {
         val sb = StringBuilder("(")
         if (reply != null) sb.append("Reply To: ${reply!!.id}, ")
-        if (at) sb.append("At them, ")
+        if (at != null) sb.append("At them${if (at!!.newLine)" \n" else ""}, ")
         if (body.size > 0) {
             sb.append("[ ${body[0].toLogString()}")
             for (i in 1 until body.size) {
@@ -91,21 +92,7 @@ open class Message : Result(), MessagePlus {
     }
 
     override fun toString(): String {
-        val sb = StringBuilder("Message(")
-        //("Sender: $qq, ")
-//        if (group != null) sb.append("Group: $group, ")
-//        if (temp) sb.append("Temp Message, ")
-        if (reply != null) sb.append("Reply To: ${reply!!.id}, ")
-        if (at) sb.append("At them, ")
-        if (body.size > 0) {
-            sb.append("[ ${body[0]}")
-            for (i in 1 until body.size) {
-                sb.append(", ${body[i]}")
-            }
-            sb.append(" ]")
-        }
-        sb.append(")")
-        return sb.toString()
+        return toLogString()
     }
 
 

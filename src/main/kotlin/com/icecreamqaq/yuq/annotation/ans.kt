@@ -32,7 +32,7 @@ annotation class ContextTip(val value: String, val status: Int = 0)
 annotation class NextContext(val value: String, val status: Int = 0)
 annotation class Save(val value: String = "")
 
-annotation class QMsg(val at: Boolean = false, val reply: Boolean = false)
+annotation class QMsg(val at: Boolean = false, val reply: Boolean = false, val atNewLine:Boolean = false)
 
 annotation class PathVar(val value: Int, val type: Type = Type.String) {
     enum class Type {

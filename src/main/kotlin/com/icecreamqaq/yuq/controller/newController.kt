@@ -345,6 +345,7 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
 open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActionInvoker(level, method, instance) {
 
     var at: Boolean = false
+    var atNewLine: Boolean = false
     var reply: Boolean = false
     var nextContext: NextActionContext? = null
 
@@ -369,7 +370,7 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActi
                 if (o != null) context[toLowerCaseFirstOne(o::class.java.simpleName)] = o
             }
             if (reply) reMessage.reply = context.message.source
-            if (at) reMessage.at = true
+            if (at) reMessage.at = MessageAt(context.sender.id, atNewLine)
         } catch (e: Exception) {
             when (val r = context.onError(e)) {
                 null -> {
@@ -414,6 +415,7 @@ open class BotControllerLoader : NewControllerLoader() {
         val qq = actionMethod.getAnnotation(QMsg::class.java) ?: return ai
         ai.reply = qq.reply
         ai.at = qq.at
+        ai.atNewLine = qq.atNewLine
         return ai
     }
 }
