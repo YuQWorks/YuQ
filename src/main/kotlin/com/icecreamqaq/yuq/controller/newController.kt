@@ -3,6 +3,7 @@ package com.icecreamqaq.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.controller.NewActionContext
 import com.IceCreamQAQ.Yu.controller.NewControllerLoader
+import com.IceCreamQAQ.Yu.controller.router.CatchInvoker
 import com.IceCreamQAQ.Yu.controller.router.NewActionInvoker
 import com.IceCreamQAQ.Yu.controller.router.NewMethodInvoker
 import com.IceCreamQAQ.Yu.entity.DoNone
@@ -12,9 +13,10 @@ import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.annotation.Save
 import com.icecreamqaq.yuq.entity.*
+import com.icecreamqaq.yuq.entity.Member.Companion.toFriend
+import com.icecreamqaq.yuq.error.MessageThrowable
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItem
-import com.icecreamqaq.yuq.toFriend
 import com.icecreamqaq.yuq.yuq
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
@@ -25,6 +27,12 @@ class BotActionContext(
         val sender: Contact,
         val message: Message,
         var session: ContextSession,
+        /***
+         * 0 -> 群消息
+         * 1 -> 好友消息
+         * 2 -> 临时会话
+         */
+        var messageType: Int,
         override var path: Array<String> = message.toPath().toTypedArray()
 ) : NewActionContext {
 
@@ -91,9 +99,13 @@ class BotActionContext(
     override fun onError(e: Throwable) =
             when (e) {
                 is DoNone -> null
+                is MessageThrowable -> {
+                    this.reMessage = buildResult(e)
+                    null
+                }
                 is Result -> {
                     this.reMessage = buildResult(e)
-                    reMessage
+                    null
                 }
                 is NextActionContext -> {
                     this.nextContext = e
@@ -112,11 +124,11 @@ class BotActionContext(
     private fun buildResult(obj: Any): Message? {
         return when (obj) {
             is String -> {
-                val message = this.message!!.newMessage()
+                val message = Message()
                 message + obj
             }
             is MessageItem -> {
-                val message = this.message!!.newMessage()
+                val message = Message()
                 val mb = message.body
                 mb.add(obj)
                 message
@@ -264,7 +276,7 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
 
             type == PathVar.Type.Friend -> yuq.friends[message.path[num].convertByPathVar(PathVar.Type.Long)]
             type == PathVar.Type.Group -> yuq.groups[message.path[num].convertByPathVar(PathVar.Type.Long)]
-            type == PathVar.Type.Member -> yuq.groups[message.group!!]!![message.path[num].convertByPathVar(PathVar.Type.Long) as Long]
+//            type == PathVar.Type.Member -> yuq.groups[message.group!!]!![message.path[num].convertByPathVar(PathVar.Type.Long) as Long]
             else -> context.message.path[num].convertByPathVar(type)
         }
     }
@@ -352,50 +364,85 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActi
     override val invoker: NewMethodInvoker = BotReflectMethodInvoker(method, instance, level)
 
 
+    fun superInvoke(path: String, context: NewActionContext): Boolean {
+        val cps = context.path.size
+        val nextPath = when {
+            level > cps -> return false
+            level == cps -> ""
+            else -> context.path[level]
+        }
+        val nor = noMatch[path]
+        if (nor != null) return nor.invoke(nextPath, context)
+        for (matchItem in needMath) {
+            val m = matchItem.p.matcher(path)
+            if (m.find()) {
+                if (matchItem.needSave) {
+                    for ((i, name) in matchItem.matchNames!!.withIndex()) {
+                        context[name] = m.group(i + 1)
+                    }
+                }
+                if (matchItem.invoke(nextPath, context)) return true
+            }
+        }
+        return false
+    }
+
     override fun invoke(path: String, context: NewActionContext): Boolean {
         if (context !is BotActionContext) return false
-//        if (super.invoke(path, context)) return true
-        var reMessage: Message? = null
+        if (superInvoke(path, context)) return true
+
+//         reMessage: Message?
         try {
             context.actionInvoker = this
+            for (before in globalBefores) {
+                val o = before.invoke(context)
+                if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
+            }
             for (before in befores) {
                 val o = before.invoke(context)
-                if (o != null) context[toLowerCaseFirstOne(o::class.java.simpleName)] = o
+                if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
             }
             val re = invoker.invoke(context)
             if (nextContext != null && context.nextContext == null) context.nextContext = nextContext
-            reMessage = context.onSuccess(re ?: return true) as Message
+            val reMessage = context.onSuccess(re ?: return true) as Message
+            for (after in globalAfters) {
+                val o = after.invoke(context)
+                if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
+            }
             for (after in afters) {
                 val o = after.invoke(context)
-                if (o != null) context[toLowerCaseFirstOne(o::class.java.simpleName)] = o
+                if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
             }
             if (reply) reMessage.reply = context.message.source
             if (at) reMessage.at = MessageAt(context.sender.id, atNewLine)
+            return true
         } catch (e: Exception) {
-            when (val r = context.onError(e)) {
-                null -> {
+            val r = context.onError(e) ?: return true
+//            throw r
+
+//            val er= context.onError(e) ?: return true
+            context["exception"] = r
+            try {
+                for (catch in globalCatchs) {
+                    val o = catch.invoke(context, r)
+                    if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
                 }
-                is Message -> reMessage = r
-                else -> throw r
+                for (catch in catchs) {
+                    val o = catch.invoke(context, r)
+                    if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
+                }
+                return true
+            } catch (ee: Exception) {
+                throw context.onError(ee) ?: return true
             }
         }
-        if (reMessage != null)
-            if (reMessage.qq == null && reMessage.group == null) {
-                val message = context.message
-
-                reMessage.temp = message.temp
-                reMessage.qq = message.qq
-                reMessage.group = message.group
-            }
-//        context.result = reMessage
 
 
-        return true
     }
 
-    private fun toLowerCaseFirstOne(s: String): String {
-        return if (Character.isLowerCase(s[0])) s
-        else (StringBuilder()).append(Character.toLowerCase(s[0])).append(s.substring(1)).toString();
+    private fun String.toLowerCaseFirstOne(): String {
+        return if (Character.isLowerCase(this[0])) this
+        else (StringBuilder()).append(Character.toLowerCase(this[0])).append(this.substring(1)).toString();
     }
 }
 
@@ -418,4 +465,5 @@ open class BotControllerLoader : NewControllerLoader() {
         ai.atNewLine = qq.atNewLine
         return ai
     }
+
 }

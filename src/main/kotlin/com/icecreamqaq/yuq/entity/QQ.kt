@@ -3,13 +3,14 @@ package com.icecreamqaq.yuq.entity
 import com.icecreamqaq.yuq.message.At
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageSource
+import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.yuq
 
 interface Contact : User {
 
     fun sendMessage(message: Message): MessageSource
 
-    fun convertMessage(message: Message): Message
+//    fun convertMessage(message: Message): Message
 
     fun toLogString(): String
     override fun canSendMessage() = true
@@ -26,11 +27,11 @@ interface User {
 
 interface Friend : Contact {
 
-    override fun convertMessage(message: Message): Message {
-        message.temp = false
-        message.qq = id
-        return message
-    }
+//    override fun convertMessage(message: Message): Message {
+//        message.temp = false
+//        message.qq = id
+//        return message
+//    }
 
     override fun isFriend() = true
     override fun canSendMessage() = true
@@ -46,15 +47,18 @@ interface Group : Contact {
     val bot: Member
     val maxCount: Int
 
+    val owner: Member
+    val admins: List<Member>
+
     operator fun get(qq: Long): Member {
         return members[qq] ?: error("Member $qq Not Found!")
     }
 
-    override fun convertMessage(message: Message): Message {
-        message.temp = false
-        message.group = id
-        return message
-    }
+//    override fun convertMessage(message: Message): Message {
+//        message.temp = false
+//        message.group = id
+//        return message
+//    }
 
     /***
      * 离开本群，当机器人是群主的时候解析为解散。
@@ -77,7 +81,7 @@ interface Member : Contact, User {
     val title: String
 
     val ban: Int
-    fun isBan() = ban > 0
+    fun isBan() = ban > (System.currentTimeMillis() / 1000).toInt()
     fun ban(time: Int)
     fun unBan()
     fun nameCardOrName() = if (nameCard == "") name else nameCard
@@ -88,23 +92,27 @@ interface Member : Contact, User {
     override fun toLogString() = "${nameCardOrName()}($id)[${group.name}(${group.id})]"
     fun toLogStringSingle() = "${nameCardOrName()}($id)"
 
-    override fun convertMessage(message: Message): Message {
-        message.temp = true
-        message.group = group.id
-        message.qq = id
-        return message
-    }
+//    override fun convertMessage(message: Message): Message {
+//        message.temp = true
+//        message.group = group.id
+//        message.qq = id
+//        return message
+//    }
 
-    fun at(): At
+    fun at(): At = mif.at(this)
 
     fun isAdmin() = permission > 0
     fun isOwner() = permission == 2
 
     fun kick(message: String = "")
 
+    companion object {
+        fun Member.toFriend(): Friend? = yuq.friends[id]
+    }
+
 }
 
-interface AnonymousMember: Member{
+interface AnonymousMember : Member {
 
     override fun canSendMessage() = false
     override fun isFriend() = false
@@ -133,12 +141,12 @@ data class UserInfo(
 }
 
 data class GroupInfo(
-        val id:Long,
-        val name:String,
+        val id: Long,
+        val name: String,
         val maxCount: Int,
 
-        val owner:User,
-        val admin:List<User>
+        val owner: User,
+        val admin: List<User>
 )
 
 //interface UserInfo : User {

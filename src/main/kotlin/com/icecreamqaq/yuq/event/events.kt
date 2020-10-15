@@ -13,11 +13,14 @@ open class MessageEvent(open val sender: Contact, val message: Message) : Event(
 }
 
 open class GroupMessageEvent(override val sender: Member, val group: Group, message: Message) : MessageEvent(sender, message)
-open class PrivateMessageEvent(sender: Contact, message: Message) : MessageEvent(sender, message)
+open class PrivateMessageEvent(sender: Contact, message: Message) : MessageEvent(sender, message) {
+    open class FriendMessage(override val sender: Friend, message: Message) : PrivateMessageEvent(sender, message)
+    open class TempMessage(override val sender: Member, message: Message) : PrivateMessageEvent(sender, message)
+}
 
-open class MessageRecallEvent(val sender: Contact, val operator: Contact, val messageId: Int) : Event()
+open class MessageRecallEvent(open val sender: Contact,open val operator: Contact, val messageId: Int) : Event()
 open class PrivateRecallEvent(sender: Contact, operator: Contact, messageId: Int) : MessageRecallEvent(sender, operator, messageId)
-open class GroupRecallEvent(val group: Group, sender: Member, operator: Member, messageId: Int) : MessageRecallEvent(sender, operator, messageId)
+open class GroupRecallEvent(val group: Group,override val sender: Member,override val operator: Member, messageId: Int) : MessageRecallEvent(sender, operator, messageId)
 
 open class FriendListEvent : Event()
 open class FriendAddEvent(val friend: Friend) : FriendListEvent()
@@ -25,17 +28,35 @@ open class FriendDeleteEvent(val friend: Friend) : FriendListEvent()
 
 open class GroupListEvent : Event()
 open class BotJoinGroupEvent(val group: Group) : GroupListEvent()
+
+/***
+ * Bot 从某个群离开。
+ * 当事件响应前，group 就已经从列表中被移出。
+ */
 open class BotLeaveGroupEvent(val group: Group) : GroupListEvent() {
+    /***
+     * Bot 主动退出某群。
+     */
     open class Leave(group: Group) : BotLeaveGroupEvent(group)
+
+    /***
+     * Bot 因为某些特殊原因离开某群（其他客户端主动退出，群解散，群被强制解散等等）
+     */
+    open class Other(group: Group) : BotLeaveGroupEvent(group)
+
+    /***
+     * Bot 被某群移出。
+     */
     open class Kick(val operator: Member) : BotLeaveGroupEvent(operator.group)
 }
 
 open class NewRequestEvent(val message: String) : Event(), CancelEvent {
     override fun cancelAble() = true
     var accept: Boolean? = null
+    var rejectMessage: String = ""
 }
 
-open class NewFriendRequestEvent(val qq: UserInfo,val group: Group?, message: String) : NewRequestEvent(message)
+open class NewFriendRequestEvent(val qq: UserInfo, val group: Group?, message: String) : NewRequestEvent(message)
 open class GroupInviteEvent(val group: GroupInfo, val qq: UserInfo, message: String) : NewRequestEvent(message)
 open class GroupMemberRequestEvent(val group: Group, val qq: UserInfo, message: String) : NewRequestEvent(message), CancelEvent {
     override fun cancelAble() = true
@@ -47,14 +68,18 @@ open class GroupMemberJoinEvent(group: Group, member: Member) : GroupMemberEvent
     open class Join(group: Group, member: Member) : GroupMemberJoinEvent(group, member)
     open class Invite(group: Group, member: Member, val inviter: Member) : GroupMemberJoinEvent(group, member)
 }
-@Deprecated("Image 创建 API 调整，使得命名语义更加清晰。", ReplaceWith("GroupMemberJoinEvent.Invite"))
+
+@Deprecated("群事件结构调整，使得命名语义更加清晰。", ReplaceWith("GroupMemberJoinEvent.Invite"))
 open class GroupMemberInviteEvent(group: Group, member: Member, inviter: Member) : GroupMemberJoinEvent.Invite(group, member, inviter)
 
-open class GroupMemberLeaveEvent(group: Group, member: Member) : GroupMemberEvent(group, member){
-    open class Leave(group: Group, member: Member) : GroupMemberJoinEvent(group, member)
-    open class Kick(group: Group, member: Member, val operator: Member) : GroupMemberJoinEvent(group, member)
+
+open class GroupMemberLeaveEvent(group: Group, member: Member) : GroupMemberEvent(group, member) {
+    open class Leave(group: Group, member: Member) : GroupMemberLeaveEvent(group, member)
+    open class Kick(group: Group, member: Member, val operator: Member) : GroupMemberLeaveEvent(group, member)
 }
-open class GroupMemberKickEvent(group: Group, member: Member, val operator: Member) : GroupMemberEvent(group, member)
+
+@Deprecated("群事件结构调整，使得命名语义更加清晰。", ReplaceWith("GroupMemberLeaveEvent.Kick"))
+open class GroupMemberKickEvent(group: Group, member: Member, operator: Member) : GroupMemberLeaveEvent.Kick(group, member, operator)
 
 open class GroupBanMemberEvent(group: Group, member: Member, val operator: Member, val time: Int) : GroupMemberEvent(group, member)
 open class GroupUnBanMemberEvent(group: Group, member: Member, val operator: Member) : GroupMemberEvent(group, member)
@@ -72,9 +97,10 @@ open class ActionContextInvokeEvent(val context: BotActionContext) : Event(), Ca
     }
 }
 
-open class SendMessageEvent(val sendTo: Contact, val message: Message):Event() {
+open class SendMessageEvent(val sendTo: Contact, val message: Message) : Event() {
     open class Per(sendTo: Contact, message: Message) : SendMessageEvent(sendTo, message), CancelEvent {
         override fun cancelAble() = true
     }
-    open class Post(sendTo: Contact, message: Message, messageSource: MessageSource) : SendMessageEvent(sendTo, message)
+
+    open class Post(sendTo: Contact, message: Message, val messageSource: MessageSource) : SendMessageEvent(sendTo, message)
 }

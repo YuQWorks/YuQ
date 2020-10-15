@@ -2,6 +2,8 @@ package com.icecreamqaq.yuq.message
 
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.entity.Contact
+import com.icecreamqaq.yuq.entity.Member
+import com.icecreamqaq.yuq.mif
 
 
 abstract class MessageItemBase : MessageItem {
@@ -11,9 +13,9 @@ abstract class MessageItemBase : MessageItem {
     override fun toMessage(): Message = Message() + this
 
     override fun equals(other: Any?): Boolean {
-        if (other == null)return false
-        if (this === other)return true
-        if (other !is MessageItem)return false
+        if (other == null) return false
+        if (this === other) return true
+        if (other !is MessageItem) return false
         return equal(other)
     }
 
@@ -61,6 +63,9 @@ interface Text : MessageItem {
         return text == other.text
     }
 
+    companion object{
+        fun String.toText() = mif.text(this)
+    }
 }
 
 interface At : MessageItem {
@@ -78,6 +83,14 @@ interface At : MessageItem {
         if (other !is At) return true
         return user == other.user
     }
+}
+
+interface AtByMember : At {
+    val member: Member
+    override val user: Long
+        get() = member.id
+
+    override fun toLogString() = "@${member.name}($user)"
 }
 
 interface Face : MessageItem {
@@ -116,10 +129,14 @@ interface Image : MessageItem {
         if (other !is Image) return false
         return id == other.id
     }
+
+    companion object{
+        fun Image.toFlash() = mif.imageToFlash(this)
+    }
 }
 
-interface FlashImage : Image{
-    val image:Image
+interface FlashImage : Image {
+    val image: Image
 
     override val id: String
         get() = image.id
@@ -146,7 +163,7 @@ interface XmlEx : MessageItem {
 
     override fun toPath() = "XmlMsg"
     override fun equal(other: MessageItem): Boolean {
-        if (other !is XmlEx)return true
+        if (other !is XmlEx) return true
         return value == other.value && serviceId == other.serviceId
     }
 }
@@ -159,16 +176,17 @@ interface JsonEx : MessageItem {
         PathVar.Type.Source -> this
         else -> null
     }
+
     override fun toPath() = "JsonMsg"
 
     override fun equal(other: MessageItem): Boolean {
-        if (other !is JsonEx)return true
+        if (other !is JsonEx) return true
         return value == other.value
     }
 }
 
 interface Voice : MessageItem {
-    val id:String
+    val id: String
     val url: String
 
     override fun toPath(): String {
@@ -194,7 +212,7 @@ interface NoImplItem : MessageItem {
     override fun convertByPathVar(type: PathVar.Type) = "NotImpl"
 
     override fun equal(other: MessageItem): Boolean {
-        if (other !is NoImplItem)return true
+        if (other !is NoImplItem) return true
         return source == other.source
     }
 }

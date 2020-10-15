@@ -1,8 +1,10 @@
 package com.icecreamqaq.yuq.message
 
-import com.IceCreamQAQ.Yu.entity.Result
 import com.icecreamqaq.yuq.entity.MessageAt
-import com.icecreamqaq.yuq.toText
+import com.icecreamqaq.yuq.error.MessageThrowable
+import com.icecreamqaq.yuq.message.Image.Companion.toFlash
+import com.icecreamqaq.yuq.message.Text.Companion.toText
+import com.icecreamqaq.yuq.mif
 
 interface MessagePlus {
     operator fun plus(item: MessageItem): Message
@@ -12,25 +14,36 @@ interface MessagePlus {
 
 interface MessageSource {
     val id: Int
-
+    val sender: Long
+    val sendTime: Long
+    val liteMsg: String
 
     fun recall(): Int
 }
 
-open class Message : Result(), MessagePlus {
+interface GroupMessageSource : MessageSource {
+    val groupCode: Long
+}
 
-    @Deprecated("相关 API 已经调整，现在建议直接使用 Contact 对象发送消息。")
-    var temp: Boolean = false
+interface TempMessageSource : MessageSource {
+    val groupCode: Long
+}
+
+open class Message : /*Result(),*/ MessagePlus {
+
+//    @Deprecated("相关 API 已经调整，现在建议直接使用 Contact 对象发送消息。")
+//    var temp: Boolean = false
 
     var id: Int? = null
 
-    @Deprecated("相关 API 已经调整，现在建议直接使用 Contact 对象发送消息。")
-    var qq: Long? = null
-
-    @Deprecated("相关 API 已经调整，现在建议直接使用 Contact 对象发送消息。")
-    var group: Long? = null
+//    @Deprecated("相关 API 已经调整，现在建议直接使用 Contact 对象发送消息。")
+//    var qq: Long? = null
+//
+//    @Deprecated("相关 API 已经调整，现在建议直接使用 Contact 对象发送消息。")
+//    var group: Long? = null
 
     lateinit var source: MessageSource
+    lateinit var codeStr: String
 
     var reply: MessageSource? = null
     var at: MessageAt? = null
@@ -42,7 +55,7 @@ open class Message : Result(), MessagePlus {
     fun toLogString(): String {
         val sb = StringBuilder("(")
         if (reply != null) sb.append("Reply To: ${reply!!.id}, ")
-        if (at != null) sb.append("At them${if (at!!.newLine)" \n" else ""}, ")
+        if (at != null) sb.append("At them${if (at!!.newLine) " \n" else ""}, ")
         if (body.size > 0) {
             sb.append("[ ${body[0].toLogString()}")
             for (i in 1 until body.size) {
@@ -77,15 +90,15 @@ open class Message : Result(), MessagePlus {
         return this
     }
 
-    @Deprecated("相关 API 已经调整，现在建议直接使用 Contact 对象发送消息。")
-    fun newMessage(): Message {
-        val message = Message()
-
-        message.qq = this.qq
-        message.group = this.group
-        message.temp = this.temp
-        return message
-    }
+//    @Deprecated("相关 API 已经调整，现在建议直接使用 Contact 对象发送消息。")
+//    fun newMessage(): Message {
+//        val message = Message()
+//
+//        message.qq = this.qq
+//        message.group = this.group
+//        message.temp = this.temp
+//        return message
+//    }
 
     fun recall(): Int {
         return source.recall()
@@ -104,5 +117,127 @@ open class Message : Result(), MessagePlus {
             if (item != oi) return false
         }
         return true
+    }
+
+    fun toThrowable() = MessageThrowable(this)
+
+    companion object {
+
+        fun Message.firstString(): String {
+            for (item in body) {
+                if (item is Text) return item.text
+            }
+            error("消息不包含任何一个文本串。")
+        }
+
+        fun Message.toCodeString(): String {
+            val sb = StringBuilder()
+            if (reply != null) sb.append("<Rain:Reply:$id>")
+
+            for (item in body) {
+                sb.append(
+                        when (item) {
+                            is Text -> item.text
+                            is At -> "<Rain:At:${item.user}>"
+                            is Face -> "<Rain:Face:${item.faceId}>"
+                            is Image -> "<Rain:Image:${item.id}${if (item is FlashImage) ", Flash>" else ">"}"
+                            is XmlEx -> "<Rain:Xml:${item.serviceId},${item.value.replace("<", "&&&lt&&&").replace(">", "&&&gt&&&")}>"
+                            is JsonEx -> "<Rain:Json:${item.value}>"
+                            else -> "<Rain:NoImpl:${item.toPath()}>"
+                        }
+                )
+            }
+            return sb.toString()
+        }
+
+        fun String.toMessageByRainCode(): Message {
+            val codeStart = "<Rain:"
+
+            var message = Message()
+            val t = StringBuilder()
+            val m = StringBuilder()
+
+            var rf = false
+            var rc = false
+
+            for (c in this) {
+                if (rf) {
+                    if (rc) {
+                        if (c != '>') m.append(c)
+                        else {
+                            if (t.isNotEmpty()) {
+                                message += mif.text(t.toString())
+                                t.clear()
+                            }
+                            val codeStr = m.toString()
+                            val code = codeStr.split(":")
+                            if (code.size < 3) {
+                                t.append(codeStr).append(">")
+                                m.clear()
+                                rf = false
+                                rc = false
+                                continue
+                            }
+                            val type = code[1]
+                            val data = code[2]
+                            message += when (type) {
+                                "At" -> mif.at(data.toLong())
+                                "Face" -> mif.face(data.toInt())
+                                "Image" -> {
+                                    val p = data.indexOf(',')
+                                    if (p == -1) mif.imageById(data)
+                                    else {
+                                        val id = data.substring(0, p)
+                                        mif.imageById(id).toFlash()
+                                    }
+                                }
+                                "Xml" -> {
+                                    val a = data.split(",", ignoreCase = false,limit =  2)
+                                    val id = a[0].toInt()
+                                    val value = a[1].replace("&&&lt&&&", "<").replace("&&&gt&&&", ">")
+                                    mif.xmlEx(id, value)
+                                }
+                                "Json" -> mif.jsonEx(data)
+                                else -> mif.text("$codeStr>")
+                            }
+
+                            m.clear()
+                            rf = false
+                            rc = false
+                        }
+                    } else {
+                        if (m.length < 6) m.append(c)
+                        else {
+                            val ms = m.toString()
+                            if (codeStart == ms) {
+                                rc = true
+                                m.append(c)
+                            } else {
+                                t.append(ms)
+                                m.clear()
+                                rf = false
+                                rc = false
+                                continue
+                            }
+                        }
+                    }
+                } else {
+                    if (c != '<') t.append(c)
+                    else {
+                        m.append(c)
+                        rf = true
+                    }
+                }
+
+            }
+
+            if (m.isNotEmpty()) t.append(m)
+            if (t.isNotEmpty()) message += mif.text(t.toString())
+
+            return message
+        }
+
+        fun String.toMessage() = this.toText().toMessage()
+
     }
 }

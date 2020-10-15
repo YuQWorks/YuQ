@@ -1,9 +1,9 @@
 package com.icecreamqaq.yuq.util
 
-import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.Message
-import com.icecreamqaq.yuq.toMessage
-import com.icecreamqaq.yuq.toText
+import com.icecreamqaq.yuq.message.Message.Companion.firstString
+import com.icecreamqaq.yuq.message.Message.Companion.toMessage
+import com.icecreamqaq.yuq.message.Text.Companion.toText
 
 class MessageUtil {
 
