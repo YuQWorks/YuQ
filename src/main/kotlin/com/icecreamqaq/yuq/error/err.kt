@@ -9,6 +9,9 @@ open class ImageTypedException(message: String) : YuQRuntimeException(message)
 
 open class WaitNextMessageTimeoutException : YuQRuntimeException()
 
-open class SendMessageFailedByCancel: YuQRuntimeException()
+open class SendMessageFailedByCancel : YuQRuntimeException()
 
-class MessageThrowable(val c: Message):RuntimeException()
+class MessageThrowable(val c: Message) : RuntimeException()
+
+
+class SkipMe() : RuntimeException()

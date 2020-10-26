@@ -13,10 +13,7 @@ import com.icecreamqaq.yuq.annotation.ContextTip
 import com.icecreamqaq.yuq.annotation.ContextTips
 import com.icecreamqaq.yuq.error.WaitNextMessageTimeoutException
 import com.icecreamqaq.yuq.message.Message
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import java.lang.reflect.Method
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -174,18 +171,25 @@ class ContextSession(val id: String, private val saves: MutableMap<String, Any> 
     @Throws(WaitNextMessageTimeoutException::class)
     fun waitNextMessage(maxTime: Long = 30000): Message =
             runBlocking {
-                val message = suspendCoroutine<Message> {
-                    suspendCoroutineIt = it
-                    GlobalScope.launch {
-                        delay(maxTime)
-                        if (suspendCoroutineIt != null && suspendCoroutineIt === it) {
-                            suspendCoroutineIt = null
-                            it.resumeWithException(WaitNextMessageTimeoutException())
+                try {
+                    withTimeout(maxTime){
+                        val message = suspendCoroutine<Message> {
+                            suspendCoroutineIt = it
+//                        GlobalScope.launch {
+//                            delay(maxTime)
+//                            if (suspendCoroutineIt != null && suspendCoroutineIt === it) {
+//                                suspendCoroutineIt = null
+//                                it.resumeWithException(WaitNextMessageTimeoutException())
+//                            }
+//                        }
                         }
+                        suspendCoroutineIt = null
+                        message
                     }
+                }catch (e:Exception){
+                    suspendCoroutineIt = null
+                    throw  WaitNextMessageTimeoutException()
                 }
-                suspendCoroutineIt = null
-                message
             }
 
 

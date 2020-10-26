@@ -15,6 +15,7 @@ import com.icecreamqaq.yuq.annotation.Save
 import com.icecreamqaq.yuq.entity.*
 import com.icecreamqaq.yuq.entity.Member.Companion.toFriend
 import com.icecreamqaq.yuq.error.MessageThrowable
+import com.icecreamqaq.yuq.error.SkipMe
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItem
 import com.icecreamqaq.yuq.yuq
@@ -40,7 +41,7 @@ class BotActionContext(
 
     var nextContext: NextActionContext? = null
 
-    lateinit var actionInvoker: BotActionInvoker
+    var actionInvoker: BotActionInvoker? = null
 
     private val saved = HashMap<String, Any?>()
 
@@ -100,7 +101,7 @@ class BotActionContext(
             when (e) {
                 is DoNone -> null
                 is MessageThrowable -> {
-                    this.reMessage = buildResult(e)
+                    this.reMessage = buildResult(e.c)
                     null
                 }
                 is Result -> {
@@ -418,6 +419,10 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActi
             return true
         } catch (e: Exception) {
             val r = context.onError(e) ?: return true
+            if (r is SkipMe) {
+                context.actionInvoker = null
+                return false
+            }
 //            throw r
 
 //            val er= context.onError(e) ?: return true

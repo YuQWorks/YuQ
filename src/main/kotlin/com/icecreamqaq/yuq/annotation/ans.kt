@@ -39,3 +39,5 @@ annotation class PathVar(val value: Int, val type: Type = Type.String) {
         Source, String, Integer, Switch, Long, Double,Contact, Friend, Group, Member,User
     }
 }
+
+annotation class AsyncAction
