@@ -39,6 +39,7 @@ interface Friend : Contact {
     override fun toLogString() = "$name($id)"
 
     fun delete()
+    fun click()
 }
 
 interface Group : Contact {
@@ -85,6 +86,9 @@ interface Member : Contact, User {
     fun ban(time: Int)
     fun unBan()
     fun nameCardOrName() = if (nameCard == "") name else nameCard
+
+    fun click()
+    fun clickWithTemp()
 
     override fun isFriend() = true
     override fun canSendMessage() = true

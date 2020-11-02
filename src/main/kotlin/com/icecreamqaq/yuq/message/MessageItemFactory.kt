@@ -4,6 +4,7 @@ import com.IceCreamQAQ.Yu.annotation.AutoBind
 import com.icecreamqaq.yuq.entity.Member
 import java.awt.image.BufferedImage
 import java.io.File
+import java.io.FileInputStream
 import java.io.InputStream
 
 @AutoBind
@@ -24,6 +25,7 @@ interface MessageItemFactory {
      * @param qq 欲 At 的目标 QQ 号码。
      */
     fun at(qq: Long): At
+
     /***
      * 创建一个 At 内容
      * @param member 欲 At 的目标 QQ 号码。
@@ -58,13 +60,19 @@ interface MessageItemFactory {
 
     fun imageByInputStream(inputStream: InputStream): Image
 
+    fun imageByByteArray(byteArray: ByteArray) = imageByInputStream(byteArray.inputStream())
+
     fun imageToFlash(image: Image): FlashImage
 
     /***
      * 发送一段语音
      * @param file 语音的位置（File 对象）。
      */
-    fun voice(file: File): Voice
+    @Deprecated("Voice 创建 API 调整，使得命名语义更加清晰。", ReplaceWith("voiceByFile(file)"))
+    fun voice(file: File) = voiceByFile(file)
+    fun voiceByFile(file: File) = voiceByInputStream(FileInputStream(file))
+    fun voiceByInputStream(inputStream: InputStream): Voice
+    fun voiceByByteArray(byteArray: ByteArray) = voiceByInputStream(byteArray.inputStream())
 
     /***
      * 发送一个 Xml 消息（卡片消息）

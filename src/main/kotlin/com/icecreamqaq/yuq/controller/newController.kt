@@ -277,7 +277,7 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
 
             type == PathVar.Type.Friend -> yuq.friends[message.path[num].convertByPathVar(PathVar.Type.Long)]
             type == PathVar.Type.Group -> yuq.groups[message.path[num].convertByPathVar(PathVar.Type.Long)]
-//            type == PathVar.Type.Member -> yuq.groups[message.group!!]!![message.path[num].convertByPathVar(PathVar.Type.Long) as Long]
+            type == PathVar.Type.Member -> (context.source as Group)[message.path[num].convertByPathVar(PathVar.Type.Long) as Long]
             else -> context.message.path[num].convertByPathVar(type)
         }
     }
@@ -436,7 +436,7 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActi
                     val o = catch.invoke(context, r)
                     if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
                 }
-                return true
+                throw r
             } catch (ee: Exception) {
                 throw context.onError(ee) ?: return true
             }

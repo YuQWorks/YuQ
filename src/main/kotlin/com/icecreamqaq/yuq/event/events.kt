@@ -18,9 +18,9 @@ open class PrivateMessageEvent(sender: Contact, message: Message) : MessageEvent
     open class TempMessage(override val sender: Member, message: Message) : PrivateMessageEvent(sender, message)
 }
 
-open class MessageRecallEvent(open val sender: Contact,open val operator: Contact, val messageId: Int) : Event()
+open class MessageRecallEvent(open val sender: Contact, open val operator: Contact, val messageId: Int) : Event()
 open class PrivateRecallEvent(sender: Contact, operator: Contact, messageId: Int) : MessageRecallEvent(sender, operator, messageId)
-open class GroupRecallEvent(val group: Group,override val sender: Member,override val operator: Member, messageId: Int) : MessageRecallEvent(sender, operator, messageId)
+open class GroupRecallEvent(val group: Group, override val sender: Member, override val operator: Member, messageId: Int) : MessageRecallEvent(sender, operator, messageId)
 
 open class FriendListEvent : Event()
 open class FriendAddEvent(val friend: Friend) : FriendListEvent()
@@ -103,4 +103,19 @@ open class SendMessageEvent(val sendTo: Contact, val message: Message) : Event()
     }
 
     open class Post(sendTo: Contact, message: Message, val messageSource: MessageSource) : SendMessageEvent(sendTo, message)
+}
+
+open class ClickEvent(open val operator: Contact, val action:String,val suffix:String) : Event()
+open class ClickBotEvent(operator: Contact, action: String, suffix: String) : ClickEvent(operator, action, suffix) {
+    open class Private(operator: Contact, action: String, suffix: String) : ClickBotEvent(operator, action, suffix) {
+        open class FriendClick(override val operator: Friend, action: String, suffix: String) : Private(operator, action, suffix)
+        open class TempClick(override val operator: Member, action: String, suffix: String) : Private(operator, action, suffix)
+    }
+
+    open class Group(override val operator: Member, action: String, suffix: String) : ClickBotEvent(operator, action, suffix)
+}
+
+open class ClickSomeBodyEvent(operator: Contact, open val target: Contact, action: String, suffix: String) : ClickEvent(operator, action, suffix) {
+    open class Private(operator: Contact, target: Contact, action: String, suffix: String) : ClickSomeBodyEvent(operator, target, action, suffix)
+    open class Group(override val operator: Member, override val target: Member, action: String, suffix: String) : ClickSomeBodyEvent(operator, target, action, suffix)
 }
