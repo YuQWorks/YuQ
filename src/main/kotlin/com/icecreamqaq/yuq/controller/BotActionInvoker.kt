@@ -58,7 +58,7 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActi
             }
             val re = invoker.invoke(context)
             if (nextContext != null && context.nextContext == null) context.nextContext = nextContext
-            val reMessage = context.onSuccess(re ?: return true) as Message
+            val reMessage = context.onSuccess(re ?: return true) as? Message ?: return true
             for (after in globalAfters) {
                 val o = after.invoke(context)
                 if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o

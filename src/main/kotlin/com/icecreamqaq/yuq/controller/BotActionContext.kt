@@ -7,6 +7,8 @@ import com.icecreamqaq.yuq.entity.Contact
 import com.icecreamqaq.yuq.error.MessageThrowable
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItem
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 
 class BotActionContext(
         val source: Contact,
@@ -39,39 +41,12 @@ class BotActionContext(
 
         saved["path"] = path
 
-//        saved["messageId"] = message.id
-//
-//        saved["temp"] = message.temp
-//        saved["qq"] = message.qq
-//        saved["sender"] = message.qq
-//        saved["group"] = message.group
-
         saved["sourceMessage"] = message.sourceMessage
 
         saved["reply"] = message.reply
 
         saved["message"] = message
     }
-
-//    var message: Message? = null
-//        set(message) {
-//            field = message!!
-//
-//            path = message.toPath().toTypedArray()
-//
-//            saved["messageId"] = message.id
-//
-//            saved["temp"] = message.temp
-//            saved["qq"] = message.qq
-//            saved["sender"] = message.qq
-//            saved["group"] = message.group
-//
-//            saved["sourceMessage"] = message.sourceMessage
-//
-//            saved["reply"] = message.reply
-//
-//            saved["message"] = message
-//        }
 
 
     override fun get(name: String): Any? {
@@ -102,7 +77,7 @@ class BotActionContext(
 
     override fun onSuccess(result: Any?): Any? {
         if (result == null) return null
-        this.reMessage = buildResult(result)
+        this.reMessage = buildResult(result) ?: return null
         saved["reMessage"] = reMessage
         return reMessage
     }
@@ -112,6 +87,16 @@ class BotActionContext(
             is String -> {
                 val message = Message()
                 message + obj
+            }
+            is Array<*> -> {
+                for (any in obj) {
+                    when (any) {
+                        is Int -> runBlocking { delay(any.toLong()) }
+                        is Long -> runBlocking { delay(any) }
+                        else -> any?.let { buildResult(it)?.let { message -> source.sendMessage(message) } }
+                    }
+                }
+                null
             }
             is MessageItem -> {
                 val message = Message()
