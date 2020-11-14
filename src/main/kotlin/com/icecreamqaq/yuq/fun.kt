@@ -19,6 +19,12 @@ lateinit var eventBus: EventBus
 fun Event.post() = eventBus.post(this)
 operator fun Event.invoke() = this.post()
 
+@JvmName("postEvent")
+inline fun <R> post(event: Event, success: () -> R? = { null }, cancel: () -> R? = { null }) = if (event()) cancel() else success()
+inline fun <R> Event.post(success: () -> R? = { null }, cancel: () -> R? = { null }) = post(this, success, cancel)
+inline operator fun <R> Event.invoke(success: () -> R? = { null }, cancel: () -> R? = { null }) = post(this, success, cancel)
+
+
 //operator fun String.minus(messageItem: MessageItem) = mif.text(this) + messageItem
 
 

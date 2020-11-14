@@ -51,9 +51,10 @@ interface Group : Contact {
     val owner: Member
     val admins: List<Member>
 
-    operator fun get(qq: Long): Member {
-        return members[qq] ?: error("Member $qq Not Found!")
-    }
+    operator fun get(qq: Long)= getOrNull(qq) ?: error("Member $qq Not Found!")
+
+    fun getOrNull(qq:Long):Member? = members[qq] ?: if (qq == bot.id) bot else null
+
 
 //    override fun convertMessage(message: Message): Message {
 //        message.temp = false
