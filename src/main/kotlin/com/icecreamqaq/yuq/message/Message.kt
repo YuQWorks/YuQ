@@ -1,10 +1,12 @@
 package com.icecreamqaq.yuq.message
 
+import com.icecreamqaq.yuq.RainCode
 import com.icecreamqaq.yuq.entity.MessageAt
 import com.icecreamqaq.yuq.error.MessageThrowable
 import com.icecreamqaq.yuq.message.Image.Companion.toFlash
 import com.icecreamqaq.yuq.message.Text.Companion.toText
 import com.icecreamqaq.yuq.mif
+import java.io.File
 
 interface MessagePlus {
     operator fun plus(item: MessageItem): Message
@@ -43,8 +45,11 @@ open class Message : /*Result(),*/ MessagePlus {
 //    var group: Long? = null
 
     lateinit var source: MessageSource
-    lateinit var codeStr: String
-
+    var codeStr: String = ""
+        get() {
+            if (field == "") field = toCodeString()
+            return field
+        }
     var reply: MessageSource? = null
     var at: MessageAt? = null
 
@@ -184,15 +189,32 @@ open class Message : /*Result(),*/ MessagePlus {
                                 "At" -> mif.at(data.toLong())
                                 "Face" -> mif.face(data.toInt())
                                 "Image" -> {
-                                    val p = data.indexOf(',')
-                                    if (p == -1) mif.imageById(data)
-                                    else {
-                                        val id = data.substring(0, p)
-                                        mif.imageById(id).toFlash()
+                                    val ps = data.split(",")
+                                    var url = false
+                                    var file = false
+                                    var flash = false
+                                    val id = ps[0]
+                                    for (i in 1 until ps.size) {
+                                        val p = ps[i]
+                                        if (p == "url") url = true
+                                        if (p == "file") file = true
+                                        if (p == "flash") flash = true
                                     }
+                                    val p = if (file) mif.imageByFile(File(id))
+                                    else if (RainCode.matchImageIdStartHttp || url) mif.imageByUrl(id)
+                                    else mif.imageById(id)
+                                    if (flash) p.toFlash()
+                                    else p
+//                                    if (id.st)
+//                                    val p = data.indexOf(',')
+//                                    if (p == -1) mif.imageById(data)
+//                                    else {
+//                                        val id = data.substring(0, p)
+//                                        mif.imageById(id).toFlash()
+//                                    }
                                 }
                                 "Xml" -> {
-                                    val a = data.split(",", ignoreCase = false,limit =  2)
+                                    val a = data.split(",", ignoreCase = false, limit = 2)
                                     val id = a[0].toInt()
                                     val value = a[1].replace("&&&lt&&&", "<").replace("&&&gt&&&", ">")
                                     mif.xmlEx(id, value)
