@@ -201,7 +201,7 @@ open class Message : /*Result(),*/ MessagePlus {
                                         if (p == "flash") flash = true
                                     }
                                     val p = if (file) mif.imageByFile(File(id))
-                                    else if (RainCode.matchImageIdStartHttp || url) mif.imageByUrl(id)
+                                    else if ((RainCode.matchImageIdStartHttp && id.startsWith("http", true)) || url) mif.imageByUrl(id)
                                     else mif.imageById(id)
                                     if (flash) p.toFlash()
                                     else p
