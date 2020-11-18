@@ -228,13 +228,17 @@ open class Message : /*Result(),*/ MessagePlus {
                             rc = false
                         }
                     } else {
+                        if (c == '<') {
+                            t.append(m.toString())
+                            m.clear()
+                            m.append('<')
+                            continue
+                        }
                         m.append(c)
                         if (m.length >= 6) {
                             val ms = m.toString()
-                            if (codeStart == ms) {
-                                rc = true
-                                m.append(c)
-                            } else {
+                            if (codeStart == ms) rc = true
+                            else {
                                 t.append(ms)
                                 m.clear()
                                 rf = false
@@ -258,7 +262,7 @@ open class Message : /*Result(),*/ MessagePlus {
 
             return message
         }
-        
+
 //        fun String.toMessageByRainCode(): Message {
 //            val codeStart = "<Rain:"
 //
