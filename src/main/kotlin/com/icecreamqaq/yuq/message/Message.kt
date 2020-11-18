@@ -228,8 +228,8 @@ open class Message : /*Result(),*/ MessagePlus {
                             rc = false
                         }
                     } else {
-                        if (m.length < 6) m.append(c)
-                        else {
+                        m.append(c)
+                        if (m.length >= 6) {
                             val ms = m.toString()
                             if (codeStart == ms) {
                                 rc = true
@@ -258,6 +258,110 @@ open class Message : /*Result(),*/ MessagePlus {
 
             return message
         }
+        
+//        fun String.toMessageByRainCode(): Message {
+//            val codeStart = "<Rain:"
+//
+//            var message = Message()
+//            val t = StringBuilder()
+//            val m = StringBuilder()
+//
+//            var rf = false
+//            var rc = false
+//
+//            for (c in this) {
+//                if (rf) {
+//                    if (rc) {
+//                        if (c != '>') m.append(c)
+//                        else {
+//                            if (t.isNotEmpty()) {
+//                                message += mif.text(t.toString())
+//                                t.clear()
+//                            }
+//                            val codeStr = m.toString()
+//                            val code = codeStr.split(":")
+//                            if (code.size < 3) {
+//                                t.append(codeStr).append(">")
+//                                m.clear()
+//                                rf = false
+//                                rc = false
+//                                continue
+//                            }
+//                            val type = code[1]
+//                            val data = code[2]
+//                            message += when (type) {
+//                                "At" -> mif.at(data.toLong())
+//                                "Face" -> mif.face(data.toInt())
+//                                "Image" -> {
+//                                    val ps = data.split(",")
+//                                    var url = false
+//                                    var file = false
+//                                    var flash = false
+//                                    val id = ps[0]
+//                                    for (i in 1 until ps.size) {
+//                                        val p = ps[i]
+//                                        if (p == "url") url = true
+//                                        if (p == "file") file = true
+//                                        if (p == "flash") flash = true
+//                                    }
+//                                    val p = if (file) mif.imageByFile(File(id))
+//                                    else if ((RainCode.matchImageIdStartHttp && id.startsWith("http", true)) || url) mif.imageByUrl(id)
+//                                    else mif.imageById(id)
+//                                    if (flash) p.toFlash()
+//                                    else p
+////                                    if (id.st)
+////                                    val p = data.indexOf(',')
+////                                    if (p == -1) mif.imageById(data)
+////                                    else {
+////                                        val id = data.substring(0, p)
+////                                        mif.imageById(id).toFlash()
+////                                    }
+//                                }
+//                                "Xml" -> {
+//                                    val a = data.split(",", ignoreCase = false, limit = 2)
+//                                    val id = a[0].toInt()
+//                                    val value = a[1].replace("&&&lt&&&", "<").replace("&&&gt&&&", ">")
+//                                    mif.xmlEx(id, value)
+//                                }
+//                                "Json" -> mif.jsonEx(data)
+//                                else -> mif.text("$codeStr>")
+//                            }
+//
+//                            m.clear()
+//                            rf = false
+//                            rc = false
+//                        }
+//                    } else {
+//                        if (m.length < 6) m.append(c)
+//                        else {
+//                            val ms = m.toString()
+//                            if (codeStart == ms) {
+//                                rc = true
+//                                m.append(c)
+//                            } else {
+//                                t.append(ms)
+//                                m.clear()
+//                                rf = false
+//                                rc = false
+//                                continue
+//                            }
+//                        }
+//                    }
+//                } else {
+//                    if (c != '<') t.append(c)
+//                    else {
+//                        m.append(c)
+//                        rf = true
+//                    }
+//                }
+//
+//            }
+//
+//            if (m.isNotEmpty()) t.append(m)
+//            if (t.isNotEmpty()) message += mif.text(t.toString())
+//
+//            return message
+//        }
 
         fun String.toMessage() = this.toText().toMessage()
 

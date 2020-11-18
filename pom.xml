@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>YuQ</artifactId>
-    <version>0.1.0.0-DEV9</version>
+    <version>0.1.0.0-DEV10</version>
 
     <name>YuQ QQ Robot API</name>
     <description>YuQ is a simple qq robot develop framework.</description>
