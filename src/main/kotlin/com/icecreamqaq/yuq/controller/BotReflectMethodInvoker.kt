@@ -1,8 +1,8 @@
 package com.icecreamqaq.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
-import com.IceCreamQAQ.Yu.controller.NewActionContext
-import com.IceCreamQAQ.Yu.controller.router.NewMethodInvoker
+import com.IceCreamQAQ.Yu.controller.ActionContext
+import com.IceCreamQAQ.Yu.controller.MethodInvoker
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.Save
 import com.icecreamqaq.yuq.entity.*
@@ -13,7 +13,7 @@ import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import javax.inject.Named
 
-class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Method, val instance: Any?, level: Int? = null) : NewMethodInvoker {
+class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Method, val instance: Any?, level: Int? = null) : MethodInvoker {
 
     private var returnFlag: Boolean = false
     private var mps: Array<MethodPara?>? = null
@@ -155,7 +155,7 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
         }
     }
 
-    override fun invoke(context: NewActionContext): Any? {
+    override fun invoke(context: ActionContext): Any? {
         if (context !is BotActionContext) return null
         val mps = mps!!
         val paras = arrayOfNulls<Any>(mps.size)

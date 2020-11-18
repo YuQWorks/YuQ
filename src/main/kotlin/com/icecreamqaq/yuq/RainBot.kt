@@ -1,7 +1,7 @@
 package com.icecreamqaq.yuq
 
 import com.IceCreamQAQ.Yu.cache.EhcacheHelp
-import com.IceCreamQAQ.Yu.controller.router.NewRouter
+import com.IceCreamQAQ.Yu.controller.Router
 import com.IceCreamQAQ.Yu.event.EventBus
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextRouter
@@ -33,11 +33,11 @@ open class RainBot {
 
     @Inject
     @field:Named("group")
-    private lateinit var group: NewRouter
+    private lateinit var group: Router
 
     @Inject
     @field:Named("priv")
-    private lateinit var priv: NewRouter
+    private lateinit var priv: Router
 
     @Inject
     private lateinit var contextRouter: ContextRouter
@@ -77,7 +77,7 @@ open class RainBot {
         group.todo(context)
     }
 
-    open fun NewRouter.todo(context: BotActionContext) {
+    open fun Router.todo(context: BotActionContext) {
         if (context.path.isEmpty()) return
         if (context.session.suspendCoroutineIt != null) {
             context.session.suspendCoroutineIt!!.resume(context.message)

@@ -4,9 +4,8 @@ import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.After
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.annotation.With
-import com.IceCreamQAQ.Yu.controller.NewActionContext
-import com.IceCreamQAQ.Yu.controller.router.NewMethodInvoker
-import com.IceCreamQAQ.Yu.controller.router.NewRouter
+import com.IceCreamQAQ.Yu.controller.MethodInvoker
+import com.IceCreamQAQ.Yu.controller.Router
 import com.IceCreamQAQ.Yu.di.YuContext
 import com.IceCreamQAQ.Yu.loader.LoadItem
 import com.icecreamqaq.yuq.annotation.ContextTip
@@ -28,10 +27,10 @@ class ContextRouter {
 
     val routers: MutableMap<String, ContextAction> = ConcurrentHashMap()
 
-    fun invoke(path: String, context: NewActionContext) = this.routers[path]?.invoker?.invoke("", context) ?: false
+    fun invoke(path: String, context: BotActionContext) = this.routers[path]?.invoker?.invoke("", context) ?: false
 }
 
-data class ContextAction(val invoker: NewRouter, val tips: Map<Int, String>)
+data class ContextAction(val invoker: Router, val tips: Map<Int, String>)
 
 class BotContextControllerLoader : BotControllerLoader() {
 
@@ -59,8 +58,8 @@ class BotContextControllerLoader : BotControllerLoader() {
             }
 
         val methods = controllerClass.methods
-        val befores = HashMap<Before, NewMethodInvoker>()
-        val afters = HashMap<After, NewMethodInvoker>()
+        val befores = HashMap<Before, MethodInvoker>()
+        val afters = HashMap<After, MethodInvoker>()
 
         for (method in allMethods) {
             val before = method.getAnnotation(Before::class.java)
@@ -85,7 +84,7 @@ class BotContextControllerLoader : BotControllerLoader() {
                 val actionInvoker = createActionInvoker(1, method, instance)
                 val actionMethodName = method.name
 
-                val abs = ArrayList<NewMethodInvoker>()
+                val abs = ArrayList<MethodInvoker>()
                 w@ for ((before, invoker) in befores) {
                     if (before.except.size != 1 || before.except[0] != "") for (s in before.except) {
                         if (s == actionMethodName) continue@w
@@ -95,7 +94,7 @@ class BotContextControllerLoader : BotControllerLoader() {
                     }
                     abs.add(invoker)
                 }
-                val aas = ArrayList<NewMethodInvoker>()
+                val aas = ArrayList<MethodInvoker>()
                 w@ for ((after, invoker) in afters) {
                     if (after.except.size != 1 || after.except[0] != "") for (s in after.except) {
                         if (s == actionMethodName) continue@w

@@ -1,6 +1,6 @@
 package com.icecreamqaq.yuq.controller
 
-import com.IceCreamQAQ.Yu.controller.NewActionContext
+import com.IceCreamQAQ.Yu.controller.ActionContext
 import com.IceCreamQAQ.Yu.entity.DoNone
 import com.IceCreamQAQ.Yu.entity.Result
 import com.icecreamqaq.yuq.entity.Contact
@@ -22,7 +22,7 @@ class BotActionContext(
          */
         var messageType: Int,
         override var path: Array<String> = message.toPath().toTypedArray()
-) : NewActionContext {
+) : ActionContext {
 
     var reMessage: Message? = null
 

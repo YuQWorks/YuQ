@@ -1,24 +1,24 @@
 package com.icecreamqaq.yuq.controller
 
-import com.IceCreamQAQ.Yu.controller.NewActionContext
-import com.IceCreamQAQ.Yu.controller.router.NewActionInvoker
-import com.IceCreamQAQ.Yu.controller.router.NewMethodInvoker
+import com.IceCreamQAQ.Yu.controller.ActionContext
+import com.IceCreamQAQ.Yu.controller.DefaultActionInvoker
+import com.IceCreamQAQ.Yu.controller.MethodInvoker
 import com.icecreamqaq.yuq.entity.MessageAt
 import com.icecreamqaq.yuq.error.SkipMe
 import com.icecreamqaq.yuq.message.Message
 import java.lang.reflect.Method
 
-open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActionInvoker(level, method, instance) {
+open class BotActionInvoker(level: Int, method: Method, instance: Any) : DefaultActionInvoker(level, method, instance) {
 
     var at: Boolean = false
     var atNewLine: Boolean = false
     var reply: Boolean = false
     var nextContext: NextActionContext? = null
 
-    override val invoker: NewMethodInvoker = BotReflectMethodInvoker(method, instance, level)
+    override val invoker: MethodInvoker = BotReflectMethodInvoker(method, instance, level)
 
 
-    fun superInvoke(path: String, context: NewActionContext): Boolean {
+    fun superInvoke(path: String, context: ActionContext): Boolean {
         val cps = context.path.size
         val nextPath = when {
             level > cps -> return false
@@ -41,17 +41,13 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActi
         return false
     }
 
-    override fun invoke(path: String, context: NewActionContext): Boolean {
+    override fun invoke(path: String, context: ActionContext): Boolean {
         if (context !is BotActionContext) return false
         if (superInvoke(path, context)) return true
 
 //         reMessage: Message?
         try {
             context.actionInvoker = this
-            for (before in globalBefores) {
-                val o = before.invoke(context)
-                if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
-            }
             for (before in befores) {
                 val o = before.invoke(context)
                 if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
@@ -59,10 +55,6 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActi
             val re = invoker.invoke(context)
             if (nextContext != null && context.nextContext == null) context.nextContext = nextContext
             val reMessage = context.onSuccess(re ?: return true) as? Message ?: return true
-            for (after in globalAfters) {
-                val o = after.invoke(context)
-                if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
-            }
             for (after in afters) {
                 val o = after.invoke(context)
                 if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
@@ -81,10 +73,6 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : NewActi
 //            val er= context.onError(e) ?: return true
             context["exception"] = r
             try {
-                for (catch in globalCatchs) {
-                    val o = catch.invoke(context, r)
-                    if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
-                }
                 for (catch in catchs) {
                     val o = catch.invoke(context, r)
                     if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
