@@ -175,7 +175,7 @@ open class Message : /*Result(),*/ MessagePlus {
                                 t.clear()
                             }
                             val codeStr = m.toString()
-                            val code = codeStr.split(":")
+                            val code = codeStr.split(":", limit = 3)
                             if (code.size < 3) {
                                 t.append(codeStr).append(">")
                                 m.clear()
