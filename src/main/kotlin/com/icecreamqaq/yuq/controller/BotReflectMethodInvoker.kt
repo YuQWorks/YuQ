@@ -12,12 +12,17 @@ import com.icecreamqaq.yuq.yuq
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import javax.inject.Named
+import kotlin.reflect.KFunction
+import kotlin.reflect.full.callSuspend
+import kotlin.reflect.jvm.kotlinFunction
 
 class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Method, val instance: Any?, level: Int? = null) : MethodInvoker {
 
     private var returnFlag: Boolean = false
     private var mps: Array<MethodPara?>? = null
     private val saves: Array<Saves>
+    lateinit var kFun: KFunction<*>
+    var isSuspend = false
 
     data class ParaItem(val value: Int, val type: PathVar.Type)
 
@@ -92,6 +97,13 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
 //                mps[i] = MethodPara(para.type, 0, name)
 //            }
 
+//            if (mps.last().)
+
+            method.kotlinFunction?.let {
+                kFun = it
+                if (it.isSuspend) isSuspend = true
+            }
+
             this.mps = mps
             this.saves = saves.toTypedArray()
         } else {
@@ -155,14 +167,12 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
         }
     }
 
-    override fun invoke(context: ActionContext): Any? {
-        if (context !is BotActionContext) return null
-        val mps = mps!!
-        val paras = arrayOfNulls<Any>(mps.size)
 
-
-        for (i in mps.indices) {
-            val mp = mps[i] ?: continue
+    fun getParas(len: Int, context: BotActionContext): Array<Any?> {
+        if (mps == null) return arrayOfNulls<Any>(0)
+        val paras = arrayOfNulls<Any>(len)
+        for (i in 0 until len) {
+            val mp = mps!![i] ?: continue
             paras[i] = when (mp.type) {
                 0 -> context[mp.data as String]
                 1 -> {
@@ -201,11 +211,21 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
                 else -> null
             }
         }
+        return paras
+    }
+
+    override suspend fun invoke(context: ActionContext): Any? {
+        if (context !is BotActionContext) return null
+        val mps = mps!!
+        val paras = if (isSuspend) getParas(mps.size - 1, context) else getParas(mps.size, context)
 
         try {
 
-            val re = if (mps.isEmpty()) method.invoke(instance)
+            val re = if (isSuspend) kFun.callSuspend(instance, *paras)
+            else if (mps.isEmpty()) method.invoke(instance)
             else method.invoke(instance, *paras)
+
+
 
             for (save in saves) {
                 context.session[save.name] = paras[save.i] ?: continue

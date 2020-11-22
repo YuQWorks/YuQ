@@ -18,7 +18,7 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
     override val invoker: MethodInvoker = BotReflectMethodInvoker(method, instance, level)
 
 
-    fun superInvoke(path: String, context: ActionContext): Boolean {
+    suspend fun superInvoke(path: String, context: ActionContext): Boolean {
         val cps = context.path.size
         val nextPath = when {
             level > cps -> return false
@@ -41,7 +41,7 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
         return false
     }
 
-    override fun invoke(path: String, context: ActionContext): Boolean {
+    override suspend fun invoke(path: String, context: ActionContext): Boolean {
         if (context !is BotActionContext) return false
         if (superInvoke(path, context)) return true
 

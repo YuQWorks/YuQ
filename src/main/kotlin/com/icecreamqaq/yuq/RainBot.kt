@@ -15,9 +15,14 @@ import com.icecreamqaq.yuq.job.RainInfo
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.message.MessageSource
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
 open class RainBot {
@@ -47,13 +52,13 @@ open class RainBot {
 
 
     @Deprecated("应该使用具体的 receiveFriendMessage 或是 receiveTempMessage")
-    open fun receivePrivateMessage(sender: Contact, message: Message) = when (sender) {
+    open suspend fun receivePrivateMessage(sender: Contact, message: Message) = when (sender) {
         is Friend -> receiveFriendMessage(sender, message)
         is Member -> receiveTempMessage(sender, message)
         else -> error("Not A PrivateContact")
     }
 
-    open fun receiveFriendMessage(sender: Friend, message: Message) {
+    open suspend fun receiveFriendMessage(sender: Friend, message: Message) {
         log.info("${sender.toLogString()} -> ${message.toLogString()}")
         rainInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.FriendMessage(sender, message))) return
@@ -61,7 +66,7 @@ open class RainBot {
         priv.todo(context)
     }
 
-    open fun receiveTempMessage(sender: Member, message: Message) {
+    open suspend fun receiveTempMessage(sender: Member, message: Message) {
         log.info("${sender.toLogString()} -> ${message.toLogString()}")
         rainInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.TempMessage(sender, message))) return
@@ -69,7 +74,7 @@ open class RainBot {
         priv.todo(context)
     }
 
-    open fun receiveGroupMessage(sender: Member, message: Message) {
+    open suspend fun receiveGroupMessage(sender: Member, message: Message) {
         log.info("[${sender.group.toLogString()}]${sender.toLogStringSingle()} -> ${message.toLogString()}")
         rainInfo.receiveMessage()
         if (eventBus.post(GroupMessageEvent(sender, sender.group, message))) return
@@ -77,7 +82,7 @@ open class RainBot {
         group.todo(context)
     }
 
-    open fun Router.todo(context: BotActionContext) {
+    open suspend fun Router.todo(context: BotActionContext) {
         if (context.path.isEmpty()) return
         if (context.session.suspendCoroutineIt != null) {
             context.session.suspendCoroutineIt!!.resume(context.message)

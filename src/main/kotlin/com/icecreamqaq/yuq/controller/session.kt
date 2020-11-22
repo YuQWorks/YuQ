@@ -27,7 +27,7 @@ class ContextRouter {
 
     val routers: MutableMap<String, ContextAction> = ConcurrentHashMap()
 
-    fun invoke(path: String, context: BotActionContext) = this.routers[path]?.invoker?.invoke("", context) ?: false
+    suspend fun invoke(path: String, context: BotActionContext) = this.routers[path]?.invoker?.invoke("", context) ?: false
 }
 
 data class ContextAction(val invoker: Router, val tips: Map<Int, String>)

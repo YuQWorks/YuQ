@@ -9,6 +9,7 @@ import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlin.coroutines.Continuation
 
 class BotActionContext(
         val source: Contact,
@@ -21,8 +22,9 @@ class BotActionContext(
          * 2 -> 临时会话
          */
         var messageType: Int,
-        override var path: Array<String> = message.toPath().toTypedArray()
+        override var path: Array<String> = message.toPath().toTypedArray(),
 ) : ActionContext {
+
 
     var reMessage: Message? = null
 
