@@ -104,7 +104,7 @@ open class RainBot {
                     val m = send(obj)
                     log.info("$ts <- $ms")
                     rainInfo.sendMessage()
-                    SendMessageEvent.Post(contact, message, m)
+                    SendMessageEvent.Post(contact, message, m)()
                     m
                 },
                 { throw SendMessageFailedByCancel() }
