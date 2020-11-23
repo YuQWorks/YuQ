@@ -4,9 +4,7 @@ import com.IceCreamQAQ.Yu.annotation.AutoBind
 import com.icecreamqaq.yuq.entity.Friend
 import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.entity.User
-import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItemFactory
-import com.icecreamqaq.yuq.message.MessageSource
 
 @AutoBind
 interface YuQ {
@@ -65,5 +63,12 @@ interface YuQ {
         data class Pskey(val pskey: String, val gtk: Long)
     }
 
+    companion object {
+
+        fun getYuQ(packageName: String): YuQ {
+            return yuq
+        }
+
+    }
 
 }

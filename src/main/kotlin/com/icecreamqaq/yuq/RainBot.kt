@@ -15,10 +15,7 @@ import com.icecreamqaq.yuq.job.RainInfo
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.message.MessageSource
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import javax.inject.Inject
 import javax.inject.Named
@@ -97,7 +94,13 @@ open class RainBot {
             val msg = contextRouter.routers[context.nextContext?.router]?.tips?.get(context.nextContext?.status)
             if (msg != null) context.source.sendMessage(msg.toMessage())
         }
-        context.source.sendMessage(context.reMessage ?: return)
+        val source = context.source.sendMessage(context.reMessage ?: return)
+        context.recall?.let {
+            coroutineScope {
+                delay(it)
+                source.recall()
+            }
+        }
     }
 
     fun <T> sendMessage(message: Message, contact: Contact, obj: T, send: (T) -> MessageSource): MessageSource {

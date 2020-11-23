@@ -5,7 +5,9 @@ import com.IceCreamQAQ.Yu.controller.DefaultActionInvoker
 import com.IceCreamQAQ.Yu.controller.MethodInvoker
 import com.icecreamqaq.yuq.entity.MessageAt
 import com.icecreamqaq.yuq.error.SkipMe
+import com.icecreamqaq.yuq.message.At
 import com.icecreamqaq.yuq.message.Message
+import com.icecreamqaq.yuq.yuq
 import java.lang.reflect.Method
 
 open class BotActionInvoker(level: Int, method: Method, instance: Any) : DefaultActionInvoker(level, method, instance) {
@@ -14,6 +16,8 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
     var atNewLine: Boolean = false
     var reply: Boolean = false
     var nextContext: NextActionContext? = null
+    var mastAtBot = false
+    var recall: Long? = null
 
     override val invoker: MethodInvoker = BotReflectMethodInvoker(method, instance, level)
 
@@ -44,8 +48,10 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
     override suspend fun invoke(path: String, context: ActionContext): Boolean {
         if (context !is BotActionContext) return false
         if (superInvoke(path, context)) return true
-
 //         reMessage: Message?
+        if (mastAtBot) {
+            if (((context.message.body[0] as? At)?.user ?: -1) != yuq.botId) return false
+        }
         try {
             context.actionInvoker = this
             for (before in befores) {
@@ -59,6 +65,7 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
                 val o = after.invoke(context)
                 if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
             }
+            context.recall = recall
             if (reply) reMessage.reply = context.message.source
             if (at) reMessage.at = MessageAt(context.sender.id, atNewLine)
             return true

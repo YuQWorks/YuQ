@@ -23,6 +23,8 @@ open class BotControllerLoader : DefaultControllerLoaderImpl() {
         ai.reply = qq.reply
         ai.at = qq.at
         ai.atNewLine = qq.atNewLine
+        ai.mastAtBot = qq.mastAtBot
+        if (qq.recall > 0) ai.recall = qq.recall
         return ai
     }
 

@@ -7,6 +7,7 @@ import com.icecreamqaq.yuq.entity.Contact
 import com.icecreamqaq.yuq.error.MessageThrowable
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItem
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlin.coroutines.Continuation
@@ -34,6 +35,8 @@ class BotActionContext(
 
     private val saved = HashMap<String, Any?>()
 
+    var recall:Long? = null
+
     init {
         saved["actionContext"] = this
         saved["context"] = this
@@ -59,7 +62,7 @@ class BotActionContext(
         saved[name] = obj
     }
 
-    override fun onError(e: Throwable) =
+    override suspend fun onError(e: Throwable) =
             when (e) {
                 is DoNone -> null
                 is MessageThrowable -> {
@@ -77,14 +80,14 @@ class BotActionContext(
                 else -> e
             }
 
-    override fun onSuccess(result: Any?): Any? {
+    override suspend fun onSuccess(result: Any?): Any? {
         if (result == null) return null
         this.reMessage = buildResult(result) ?: return null
         saved["reMessage"] = reMessage
         return reMessage
     }
 
-    private fun buildResult(obj: Any): Message? {
+    private suspend fun buildResult(obj: Any): Message? {
         return when (obj) {
             is String -> {
                 val message = Message()
@@ -93,8 +96,8 @@ class BotActionContext(
             is Array<*> -> {
                 for (any in obj) {
                     when (any) {
-                        is Int -> runBlocking { delay(any.toLong()) }
-                        is Long -> runBlocking { delay(any) }
+                        is Int -> coroutineScope { delay(any.toLong()) }
+                        is Long -> coroutineScope { delay(any) }
                         else -> any?.let { buildResult(it)?.let { message -> source.sendMessage(message) } }
                     }
                 }
