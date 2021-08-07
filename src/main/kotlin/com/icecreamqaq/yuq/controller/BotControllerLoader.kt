@@ -25,6 +25,7 @@ open class BotControllerLoader : DefaultControllerLoaderImpl() {
         ai.atNewLine = qq.atNewLine
         ai.mastAtBot = qq.mastAtBot
         if (qq.recall > 0) ai.recall = qq.recall
+        ai.forceMathc = qq.forceMatch
         return ai
     }
 

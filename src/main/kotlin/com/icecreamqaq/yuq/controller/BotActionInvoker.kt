@@ -18,6 +18,7 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
     var nextContext: NextActionContext? = null
     var mastAtBot = false
     var recall: Long? = null
+    var forceMathc = false
 
     override val invoker: MethodInvoker = BotReflectMethodInvoker(method, instance, level)
 
@@ -49,6 +50,9 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
         if (context !is BotActionContext) return false
         if (superInvoke(path, context)) return true
 //         reMessage: Message?
+        if (forceMathc){
+            if (context.path.size + 1 > level) return false
+        }
         if (mastAtBot) {
             if (((context.message.body[0] as? At)?.user ?: -1) != yuq.botId) return false
         }

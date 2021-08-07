@@ -1,10 +1,7 @@
 package com.icecreamqaq.yuq
 
 import com.IceCreamQAQ.Yu.DefaultStarter
-import com.IceCreamQAQ.Yu.hook.HookItem
-import com.IceCreamQAQ.Yu.hook.HookMethod
-import com.IceCreamQAQ.Yu.hook.HookRunnable
-import com.IceCreamQAQ.Yu.hook.YuHook
+import com.IceCreamQAQ.Yu.hook.*
 import com.IceCreamQAQ.Yu.loader.AppClassloader
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Method
@@ -19,8 +16,6 @@ class YuQStarter {
         @JvmStatic
         fun start() {
             val startTime = System.currentTimeMillis()
-
-            YuHook.put(HookItem("com.icecreamqaq.yuq.RainBot","getContinuation","com.icecreamqaq.yuq.HookRainBotGetContinuation"))
 
             val classloader = AppClassloader(YuQStarter::class.java.classLoader)
 
@@ -53,19 +48,4 @@ class YuQStarter {
 
     }
 
-}
-
-class HookRainBotGetContinuation : HookRunnable {
-    override fun preRun(method: HookMethod): Boolean {
-        method.result = method.paras[1]
-        return true
-    }
-
-    override fun postRun(method: HookMethod?) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onError(method: HookMethod?): Boolean {
-        TODO("Not yet implemented")
-    }
 }

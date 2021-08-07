@@ -59,7 +59,7 @@ interface Text : MessageItem {
     override fun toLogString() = "\"" + text.replace("\n", "\\n") + "\""
 
     override fun equal(other: MessageItem): Boolean {
-        if (other !is Text) return true
+        if (other !is Text) return false
         return text == other.text
     }
 
@@ -80,7 +80,7 @@ interface At : MessageItem {
     }
 
     override fun equal(other: MessageItem): Boolean {
-        if (other !is At) return true
+        if (other !is At) return false
         return user == other.user
     }
 }
@@ -163,7 +163,7 @@ interface XmlEx : MessageItem {
 
     override fun toPath() = "XmlMsg"
     override fun equal(other: MessageItem): Boolean {
-        if (other !is XmlEx) return true
+        if (other !is XmlEx) return false
         return value == other.value && serviceId == other.serviceId
     }
 }
@@ -180,7 +180,7 @@ interface JsonEx : MessageItem {
     override fun toPath() = "JsonMsg"
 
     override fun equal(other: MessageItem): Boolean {
-        if (other !is JsonEx) return true
+        if (other !is JsonEx) return false
         return value == other.value
     }
 }
@@ -212,7 +212,7 @@ interface NoImplItem : MessageItem {
     override fun convertByPathVar(type: PathVar.Type) = "NotImpl"
 
     override fun equal(other: MessageItem): Boolean {
-        if (other !is NoImplItem) return true
+        if (other !is NoImplItem) return false
         return source == other.source
     }
 }

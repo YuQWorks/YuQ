@@ -33,11 +33,12 @@ annotation class NextContext(val value: String, val status: Int = 0)
 annotation class Save(val value: String = "")
 
 annotation class QMsg(
-        val at: Boolean = false,
-        val reply: Boolean = false,
-        val atNewLine: Boolean = false,
-        val mastAtBot: Boolean = false,
-        val recall: Long = 0
+    val at: Boolean = false,
+    val reply: Boolean = false,
+    val atNewLine: Boolean = false,
+    val mastAtBot: Boolean = false,
+    val recall: Long = 0,
+    val forceMatch: Boolean = false,
 )
 
 annotation class PathVar(val value: Int, val type: Type = Type.String) {
@@ -47,3 +48,8 @@ annotation class PathVar(val value: Int, val type: Type = Type.String) {
 }
 
 annotation class AsyncAction
+
+/***
+ * 被此注解标记的内容仍在开发状态，相关类型以及名字可能随时变动，请自行评估使用价值。
+ */
+annotation class Dev

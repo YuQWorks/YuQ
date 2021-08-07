@@ -1,6 +1,7 @@
 package com.icecreamqaq.yuq
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
+import com.IceCreamQAQ.Yu.util.Web
 import com.icecreamqaq.yuq.entity.Friend
 import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.entity.User
@@ -54,6 +55,7 @@ interface YuQ {
 //    fun recallMessage(messageSource: MessageSource): Int
 
     val cookieEx: QQCookie
+    val web: Web
 
     interface QQCookie {
         val skey: String

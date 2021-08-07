@@ -15,6 +15,8 @@ lateinit var yuq: YuQ
 lateinit var mif: MessageItemFactory
 lateinit var web: Web
 
+internal lateinit var rainBot: RainBot
+
 lateinit var eventBus: EventBus
 fun Event.post() = eventBus.post(this)
 operator fun Event.invoke() = this.post()

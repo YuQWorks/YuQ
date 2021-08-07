@@ -1,12 +1,19 @@
 package com.icecreamqaq.yuq.entity
 
+import com.icecreamqaq.yuq.YuQ
+import com.icecreamqaq.yuq.annotation.Dev
+import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.message.At
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageSource
 import com.icecreamqaq.yuq.mif
+import com.icecreamqaq.yuq.rainBot
+import com.icecreamqaq.yuq.util.WebHelper.Companion.postWithQQKey
 import com.icecreamqaq.yuq.yuq
 
 interface Contact : User {
+
+    val yuq: YuQ
 
     fun sendMessage(message: Message): MessageSource
 
@@ -15,6 +22,13 @@ interface Contact : User {
     fun toLogString(): String
     override fun canSendMessage() = true
 }
+
+@Dev
+interface ContactUser {
+
+}
+
+
 
 interface User {
     val id: Long
@@ -44,6 +58,9 @@ interface Friend : Contact {
 
 interface Group : Contact {
 
+    val session: ContextSession
+        get() = rainBot.getContextSession("g$id")
+
     val members: Map<Long, Member>
     val bot: Member
     val maxCount: Int
@@ -51,9 +68,11 @@ interface Group : Contact {
     val owner: Member
     val admins: List<Member>
 
-    operator fun get(qq: Long)= getOrNull(qq) ?: error("Member $qq Not Found!")
+    val notices: GroupNoticeList
 
-    fun getOrNull(qq:Long):Member? = members[qq] ?: if (qq == bot.id) bot else null
+    operator fun get(qq: Long) = getOrNull(qq) ?: error("Member $qq Not Found!")
+
+    fun getOrNull(qq: Long): Member? = members[qq] ?: if (qq == bot.id) bot else null
 
 
 //    override fun convertMessage(message: Message): Message {
@@ -83,6 +102,8 @@ interface Member : Contact, User {
     val title: String
 
     val ban: Int
+    val lastMessageTime: Long
+
     fun isBan() = ban > (System.currentTimeMillis() / 1000).toInt()
     fun ban(time: Int)
     fun unBan()
@@ -91,18 +112,13 @@ interface Member : Contact, User {
     fun click()
     fun clickWithTemp()
 
+//    fun lastMessageTime() = -1L
+
     override fun isFriend() = true
     override fun canSendMessage() = true
 
     override fun toLogString() = "${nameCardOrName()}($id)[${group.name}(${group.id})]"
     fun toLogStringSingle() = "${nameCardOrName()}($id)"
-
-//    override fun convertMessage(message: Message): Message {
-//        message.temp = true
-//        message.group = group.id
-//        message.qq = id
-//        return message
-//    }
 
     fun at(): At = mif.at(this)
 
@@ -129,16 +145,16 @@ enum class UserSex {
 }
 
 data class UserInfo(
-        override val id: Long,
-        override val avatar: String,
-        override val name: String,
-        val sex: UserSex,
-        val age: Int,
-        val qqAge: Int,
-        val level: Int,
-        val loginDays: Int,
+    override val id: Long,
+    override val avatar: String,
+    override val name: String,
+    val sex: UserSex,
+    val age: Int,
+    val qqAge: Int,
+    val level: Int,
+    val loginDays: Int,
 
-        val vips: List<UserVip>
+    val vips: List<UserVip>
 ) : User {
     override fun isFriend() = yuq.friends.containsKey(id)
 
@@ -146,13 +162,53 @@ data class UserInfo(
 }
 
 data class GroupInfo(
-        val id: Long,
-        val name: String,
-        val maxCount: Int,
+    val id: Long,
+    val name: String,
+    val maxCount: Int,
 
-        val owner: User,
-        val admin: List<User>
+    val owner: User,
+    val admin: List<User>
 )
+
+open class GroupNotice {
+
+    protected var id: Long? = null
+    fun getId() = id ?: -1
+
+    var text: String = ""
+
+    var isTop = false
+    var popWindow = false
+    var confirmRequired = false
+
+}
+
+open class GroupNoticeList(protected val group: Group) {
+
+    internal val noticeList = arrayListOf<GroupNotice>()
+
+    operator fun get(id: Int) {
+        TODO("Feature not supported")
+    }
+
+    fun add(notice: GroupNotice) {
+        notice.run {
+            yuq.web.postWithQQKey(
+                "https://web.qun.qq.com/cgi-bin/announce/add_qun_notice", mutableMapOf(
+                    "qid" to group.id.toString(),
+                    "bkn" to "{gtk}",
+                    "text" to text,
+                    "pinned" to if (isTop) "1" else "0",
+                    "type" to "1",
+                    "settings" to "{\"is_show_edit_card\":0," +
+                            "\"tip_window_type\":${if (popWindow) "1" else "0"}," +
+                            "\"confirm_required\":${if (confirmRequired) "1" else "0"}}"
+                )
+            )
+        }
+    }
+
+}
 
 //interface UserInfo : User {
 //
@@ -168,11 +224,11 @@ data class GroupInfo(
 //}
 
 data class UserVip(
-        val id: Int,
-        val name: Int,
-        val ipSuper: Int,
-        val desc: String,
-        val level: Int,
-        val yearFlag: Boolean,
-        val para: String
+    val id: Int,
+    val name: Int,
+    val ipSuper: Int,
+    val desc: String,
+    val level: Int,
+    val yearFlag: Boolean,
+    val para: String
 )

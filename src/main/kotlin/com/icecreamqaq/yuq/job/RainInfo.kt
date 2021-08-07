@@ -92,7 +92,7 @@ class RainInfo {
     fun upInfo() {
         try {
             web.postJSON(
-                    "http://yuq.icecreamqaq.com/YuQ/runInfo",
+                    "http://yuq.icecreamqaq.com/YuQ/runInfo2",
                     mapOf(
                             "uid" to yuq.botId,
                             "yv" to version.apiVersion(),

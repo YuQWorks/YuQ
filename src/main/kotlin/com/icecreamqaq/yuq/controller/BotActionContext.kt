@@ -13,17 +13,18 @@ import kotlinx.coroutines.runBlocking
 import kotlin.coroutines.Continuation
 
 class BotActionContext(
-        val source: Contact,
-        val sender: Contact,
-        val message: Message,
-        var session: ContextSession,
-        /***
-         * 0 -> 群消息
-         * 1 -> 好友消息
-         * 2 -> 临时会话
-         */
-        var messageType: Int,
-        override var path: Array<String> = message.toPath().toTypedArray(),
+    val source: Contact,
+    val sender: Contact,
+    val message: Message,
+    var session: ContextSession,
+    var groupSession: ContextSession? = null,
+    /***
+     * 0 -> 群消息
+     * 1 -> 好友消息
+     * 2 -> 临时会话
+     */
+    var messageType: Int,
+    override var path: Array<String> = message.toPath().toTypedArray(),
 ) : ActionContext {
 
 
@@ -35,7 +36,7 @@ class BotActionContext(
 
     private val saved = HashMap<String, Any?>()
 
-    var recall:Long? = null
+    var recall: Long? = null
 
     init {
         saved["actionContext"] = this
@@ -63,22 +64,22 @@ class BotActionContext(
     }
 
     override suspend fun onError(e: Throwable) =
-            when (e) {
-                is DoNone -> null
-                is MessageThrowable -> {
-                    this.reMessage = buildResult(e.c)
-                    null
-                }
-                is Result -> {
-                    this.reMessage = buildResult(e)
-                    null
-                }
-                is NextActionContext -> {
-                    this.nextContext = e
-                    null
-                }
-                else -> e
+        when (e) {
+            is DoNone -> null
+            is MessageThrowable -> {
+                this.reMessage = buildResult(e.c)
+                null
             }
+            is Result -> {
+                this.reMessage = buildResult(e)
+                null
+            }
+            is NextActionContext -> {
+                this.nextContext = e
+                null
+            }
+            else -> e
+        }
 
     override suspend fun onSuccess(result: Any?): Any? {
         if (result == null) return null

@@ -15,11 +15,11 @@ import com.icecreamqaq.yuq.job.RainInfo
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.message.MessageSource
+import com.icecreamqaq.yuq.util.YuQInternalFun
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import javax.inject.Inject
 import javax.inject.Named
-import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
 open class RainBot {
@@ -47,6 +47,13 @@ open class RainBot {
     @Inject
     private lateinit var rainInfo: RainInfo
 
+    @Inject
+    private lateinit var internalFun: YuQInternalFun
+
+    @Inject
+    fun init() {
+        rainBot = this
+    }
 
     @Deprecated("应该使用具体的 receiveFriendMessage 或是 receiveTempMessage")
     open suspend fun receivePrivateMessage(sender: Contact, message: Message) = when (sender) {
@@ -59,7 +66,7 @@ open class RainBot {
         log.info("${sender.toLogString()} -> ${message.toLogString()}")
         rainInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.FriendMessage(sender, message))) return
-        val context = BotActionContext(sender, sender, message, getContextSession(sender.id.toString()), 1)
+        val context = BotActionContext(sender, sender, message, getContextSession(sender.id.toString()), null, 1)
         priv.todo(context)
     }
 
@@ -67,15 +74,29 @@ open class RainBot {
         log.info("${sender.toLogString()} -> ${message.toLogString()}")
         rainInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.TempMessage(sender, message))) return
-        val context = BotActionContext(sender, sender, message, getContextSession(sender.id.toString()), 2)
+        val context = BotActionContext(sender, sender, message, getContextSession(sender.id.toString()), null, 2)
         priv.todo(context)
     }
 
     open suspend fun receiveGroupMessage(sender: Member, message: Message) {
         log.info("[${sender.group.toLogString()}]${sender.toLogStringSingle()} -> ${message.toLogString()}")
         rainInfo.receiveMessage()
+        internalFun.setMemberLastMessageTime(sender, System.currentTimeMillis())
         if (eventBus.post(GroupMessageEvent(sender, sender.group, message))) return
-        val context = BotActionContext(sender.group, sender, message, getContextSession("${sender.group.id}_${sender.id}"), 0)
+        val groupSession = rainBot.getContextSession("g${sender.group.id}")
+        if (groupSession.suspendCoroutineIt != null) {
+            groupSession.suspendCoroutineIt!!.resume(message)
+            return
+        }
+        val context =
+            BotActionContext(
+                sender.group,
+                sender,
+                message,
+                getContextSession("${sender.group.id}_${sender.id}"),
+                groupSession,
+                0
+            )
         group.todo(context)
     }
 
@@ -83,6 +104,7 @@ open class RainBot {
         if (context.path.isEmpty()) return
         if (context.session.suspendCoroutineIt != null) {
             context.session.suspendCoroutineIt!!.resume(context.message)
+            return
         }
         if (eventBus.post(ActionContextInvokeEvent.Per(context))) return
         val session = context.session
@@ -108,14 +130,14 @@ open class RainBot {
         val ts = contact.toLogString()
         log.debug("Send Message To: $ts, $ms")
         return SendMessageEvent.Per(contact, message)(
-                {
-                    val m = send(obj)
-                    log.info("$ts <- $ms")
-                    rainInfo.sendMessage()
-                    SendMessageEvent.Post(contact, message, m)()
-                    m
-                },
-                { throw SendMessageFailedByCancel() }
+            {
+                val m = send(obj)
+                log.info("$ts <- $ms")
+                rainInfo.sendMessage()
+                SendMessageEvent.Post(contact, message, m)()
+                m
+            },
+            { throw SendMessageFailedByCancel() }
         )!!
     }
 
