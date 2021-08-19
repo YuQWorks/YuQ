@@ -3,21 +3,33 @@ package com.icecreamqaq.yuq.entity
 import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.annotation.Dev
 import com.icecreamqaq.yuq.controller.ContextSession
-import com.icecreamqaq.yuq.message.At
-import com.icecreamqaq.yuq.message.Message
-import com.icecreamqaq.yuq.message.MessageSource
+import com.icecreamqaq.yuq.message.*
+import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.rainBot
 import com.icecreamqaq.yuq.util.WebHelper.Companion.postWithQQKey
 import com.icecreamqaq.yuq.yuq
+import java.io.File
 
 interface Contact : User {
 
     val yuq: YuQ
 
     fun sendMessage(message: Message): MessageSource
+    fun sendMessage(message: MessageLineQ): MessageSource = sendMessage(message.message)
+    fun sendMessage(message: String): MessageSource = sendMessage(message.toMessage())
+    fun sendMessage(messageItem: MessageItem): MessageSource = sendMessage(messageItem.toMessage())
 
-//    fun convertMessage(message: Message): Message
+    //    fun convertMessage(message: Message): Message
+    /***
+     * 上传一张图片，返回 Image(MessageItem) 对象。
+     */
+    fun uploadImage(imageFile: File): Image
+
+    /***
+     * 发送文件，当 Contact 为 Group 时，表现为上传文件。
+     */
+    fun sendFile(file: File)
 
     fun toLogString(): String
     override fun canSendMessage() = true
@@ -28,6 +40,14 @@ interface ContactUser {
 
 }
 
+//interface BlockFriend{
+//    @JvmName("")
+//    fun delete()
+//}
+//interface SuspendFriend{
+//    suspend fun delete()
+//}
+//interface XFriend :BlockFriend,SuspendFriend
 
 
 interface User {
@@ -70,6 +90,8 @@ interface Group : Contact {
 
     val notices: GroupNoticeList
 
+    override fun canSendMessage() = !bot.isBan()
+
     operator fun get(qq: Long) = getOrNull(qq) ?: error("Member $qq Not Found!")
 
     fun getOrNull(qq: Long): Member? = members[qq] ?: if (qq == bot.id) bot else null
@@ -99,7 +121,7 @@ interface Member : Contact, User {
     val permission: Int
 
     var nameCard: String
-    val title: String
+    var title: String
 
     val ban: Int
     val lastMessageTime: Long
@@ -125,6 +147,7 @@ interface Member : Contact, User {
     fun isAdmin() = permission > 0
     fun isOwner() = permission == 2
 
+    fun kick() = kick("")
     fun kick(message: String = "")
 
     companion object {

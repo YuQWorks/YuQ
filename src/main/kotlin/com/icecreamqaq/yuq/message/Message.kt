@@ -1,12 +1,15 @@
 package com.icecreamqaq.yuq.message
 
 import com.icecreamqaq.yuq.RainCode
+import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.entity.MessageAt
 import com.icecreamqaq.yuq.error.MessageThrowable
 import com.icecreamqaq.yuq.message.Image.Companion.toFlash
 import com.icecreamqaq.yuq.message.Text.Companion.toText
 import com.icecreamqaq.yuq.mif
+import java.awt.image.BufferedImage
 import java.io.File
+import java.io.InputStream
 
 interface MessagePlus {
     operator fun plus(item: MessageItem): Message
@@ -29,6 +32,44 @@ interface GroupMessageSource : MessageSource {
 
 interface TempMessageSource : MessageSource {
     val groupCode: Long
+}
+
+open class MessageLineQ(val message: Message) {
+    fun plus(item: MessageItem): MessageLineQ {
+        message.plus(item)
+        return this
+    }
+
+    fun text(text: String) = plus(mif.text(text))
+    fun textLine(text: String) = plus(mif.text("$text\n"))
+
+    fun at(qq: Long) = plus(mif.at(qq))
+    fun at(member: Member) = plus(mif.at(member))
+
+    fun face(id: Int) = plus(mif.face(id))
+
+    fun imageByFile(file: File) = plus(mif.imageByFile(file))
+
+    fun imageByUrl(url: String) = plus(mif.imageByUrl(url))
+
+    fun imageById(id: String) = plus(mif.imageById(id))
+
+    fun imageByBufferedImage(bufferedImage: BufferedImage) = plus(mif.imageByBufferedImage(bufferedImage))
+
+    fun imageByInputStream(inputStream: InputStream) = plus(mif.imageByInputStream(inputStream))
+
+    fun imageToFlash(image: Image) = plus(mif.imageToFlash(image))
+
+    fun voiceByInputStream(inputStream: InputStream) = plus(mif.voiceByInputStream(inputStream))
+
+    fun xmlEx(serviceId: Int, value: String) = plus(mif.xmlEx(serviceId, value))
+
+    fun jsonEx(value: String) = plus(mif.jsonEx(value))
+
+    fun recallDelay(time: Long): MessageLineQ {
+        message.recallDelay = time
+        return this
+    }
 }
 
 open class Message : /*Result(),*/ MessagePlus {
@@ -56,6 +97,17 @@ open class Message : /*Result(),*/ MessagePlus {
     lateinit var sourceMessage: Any
     var body = ArrayList<MessageItem>()
     lateinit var path: List<MessageItem>
+
+    private var lineQ_: MessageLineQ? = null
+    fun lineQ(): MessageLineQ {
+        if (lineQ_ == null) lineQ_ = MessageLineQ(this)
+        return lineQ_!!
+    }
+
+    /***
+     * 本条消息在发出后一段时间撤回，单位：毫秒。
+     */
+    var recallDelay: Long? = null
 
     fun toLogString(): String {
         val sb = StringBuilder("(")
@@ -95,16 +147,6 @@ open class Message : /*Result(),*/ MessagePlus {
         return this
     }
 
-//    @Deprecated("相关 API 已经调整，现在建议直接使用 Contact 对象发送消息。")
-//    fun newMessage(): Message {
-//        val message = Message()
-//
-//        message.qq = this.qq
-//        message.group = this.group
-//        message.temp = this.temp
-//        return message
-//    }
-
     fun recall(): Int {
         return source.recall()
     }
@@ -141,15 +183,17 @@ open class Message : /*Result(),*/ MessagePlus {
 
             for (item in body) {
                 sb.append(
-                        when (item) {
-                            is Text -> item.text
-                            is At -> "<Rain:At:${item.user}>"
-                            is Face -> "<Rain:Face:${item.faceId}>"
-                            is Image -> "<Rain:Image:${item.id}${if (item is FlashImage) ", Flash>" else ">"}"
-                            is XmlEx -> "<Rain:Xml:${item.serviceId},${item.value.replace("<", "&&&lt&&&").replace(">", "&&&gt&&&")}>"
-                            is JsonEx -> "<Rain:Json:${item.value}>"
-                            else -> "<Rain:NoImpl:${item.toPath()}>"
-                        }
+                    when (item) {
+                        is Text -> item.text
+                        is At -> "<Rain:At:${item.user}>"
+                        is Face -> "<Rain:Face:${item.faceId}>"
+                        is Image -> "<Rain:Image:${item.id}${if (item is FlashImage) ", Flash>" else ">"}"
+                        is XmlEx -> "<Rain:Xml:${item.serviceId},${
+                            item.value.replace("<", "&&&lt&&&").replace(">", "&&&gt&&&")
+                        }>"
+                        is JsonEx -> "<Rain:Json:${item.value}>"
+                        else -> "<Rain:NoImpl:${item.toPath()}>"
+                    }
                 )
             }
             return sb.toString()
@@ -201,7 +245,11 @@ open class Message : /*Result(),*/ MessagePlus {
                                         if (p == "flash") flash = true
                                     }
                                     val p = if (file) mif.imageByFile(File(id))
-                                    else if ((RainCode.matchImageIdStartHttp && id.startsWith("http", true)) || url) mif.imageByUrl(id)
+                                    else if ((RainCode.matchImageIdStartHttp && id.startsWith(
+                                            "http",
+                                            true
+                                        )) || url
+                                    ) mif.imageByUrl(id)
                                     else mif.imageById(id)
                                     if (flash) p.toFlash()
                                     else p

@@ -1,5 +1,6 @@
 package com.icecreamqaq.yuq
 
+import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.cache.EhcacheHelp
 import com.IceCreamQAQ.Yu.controller.Router
 import com.IceCreamQAQ.Yu.event.EventBus
@@ -50,10 +51,18 @@ open class RainBot {
     @Inject
     private lateinit var internalFun: YuQInternalFun
 
+    data class RainCodeConfig(
+        val prefix: String = "^",
+        val enable: Boolean = false
+    )
+
     @Inject
     fun init() {
         rainBot = this
     }
+
+    @Config("YuQ.Controller.RainCode")
+    lateinit var rainCode: RainCodeConfig
 
     @Deprecated("应该使用具体的 receiveFriendMessage 或是 receiveTempMessage")
     open suspend fun receivePrivateMessage(sender: Contact, message: Message) = when (sender) {
@@ -102,22 +111,27 @@ open class RainBot {
 
     open suspend fun Router.todo(context: BotActionContext) {
         if (context.path.isEmpty()) return
-        if (context.session.suspendCoroutineIt != null) {
-            context.session.suspendCoroutineIt!!.resume(context.message)
+        kotlin.runCatching {
+            if (context.session.suspendCoroutineIt != null) {
+                context.session.suspendCoroutineIt!!.resume(context.message)
+                return
+            }
+            if (eventBus.post(ActionContextInvokeEvent.Per(context))) return
+            val session = context.session
+            if (session.context != null) contextRouter.invoke(session.context!!, context)
+            else this.invoke(context.path[0], context)
+            if (eventBus.post(ActionContextInvokeEvent.Post(context))) return
+            session.context = context.nextContext?.router
+            if (context.nextContext != null) {
+                val msg = contextRouter.routers[context.nextContext?.router]?.tips?.get(context.nextContext?.status)
+                if (msg != null) context.source.sendMessage(msg.toMessage())
+            }
+        }.onFailure {
+            it.printStackTrace()
             return
         }
-        if (eventBus.post(ActionContextInvokeEvent.Per(context))) return
-        val session = context.session
-        if (session.context != null) contextRouter.invoke(session.context!!, context)
-        else this.invoke(context.path[0], context)
-        if (eventBus.post(ActionContextInvokeEvent.Post(context))) return
-        session.context = context.nextContext?.router
-        if (context.nextContext != null) {
-            val msg = contextRouter.routers[context.nextContext?.router]?.tips?.get(context.nextContext?.status)
-            if (msg != null) context.source.sendMessage(msg.toMessage())
-        }
         val source = context.source.sendMessage(context.reMessage ?: return)
-        context.recall?.let {
+        (context.recall ?: context.reMessage!!.recallDelay)?.let {
             coroutineScope {
                 delay(it)
                 source.recall()
@@ -135,20 +149,26 @@ open class RainBot {
                 log.info("$ts <- $ms")
                 rainInfo.sendMessage()
                 SendMessageEvent.Post(contact, message, m)()
+                message.recallDelay?.let {
+                    GlobalScope.launch {
+                        delay(it)
+                        m.recall()
+                    }
+                }
                 m
             },
             { throw SendMessageFailedByCancel() }
         )!!
     }
 
-    open fun getContextSession(sessionId: String) = sessionCache[sessionId] ?: {
+    open fun getContextSession(sessionId: String) = sessionCache[sessionId] ?: run {
         val session = ContextSession(sessionId)
         eventBus.post(ContextSessionCreateEvent(session))
         sessionCache[sessionId] = session
         session
-    }()
+    }
 
 //    open fun
 
-
+//    data class Spx
 }

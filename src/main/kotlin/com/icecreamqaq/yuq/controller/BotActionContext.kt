@@ -6,7 +6,11 @@ import com.IceCreamQAQ.Yu.entity.Result
 import com.icecreamqaq.yuq.entity.Contact
 import com.icecreamqaq.yuq.error.MessageThrowable
 import com.icecreamqaq.yuq.message.Message
+import com.icecreamqaq.yuq.message.Message.Companion.toMessage
+import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.message.MessageItem
+import com.icecreamqaq.yuq.message.MessageLineQ
+import com.icecreamqaq.yuq.rainBot
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -36,6 +40,7 @@ class BotActionContext(
 
     private val saved = HashMap<String, Any?>()
 
+    @Deprecated("功能已经转移到 Message 的 recallDelay 字段。")
     var recall: Long? = null
 
     init {
@@ -90,10 +95,13 @@ class BotActionContext(
 
     private suspend fun buildResult(obj: Any): Message? {
         return when (obj) {
-            is String -> {
-                val message = Message()
-                message + obj
-            }
+            is String ->
+                rainBot.rainCode.run {
+                    if (enable)
+                        if (obj.startsWith(prefix)) obj.substring(prefix.length).toMessageByRainCode()
+                        else obj.toMessage()
+                    else obj.toMessage()
+                }
             is Array<*> -> {
                 for (any in obj) {
                     when (any) {
@@ -111,6 +119,7 @@ class BotActionContext(
                 message
             }
             is Message -> obj
+            is MessageLineQ -> obj.message
             else -> buildResult(obj.toString())
         }
     }

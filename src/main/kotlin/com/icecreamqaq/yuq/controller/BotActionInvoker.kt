@@ -2,26 +2,28 @@ package com.icecreamqaq.yuq.controller
 
 import com.IceCreamQAQ.Yu.controller.ActionContext
 import com.IceCreamQAQ.Yu.controller.DefaultActionInvoker
-import com.IceCreamQAQ.Yu.controller.MethodInvoker
 import com.icecreamqaq.yuq.entity.MessageAt
 import com.icecreamqaq.yuq.error.SkipMe
 import com.icecreamqaq.yuq.message.At
 import com.icecreamqaq.yuq.message.Message
+import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.yuq
 import java.lang.reflect.Method
 
 open class BotActionInvoker(level: Int, method: Method, instance: Any) : DefaultActionInvoker(level, method, instance) {
 
+    var decodeRainCode: Boolean = false
     var at: Boolean = false
     var atNewLine: Boolean = false
     var reply: Boolean = false
     var nextContext: NextActionContext? = null
     var mastAtBot = false
     var recall: Long? = null
-    var forceMathc = false
+    var forceMatch = false
 
-    override val invoker: MethodInvoker = BotReflectMethodInvoker(method, instance, level)
+//    override val invoker: MethodInvoker = BotReflectMethodInvoker(method, instance, level)
 
+    override fun createMethodInvoker(method: Method, instance: Any) = BotReflectMethodInvoker(method, instance, level)
 
     suspend fun superInvoke(path: String, context: ActionContext): Boolean {
         val cps = context.path.size
@@ -50,7 +52,7 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
         if (context !is BotActionContext) return false
         if (superInvoke(path, context)) return true
 //         reMessage: Message?
-        if (forceMathc){
+        if (forceMatch) {
             if (context.path.size + 1 > level) return false
         }
         if (mastAtBot) {
@@ -58,18 +60,18 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
         }
         try {
             context.actionInvoker = this
-            for (before in befores) {
-                val o = before.invoke(context)
-                if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
-            }
-            val re = invoker.invoke(context)
+            for (before in befores)
+                before.invoke(context)?.let { o -> context[o::class.java.simpleName.toLowerCaseFirstOne()] = o }
+
+            var re = invoker.invoke(context)
             if (nextContext != null && context.nextContext == null) context.nextContext = nextContext
+            if (decodeRainCode) if (re is String) re = re.toMessageByRainCode()
             val reMessage = context.onSuccess(re ?: return true) as? Message ?: return true
-            for (after in afters) {
-                val o = after.invoke(context)
-                if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
-            }
-            context.recall = recall
+
+            for (after in afters)
+                after.invoke(context)?.let { o -> context[o::class.java.simpleName.toLowerCaseFirstOne()] = o }
+
+            recall?.let { reMessage.recallDelay = it }
             if (reply) reMessage.reply = context.message.source
             if (at) reMessage.at = MessageAt(context.sender.id, atNewLine)
             return true
