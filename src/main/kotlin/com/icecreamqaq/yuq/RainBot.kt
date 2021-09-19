@@ -118,9 +118,9 @@ open class RainBot {
             }
             if (eventBus.post(ActionContextInvokeEvent.Per(context))) return
             val session = context.session
-            if (session.context != null) contextRouter.invoke(session.context!!, context)
+            val flag = if (session.context != null) contextRouter.invoke(session.context!!, context)
             else this.invoke(context.path[0], context)
-            if (eventBus.post(ActionContextInvokeEvent.Post(context))) return
+            if (eventBus.post(ActionContextInvokeEvent.Post(context, flag))) return
             session.context = context.nextContext?.router
             if (context.nextContext != null) {
                 val msg = contextRouter.routers[context.nextContext?.router]?.tips?.get(context.nextContext?.status)
