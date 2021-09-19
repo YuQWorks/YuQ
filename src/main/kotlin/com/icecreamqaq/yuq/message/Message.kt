@@ -34,44 +34,6 @@ interface TempMessageSource : MessageSource {
     val groupCode: Long
 }
 
-open class MessageLineQ(val message: Message) {
-    fun plus(item: MessageItem): MessageLineQ {
-        message.plus(item)
-        return this
-    }
-
-    fun text(text: String) = plus(mif.text(text))
-    fun textLine(text: String) = plus(mif.text("$text\n"))
-
-    fun at(qq: Long) = plus(mif.at(qq))
-    fun at(member: Member) = plus(mif.at(member))
-
-    fun face(id: Int) = plus(mif.face(id))
-
-    fun imageByFile(file: File) = plus(mif.imageByFile(file))
-
-    fun imageByUrl(url: String) = plus(mif.imageByUrl(url))
-
-    fun imageById(id: String) = plus(mif.imageById(id))
-
-    fun imageByBufferedImage(bufferedImage: BufferedImage) = plus(mif.imageByBufferedImage(bufferedImage))
-
-    fun imageByInputStream(inputStream: InputStream) = plus(mif.imageByInputStream(inputStream))
-
-    fun imageToFlash(image: Image) = plus(mif.imageToFlash(image))
-
-    fun voiceByInputStream(inputStream: InputStream) = plus(mif.voiceByInputStream(inputStream))
-
-    fun xmlEx(serviceId: Int, value: String) = plus(mif.xmlEx(serviceId, value))
-
-    fun jsonEx(value: String) = plus(mif.jsonEx(value))
-
-    fun recallDelay(time: Long): MessageLineQ {
-        message.recallDelay = time
-        return this
-    }
-}
-
 open class Message : /*Result(),*/ MessagePlus {
 
 //    @Deprecated("相关 API 已经调整，现在建议直接使用 Contact 对象发送消息。")
