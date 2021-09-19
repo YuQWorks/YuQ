@@ -13,9 +13,11 @@ import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.error.SendMessageFailedByCancel
 import com.icecreamqaq.yuq.event.*
 import com.icecreamqaq.yuq.job.RainInfo
+import com.icecreamqaq.yuq.message.At
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.message.MessageSource
+import com.icecreamqaq.yuq.message.Text
 import com.icecreamqaq.yuq.util.YuQInternalFun
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
@@ -51,6 +53,9 @@ open class RainBot {
     @Inject
     private lateinit var internalFun: YuQInternalFun
 
+    @Config("YuQ.bot.name")
+    private var botName: String? = null
+
     data class RainCodeConfig(
         val prefix: String = "^",
         val enable: Boolean = false
@@ -59,6 +64,15 @@ open class RainBot {
     @Inject
     fun init() {
         rainBot = this
+    }
+
+    private fun Message.getOnlyAtFlag(): Int {
+        if (body.size > 1) return 0
+
+        val i = body[0]
+        if (i is At) if (i.user == yuq.botId) return 1
+        if (botName != null) if (i is Text) if (i.text == botName) return 2
+        return 0
     }
 
     @Config("YuQ.Controller.RainCode")
@@ -75,6 +89,11 @@ open class RainBot {
         log.info("${sender.toLogString()} -> ${message.toLogString()}")
         rainInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.FriendMessage(sender, message))) return
+        val flag = message.getOnlyAtFlag()
+        if (flag > 0) {
+            eventBus.post(AtBotEvent.ByPrivate.ByFriend(flag, sender, sender))
+            return
+        }
         val context = BotActionContext(sender, sender, message, getContextSession(sender.id.toString()), null, 1)
         priv.todo(context)
     }
@@ -83,6 +102,11 @@ open class RainBot {
         log.info("${sender.toLogString()} -> ${message.toLogString()}")
         rainInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.TempMessage(sender, message))) return
+        val flag = message.getOnlyAtFlag()
+        if (flag > 0) {
+            eventBus.post(AtBotEvent.ByPrivate.ByTemp(flag, sender, sender))
+            return
+        }
         val context = BotActionContext(sender, sender, message, getContextSession(sender.id.toString()), null, 2)
         priv.todo(context)
     }
@@ -95,6 +119,11 @@ open class RainBot {
         val groupSession = rainBot.getContextSession("g${sender.group.id}")
         if (groupSession.suspendCoroutineIt != null) {
             groupSession.suspendCoroutineIt!!.resume(message)
+            return
+        }
+        val flag = message.getOnlyAtFlag()
+        if (flag > 0) {
+            eventBus.post(AtBotEvent.ByGroup(flag, sender, sender.group))
             return
         }
         val context =

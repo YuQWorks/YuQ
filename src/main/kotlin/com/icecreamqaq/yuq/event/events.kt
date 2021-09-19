@@ -133,6 +133,19 @@ open class ClickBotEvent(operator: Contact, action: String, suffix: String) : Cl
         ClickBotEvent(operator, action, suffix)
 }
 
+open class AtBotEvent(open val type: Int, open val sender: Contact, open val source: Contact) : Event() {
+    open class ByGroup(type: Int, override val sender: Member, override val source: Group) :
+        AtBotEvent(type, sender, source)
+
+    open class ByPrivate(type: Int, sender: Contact, source: Contact) : AtBotEvent(type, sender, source) {
+        open class ByFriend(type: Int, override val sender: Friend, override val source: Friend) :
+            ByPrivate(type, sender, source)
+
+        open class ByTemp(type: Int, override val sender: Member, override val source: Member) :
+            ByPrivate(type, sender, source)
+    }
+}
+
 open class ClickSomeBodyEvent(operator: Contact, open val target: Contact, action: String, suffix: String) :
     ClickEvent(operator, action, suffix) {
     open class Private(operator: Contact, target: Contact, action: String, suffix: String) :
