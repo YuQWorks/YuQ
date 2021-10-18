@@ -33,7 +33,7 @@
     <properties>
         <kotlin.version>1.4.10</kotlin.version>
 
-        <Yu-Core.version>0.2.0.0-DEV13</Yu-Core.version>
+        <Yu-Core.version>0.2.0.0-DEV15</Yu-Core.version>
 
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
     </properties>
@@ -96,5 +96,12 @@
             </plugin>
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>IceCream</id>
+            <url>https://maven.icecreamqaq.com/repository/maven-public/</url>
+        </repository>
+    </repositories>
 
 </project>
