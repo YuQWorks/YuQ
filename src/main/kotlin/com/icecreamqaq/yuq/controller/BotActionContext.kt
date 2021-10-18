@@ -92,6 +92,13 @@ class BotActionContext(
         saved["reMessage"] = reMessage
         return reMessage
     }
+    private suspend fun arrayResult(any: Any?){
+        when (any) {
+            is Int -> coroutineScope { delay(any.toLong()) }
+            is Long -> coroutineScope { delay(any) }
+            else -> any?.let { buildResult(it)?.let { message -> source.sendMessage(message) } }
+        }
+    }
 
     private suspend fun buildResult(obj: Any): Message? {
         return when (obj) {
@@ -103,13 +110,11 @@ class BotActionContext(
                     else obj.toMessage()
                 }
             is Array<*> -> {
-                for (any in obj) {
-                    when (any) {
-                        is Int -> coroutineScope { delay(any.toLong()) }
-                        is Long -> coroutineScope { delay(any) }
-                        else -> any?.let { buildResult(it)?.let { message -> source.sendMessage(message) } }
-                    }
-                }
+                for (any in obj) arrayResult(any)
+                null
+            }
+            is List<*> -> {
+                for (any in obj) arrayResult(any)
                 null
             }
             is MessageItem -> {
