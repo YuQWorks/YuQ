@@ -1,0 +1,10 @@
+*.iml
+/.idea
+
+/build
+/target
+
+/log
+/tmp
+
+mavenInfo.txt
