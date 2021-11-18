@@ -2,13 +2,111 @@ package com.icecreamqaq.yuq.controller
 
 import com.IceCreamQAQ.Yu.controller.ActionContext
 import com.IceCreamQAQ.Yu.controller.DefaultActionInvoker
+import com.icecreamqaq.yuq.annotation.TaskLimit
 import com.icecreamqaq.yuq.entity.MessageAt
 import com.icecreamqaq.yuq.error.SkipMe
 import com.icecreamqaq.yuq.message.At
 import com.icecreamqaq.yuq.message.Message
+import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
+import com.icecreamqaq.yuq.rainBot
 import com.icecreamqaq.yuq.yuq
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.lang.reflect.Method
+
+interface TaskLimitHandler {
+
+    fun auth(context: BotActionContext): Boolean
+    fun cold(context: BotActionContext)
+
+    abstract class BaseHandler : TaskLimitHandler {
+        //        lateinit var messageBuilder: MessageBuilder
+        lateinit var cdMessage: Message
+        var cd: Long = 0
+
+        fun makeMessage(msgStr: String) {
+            cdMessage = rainBot.rainCode.run {
+                if (enable)
+                    if (msgStr.startsWith(prefix)) msgStr.substring(prefix.length).toMessageByRainCode()
+                    else msgStr.toMessage()
+                else msgStr.toMessage()
+            }
+        }
+
+        abstract fun doAuth(context: BotActionContext): Boolean
+
+        override fun auth(context: BotActionContext): Boolean {
+            if (!doAuth(context)) {
+                context.reMessage = cdMessage
+                return false
+            }
+            return true
+        }
+
+
+    }
+
+
+    class All : BaseHandler() {
+
+        var auth = true
+
+        override fun doAuth(context: BotActionContext) = auth
+        override fun cold(context: BotActionContext) {
+            auth = false
+            GlobalScope.launch {
+                delay(cd)
+                auth = true
+            }
+        }
+
+    }
+
+    class Source : BaseHandler() {
+        private var auth = HashSet<String>()
+
+        override fun doAuth(context: BotActionContext) = !auth.contains(context.source.guid)
+        override fun cold(context: BotActionContext) {
+            auth.add(context.source.guid)
+            GlobalScope.launch {
+                delay(cd)
+                auth.remove(context.source.guid)
+            }
+        }
+    }
+
+    class Sender : BaseHandler() {
+        private var auth = HashSet<String>()
+
+        override fun doAuth(context: BotActionContext) = !auth.contains(context.sender.guid)
+        override fun cold(context: BotActionContext) {
+            auth.add(context.sender.guid)
+            GlobalScope.launch {
+                delay(cd)
+                auth.remove(context.sender.guid)
+            }
+        }
+    }
+
+    object Factory {
+
+        fun build(taskLimit: TaskLimit?): TaskLimitHandler? {
+            if (taskLimit == null) return null
+            val handler = when (taskLimit.type) {
+                TaskLimit.TaskLimitSource.ALL -> All()
+                TaskLimit.TaskLimitSource.SOURCE -> Source()
+                TaskLimit.TaskLimitSource.SENDER -> Sender()
+            }
+            handler.cd = taskLimit.value
+            handler.makeMessage(taskLimit.coldDownTip)
+            return handler
+        }
+
+    }
+
+}
 
 open class BotActionInvoker(level: Int, method: Method, instance: Any) : DefaultActionInvoker(level, method, instance) {
 
@@ -20,6 +118,9 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
     var mastAtBot = false
     var recall: Long? = null
     var forceMatch = false
+
+    var taskLimitHandler: TaskLimitHandler? =
+        TaskLimitHandler.Factory.build(method.getAnnotation(TaskLimit::class.java))
 
 //    override val invoker: MethodInvoker = BotReflectMethodInvoker(method, instance, level)
 
@@ -60,20 +161,26 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
         }
         try {
             context.actionInvoker = this
-            for (before in befores)
-                before.invoke(context)?.let { o -> context[o::class.java.simpleName.toLowerCaseFirstOne()] = o }
+            val reMessage = if (taskLimitHandler?.auth(context) != false) {
+                for (before in befores)
+                    before.invoke(context)?.let { o -> context[o::class.java.simpleName.toLowerCaseFirstOne()] = o }
 
-            var re = invoker.invoke(context)
-            if (nextContext != null && context.nextContext == null) context.nextContext = nextContext
-            if (decodeRainCode) if (re is String) re = re.toMessageByRainCode()
-            val reMessage = context.onSuccess(re ?: return true) as? Message ?: return true
+                var re = invoker.invoke(context)
+                if (nextContext != null && context.nextContext == null) context.nextContext = nextContext
+                if (decodeRainCode) if (re is String) re = re.toMessageByRainCode()
+                val reMessage = context.onSuccess(re ?: return true) as? Message ?: return true
 
-            for (after in afters)
-                after.invoke(context)?.let { o -> context[o::class.java.simpleName.toLowerCaseFirstOne()] = o }
+                for (after in afters)
+                    after.invoke(context)?.let { o -> context[o::class.java.simpleName.toLowerCaseFirstOne()] = o }
+
+                taskLimitHandler?.cold(context)
+                reMessage
+            } else context.reMessage!!
 
             recall?.let { reMessage.recallDelay = it }
             if (reply) reMessage.reply = context.message.source
             if (at) reMessage.at = MessageAt(context.sender.id, atNewLine)
+
             return true
         } catch (e: Exception) {
             val r = context.onError(e) ?: return true

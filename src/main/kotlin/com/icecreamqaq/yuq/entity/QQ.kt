@@ -15,6 +15,8 @@ interface Contact : User {
 
     val yuq: YuQ
 
+    val guid: String
+
     fun sendMessage(message: Message): MessageSource
     fun sendMessage(message: MessageLineQ): MessageSource = sendMessage(message.message)
     fun sendMessage(message: String): MessageSource = sendMessage(message.toMessage())

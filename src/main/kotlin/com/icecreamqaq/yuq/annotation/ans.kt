@@ -50,6 +50,16 @@ annotation class PathVar(val value: Int, val type: Type = Type.String) {
 }
 
 annotation class AsyncAction
+annotation class TaskLimit(
+    val value: Long,
+    val type: TaskLimitSource = TaskLimitSource.SENDER,
+    val extraPermission: String = "",
+    val coldDownTip: String = "冷却中。",
+) {
+    enum class TaskLimitSource {
+        SENDER, SOURCE, ALL
+    }
+}
 
 /***
  * 被此注解标记的内容仍在开发状态，相关类型以及名字可能随时变动，请自行评估使用价值。

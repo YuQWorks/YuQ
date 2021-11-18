@@ -74,7 +74,7 @@ open class Message : /*Result(),*/ MessagePlus {
     fun toLogString(): String {
         val sb = StringBuilder("(")
         if (reply != null) sb.append("Reply To: ${reply!!.id}, ")
-        if (at != null) sb.append("At them${if (at!!.newLine) " \n" else ""}, ")
+        if (at != null) sb.append("At them${if (at!!.newLine) " \\n" else ""}, ")
         if (body.size > 0) {
             sb.append("[ ${body[0].toLogString()}")
             for (i in 1 until body.size) {
