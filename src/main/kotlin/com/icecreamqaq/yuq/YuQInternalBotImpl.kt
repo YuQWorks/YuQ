@@ -89,6 +89,7 @@ open class YuQInternalBotImpl {
         log.info("${sender.toLogString()} -> ${message.toLogString()}")
         runningInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.FriendMessage(sender, message))) return
+        if (message.body.isEmpty()) return
         val flag = message.getOnlyAtFlag()
         if (flag > 0) {
             eventBus.post(AtBotEvent.ByPrivate.ByFriend(flag, sender, sender))
@@ -102,6 +103,7 @@ open class YuQInternalBotImpl {
         log.info("${sender.toLogString()} -> ${message.toLogString()}")
         runningInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.TempMessage(sender, message))) return
+        if (message.body.isEmpty()) return
         val flag = message.getOnlyAtFlag()
         if (flag > 0) {
             eventBus.post(AtBotEvent.ByPrivate.ByTemp(flag, sender, sender))
@@ -121,6 +123,7 @@ open class YuQInternalBotImpl {
             groupSession.suspendCoroutineIt!!.complete(message)
             return
         }
+        if (message.body.isEmpty()) return
         val flag = message.getOnlyAtFlag()
         if (flag > 0) {
             eventBus.post(AtBotEvent.ByGroup(flag, sender, sender.group))
