@@ -6,20 +6,19 @@ plugins {
 }
 val baseVersion = "0.1.0.0"
 val channel = "DEV"
-val buildNum = 22
+val buildNum = 24
 
 group = "com.IceCreamQAQ"
 version = "$baseVersion-$channel$buildNum"
 
 repositories {
-    mavenLocal()
     mavenCentral()
     maven("https://maven.icecreamqaq.com/repository/maven-public/")
 }
 
 dependencies {
     api(kotlin("stdlib"))
-    api("com.IceCreamQAQ:Yu-Core:0.2.0.0-DEV15")
+    api("com.IceCreamQAQ:Yu-Core:0.2.0.0-DEV16")
 }
 
 tasks {
