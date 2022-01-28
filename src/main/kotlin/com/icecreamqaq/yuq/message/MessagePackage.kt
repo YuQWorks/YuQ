@@ -1,6 +1,8 @@
 package com.icecreamqaq.yuq.message
 
-data class MessagePackage(
+import com.icecreamqaq.yuq.annotation.PathVar
+
+interface MessagePackage : MessageItem {
     /***
      * 发送方式
      * 0 -> 通过转发多条消息方式发送。
@@ -11,6 +13,15 @@ data class MessagePackage(
      *  当 Runtime 不支持转发多条消息时，将发送失败。
      *  当发送方式为转发多条时，如果 Message 未提供 source 或是内容物为 MessageItemChain 则将为本条消息发送者设置为机器人。
      */
-    var type:Int = 0,
-    val body:MutableList<IMessageItemChain> = arrayListOf()
-)
+    var type: Int
+
+    val body: MutableList<IMessageItemChain>
+
+    override fun toPath() = "MessagePackage"
+    override fun convertByPathVar(type: PathVar.Type) = null
+
+    override fun equal(other: MessageItem): Boolean {
+        if (other !is MessagePackage) return false
+        return body == other.body
+    }
+}

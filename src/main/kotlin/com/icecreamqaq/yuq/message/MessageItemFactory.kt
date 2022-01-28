@@ -87,4 +87,6 @@ interface MessageItemFactory {
      */
     fun jsonEx(value: String): JsonEx
 
+    fun messagePackage(flag: Int, body: MutableList<IMessageItemChain>): MessagePackage
+
 }
