@@ -149,7 +149,7 @@ open class Message(val body: MessageItemChain = MessageItemChain()) : SendAble, 
 
         fun Message.toCodeString(): String {
             val sb = StringBuilder()
-            if (reply != null) sb.append("<Rain:Reply:$id>")
+            if (reply != null) sb.append("<Rain:Reply:${reply!!.id}>")
 
             for (item in body) {
                 sb.append(
