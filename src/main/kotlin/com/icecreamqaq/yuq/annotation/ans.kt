@@ -65,3 +65,8 @@ annotation class TaskLimit(
  * 被此注解标记的内容仍在开发状态，相关类型以及名字可能随时变动，请自行评估使用价值。
  */
 annotation class Dev
+
+/***
+ * 被此注解标记的内容不推荐使用。
+ */
+annotation class NoRecommendation

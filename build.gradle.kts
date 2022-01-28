@@ -1,6 +1,6 @@
 plugins {
     java
-    kotlin("jvm") version "1.5.30"
+    kotlin("jvm") version "1.6.10"
     `java-library`
     `maven-publish`
 }
@@ -12,18 +12,30 @@ group = "com.IceCreamQAQ"
 version = "$baseVersion-$channel$buildNum"
 
 repositories {
-    mavenCentral()
+    mavenLocal()
     maven("https://maven.icecreamqaq.com/repository/maven-public/")
 }
 
 dependencies {
-    api(kotlin("stdlib"))
+    implementation(kotlin("stdlib"))
     api("com.IceCreamQAQ:Yu-Core:0.2.0.0-DEV16")
+}
+
+java {
+    withSourcesJar()
 }
 
 tasks {
     withType<JavaCompile> {
+        options.encoding = "UTF-8"
+        sourceCompatibility = "1.8"
+        targetCompatibility = "1.8"
+    }
 
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
     }
 }
 

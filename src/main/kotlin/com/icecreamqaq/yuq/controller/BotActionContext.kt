@@ -10,11 +10,10 @@ import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.message.MessageItem
 import com.icecreamqaq.yuq.message.MessageLineQ
-import com.icecreamqaq.yuq.rainBot
+import com.icecreamqaq.yuq.internalBot
+import com.icecreamqaq.yuq.message.MessageItemChain
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import kotlin.coroutines.Continuation
 
 class BotActionContext(
     val source: Contact,
@@ -92,37 +91,33 @@ class BotActionContext(
         saved["reMessage"] = reMessage
         return reMessage
     }
-    private suspend fun arrayResult(any: Any?){
-        when (any) {
-            is Int -> coroutineScope { delay(any.toLong()) }
-            is Long -> coroutineScope { delay(any) }
-            else -> any?.let { buildResult(it)?.let { message -> source.sendMessage(message) } }
-        }
-    }
 
     private suspend fun buildResult(obj: Any): Message? {
         return when (obj) {
             is String ->
-                rainBot.rainCode.run {
+                internalBot.rainCode.run {
                     if (enable)
                         if (obj.startsWith(prefix)) obj.substring(prefix.length).toMessageByRainCode()
                         else obj.toMessage()
                     else obj.toMessage()
                 }
             is Array<*> -> {
-                for (any in obj) arrayResult(any)
-                null
-            }
-            is List<*> -> {
-                for (any in obj) arrayResult(any)
+                for (any in obj) {
+                    when (any) {
+                        is Int -> coroutineScope { delay(any.toLong()) }
+                        is Long -> coroutineScope { delay(any) }
+                        else -> any?.let { buildResult(it)?.let { message -> source.sendMessage(message) } }
+                    }
+                }
                 null
             }
             is MessageItem -> {
                 val message = Message()
                 val mb = message.body
-                mb.add(obj)
+                mb.append(obj)
                 message
             }
+            is MessageItemChain -> obj.toMessage()
             is Message -> obj
             is MessageLineQ -> obj.message
             else -> buildResult(obj.toString())

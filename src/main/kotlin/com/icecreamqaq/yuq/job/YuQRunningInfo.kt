@@ -4,15 +4,15 @@ import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import com.IceCreamQAQ.Yu.util.Web
-import com.icecreamqaq.yuq.RainVersion
+import com.icecreamqaq.yuq.YuQVersion
 import com.icecreamqaq.yuq.yuq
 import javax.inject.Inject
 
 @JobCenter
-class RainInfo {
+class YuQRunningInfo {
 
     @Inject
-    private lateinit var version: RainVersion
+    private lateinit var version: YuQVersion
 
     @Inject
     private lateinit var web: Web

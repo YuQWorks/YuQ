@@ -1,20 +1,23 @@
 package com.icecreamqaq.yuq.message
 
-import com.icecreamqaq.yuq.RainCode
-import com.icecreamqaq.yuq.entity.Member
+import com.icecreamqaq.yuq.annotation.NoRecommendation
 import com.icecreamqaq.yuq.entity.MessageAt
 import com.icecreamqaq.yuq.error.MessageThrowable
 import com.icecreamqaq.yuq.message.Image.Companion.toFlash
 import com.icecreamqaq.yuq.message.Text.Companion.toText
 import com.icecreamqaq.yuq.mif
-import java.awt.image.BufferedImage
 import java.io.File
-import java.io.InputStream
 
 interface MessagePlus {
-    operator fun plus(item: MessageItem): Message
-    operator fun plus(item: String): Message
-    operator fun plus(item: Message): Message
+    operator fun plus(item: MessageItem): MessageItemChain
+    operator fun plus(item: String): MessageItemChain
+    operator fun plus(item: Message): MessageItemChain
+    operator fun plus(item: MessageItemChain): MessageItemChain
+}
+
+interface SendAble {
+    fun toMessage(): Message
+    fun toThrowable(): MessageThrowable = MessageThrowable(toMessage())
 }
 
 interface MessageSource {
@@ -26,6 +29,7 @@ interface MessageSource {
     fun recall(): Int
 }
 
+
 interface GroupMessageSource : MessageSource {
     val groupCode: Long
 }
@@ -34,20 +38,19 @@ interface TempMessageSource : MessageSource {
     val groupCode: Long
 }
 
-open class Message : /*Result(),*/ MessagePlus {
 
-//    @Deprecated("相关 API 已经调整，现在建议直接使用 Contact 对象发送消息。")
-//    var temp: Boolean = false
+open class Message(val body: MessageItemChain = MessageItemChain()) : SendAble, IMessageItemChain by body {
 
     var id: Int? = null
 
-//    @Deprecated("相关 API 已经调整，现在建议直接使用 Contact 对象发送消息。")
-//    var qq: Long? = null
-//
-//    @Deprecated("相关 API 已经调整，现在建议直接使用 Contact 对象发送消息。")
-//    var group: Long? = null
-
+    /***
+     * 消息源信息。
+     * 与消息本身无关，如果这条消息是收到的消息，则会附带本参数。
+     * 消息源是定位消息在腾讯所在位置的记录，用于消息撤回，回复等操作。
+     * 当你将消息发出时，并不会将发出消息的消息源写到本参数，而是 sendMessage 方法返回的消息源。
+     */
     lateinit var source: MessageSource
+
     var codeStr: String = ""
         get() {
             if (field == "") field = toCodeString()
@@ -56,8 +59,9 @@ open class Message : /*Result(),*/ MessagePlus {
     var reply: MessageSource? = null
     var at: MessageAt? = null
 
+    @NoRecommendation
     lateinit var sourceMessage: Any
-    var body = ArrayList<MessageItem>()
+
     lateinit var path: List<MessageItem>
 
     private var lineQ_: MessageLineQ? = null
@@ -94,21 +98,6 @@ open class Message : /*Result(),*/ MessagePlus {
         return paths
     }
 
-    override operator fun plus(item: MessageItem): Message {
-        body.add(item)
-        return this
-    }
-
-    override fun plus(item: String): Message {
-        body.add(item.toText())
-        return this
-    }
-
-    override fun plus(item: Message): Message {
-        body.addAll(item.body)
-        return this
-    }
-
     fun recall(): Int {
         return source.recall()
     }
@@ -116,7 +105,6 @@ open class Message : /*Result(),*/ MessagePlus {
     override fun toString(): String {
         return toLogString()
     }
-
 
     open fun bodyEquals(other: Any?): Boolean {
         if (other !is Message) return false
@@ -128,7 +116,27 @@ open class Message : /*Result(),*/ MessagePlus {
         return true
     }
 
-    fun toThrowable() = MessageThrowable(this)
+    override fun toMessage() = this
+
+    operator fun plus(item: MessageItem): Message {
+        body.append(item)
+        return this
+    }
+
+    operator fun plus(item: String): Message {
+        body.append(item.toText())
+        return this
+    }
+
+    operator fun plus(item: Message): Message {
+        body.append(item.body)
+        return this
+    }
+
+    operator fun plus(item: MessageItemChain): Message {
+        body.append(item)
+        return this
+    }
 
     companion object {
 
@@ -164,7 +172,7 @@ open class Message : /*Result(),*/ MessagePlus {
         fun String.toMessageByRainCode(): Message {
             val codeStart = "<Rain:"
 
-            var message = Message()
+            var message = MessageItemChain()
             val t = StringBuilder()
             val m = StringBuilder()
 
@@ -207,21 +215,10 @@ open class Message : /*Result(),*/ MessagePlus {
                                         if (p == "flash") flash = true
                                     }
                                     val p = if (file) mif.imageByFile(File(id))
-                                    else if ((RainCode.matchImageIdStartHttp && id.startsWith(
-                                            "http",
-                                            true
-                                        )) || url
-                                    ) mif.imageByUrl(id)
+                                    else if (id.startsWith("http", true) || url) mif.imageByUrl(id)
                                     else mif.imageById(id)
                                     if (flash) p.toFlash()
                                     else p
-//                                    if (id.st)
-//                                    val p = data.indexOf(',')
-//                                    if (p == -1) mif.imageById(data)
-//                                    else {
-//                                        val id = data.substring(0, p)
-//                                        mif.imageById(id).toFlash()
-//                                    }
                                 }
                                 "Xml" -> {
                                     val a = data.split(",", ignoreCase = false, limit = 2)
@@ -270,114 +267,12 @@ open class Message : /*Result(),*/ MessagePlus {
             if (m.isNotEmpty()) t.append(m)
             if (t.isNotEmpty()) message += mif.text(t.toString())
 
-            return message
+            return message.toMessage()
         }
 
-//        fun String.toMessageByRainCode(): Message {
-//            val codeStart = "<Rain:"
-//
-//            var message = Message()
-//            val t = StringBuilder()
-//            val m = StringBuilder()
-//
-//            var rf = false
-//            var rc = false
-//
-//            for (c in this) {
-//                if (rf) {
-//                    if (rc) {
-//                        if (c != '>') m.append(c)
-//                        else {
-//                            if (t.isNotEmpty()) {
-//                                message += mif.text(t.toString())
-//                                t.clear()
-//                            }
-//                            val codeStr = m.toString()
-//                            val code = codeStr.split(":")
-//                            if (code.size < 3) {
-//                                t.append(codeStr).append(">")
-//                                m.clear()
-//                                rf = false
-//                                rc = false
-//                                continue
-//                            }
-//                            val type = code[1]
-//                            val data = code[2]
-//                            message += when (type) {
-//                                "At" -> mif.at(data.toLong())
-//                                "Face" -> mif.face(data.toInt())
-//                                "Image" -> {
-//                                    val ps = data.split(",")
-//                                    var url = false
-//                                    var file = false
-//                                    var flash = false
-//                                    val id = ps[0]
-//                                    for (i in 1 until ps.size) {
-//                                        val p = ps[i]
-//                                        if (p == "url") url = true
-//                                        if (p == "file") file = true
-//                                        if (p == "flash") flash = true
-//                                    }
-//                                    val p = if (file) mif.imageByFile(File(id))
-//                                    else if ((RainCode.matchImageIdStartHttp && id.startsWith("http", true)) || url) mif.imageByUrl(id)
-//                                    else mif.imageById(id)
-//                                    if (flash) p.toFlash()
-//                                    else p
-////                                    if (id.st)
-////                                    val p = data.indexOf(',')
-////                                    if (p == -1) mif.imageById(data)
-////                                    else {
-////                                        val id = data.substring(0, p)
-////                                        mif.imageById(id).toFlash()
-////                                    }
-//                                }
-//                                "Xml" -> {
-//                                    val a = data.split(",", ignoreCase = false, limit = 2)
-//                                    val id = a[0].toInt()
-//                                    val value = a[1].replace("&&&lt&&&", "<").replace("&&&gt&&&", ">")
-//                                    mif.xmlEx(id, value)
-//                                }
-//                                "Json" -> mif.jsonEx(data)
-//                                else -> mif.text("$codeStr>")
-//                            }
-//
-//                            m.clear()
-//                            rf = false
-//                            rc = false
-//                        }
-//                    } else {
-//                        if (m.length < 6) m.append(c)
-//                        else {
-//                            val ms = m.toString()
-//                            if (codeStart == ms) {
-//                                rc = true
-//                                m.append(c)
-//                            } else {
-//                                t.append(ms)
-//                                m.clear()
-//                                rf = false
-//                                rc = false
-//                                continue
-//                            }
-//                        }
-//                    }
-//                } else {
-//                    if (c != '<') t.append(c)
-//                    else {
-//                        m.append(c)
-//                        rf = true
-//                    }
-//                }
-//
-//            }
-//
-//            if (m.isNotEmpty()) t.append(m)
-//            if (t.isNotEmpty()) message += mif.text(t.toString())
-//
-//            return message
-//        }
-
         fun String.toMessage() = this.toText().toMessage()
+
+        fun String.toChain() = MessageItemChain().append(this.toText())
 
     }
 }

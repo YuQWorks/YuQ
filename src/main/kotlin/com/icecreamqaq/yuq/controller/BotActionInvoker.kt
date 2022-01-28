@@ -9,7 +9,7 @@ import com.icecreamqaq.yuq.message.At
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
-import com.icecreamqaq.yuq.rainBot
+import com.icecreamqaq.yuq.internalBot
 import com.icecreamqaq.yuq.yuq
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -19,7 +19,8 @@ import java.lang.reflect.Method
 interface TaskLimitHandler {
 
     fun auth(context: BotActionContext): Boolean
-    fun cold(context: BotActionContext)
+    fun start(context: BotActionContext)
+    fun end(context: BotActionContext)
 
     abstract class BaseHandler : TaskLimitHandler {
         //        lateinit var messageBuilder: MessageBuilder
@@ -27,7 +28,7 @@ interface TaskLimitHandler {
         var cd: Long = 0
 
         fun makeMessage(msgStr: String) {
-            cdMessage = rainBot.rainCode.run {
+            cdMessage = internalBot.rainCode.run {
                 if (enable)
                     if (msgStr.startsWith(prefix)) msgStr.substring(prefix.length).toMessageByRainCode()
                     else msgStr.toMessage()
@@ -36,6 +37,7 @@ interface TaskLimitHandler {
         }
 
         abstract fun doAuth(context: BotActionContext): Boolean
+        abstract fun doEnd(context: BotActionContext)
 
         override fun auth(context: BotActionContext): Boolean {
             if (!doAuth(context)) {
@@ -43,6 +45,15 @@ interface TaskLimitHandler {
                 return false
             }
             return true
+        }
+
+        override fun end(context: BotActionContext) {
+            if (cd > 0)
+                GlobalScope.launch {
+                    delay(cd)
+                    doEnd(context)
+                }
+            else doEnd(context)
         }
 
 
@@ -53,13 +64,13 @@ interface TaskLimitHandler {
 
         var auth = true
 
-        override fun doAuth(context: BotActionContext) = auth
-        override fun cold(context: BotActionContext) {
+        override fun start(context: BotActionContext) {
             auth = false
-            GlobalScope.launch {
-                delay(cd)
-                auth = true
-            }
+        }
+
+        override fun doAuth(context: BotActionContext) = auth
+        override fun doEnd(context: BotActionContext) {
+            auth = true
         }
 
     }
@@ -68,12 +79,13 @@ interface TaskLimitHandler {
         private var auth = HashSet<String>()
 
         override fun doAuth(context: BotActionContext) = !auth.contains(context.source.guid)
-        override fun cold(context: BotActionContext) {
+
+        override fun start(context: BotActionContext) {
             auth.add(context.source.guid)
-            GlobalScope.launch {
-                delay(cd)
-                auth.remove(context.source.guid)
-            }
+        }
+
+        override fun doEnd(context: BotActionContext) {
+            auth.remove(context.source.guid)
         }
     }
 
@@ -81,12 +93,12 @@ interface TaskLimitHandler {
         private var auth = HashSet<String>()
 
         override fun doAuth(context: BotActionContext) = !auth.contains(context.sender.guid)
-        override fun cold(context: BotActionContext) {
+        override fun start(context: BotActionContext) {
             auth.add(context.sender.guid)
-            GlobalScope.launch {
-                delay(cd)
-                auth.remove(context.sender.guid)
-            }
+        }
+
+        override fun doEnd(context: BotActionContext) {
+            auth.remove(context.sender.guid)
         }
     }
 
@@ -162,6 +174,7 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
         try {
             context.actionInvoker = this
             val reMessage = if (taskLimitHandler?.auth(context) != false) {
+                taskLimitHandler?.start(context)
                 for (before in befores)
                     before.invoke(context)?.let { o -> context[o::class.java.simpleName.toLowerCaseFirstOne()] = o }
 
@@ -173,7 +186,7 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
                 for (after in afters)
                     after.invoke(context)?.let { o -> context[o::class.java.simpleName.toLowerCaseFirstOne()] = o }
 
-                taskLimitHandler?.cold(context)
+
                 reMessage
             } else context.reMessage!!
 
@@ -181,11 +194,13 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
             if (reply) reMessage.reply = context.message.source
             if (at) reMessage.at = MessageAt(context.sender.id, atNewLine)
 
+            taskLimitHandler?.end(context)
             return true
         } catch (e: Exception) {
             val r = context.onError(e) ?: return true
             if (r is SkipMe) {
                 context.actionInvoker = null
+                taskLimitHandler?.end(context)
                 return false
             }
 //            throw r
@@ -197,8 +212,10 @@ open class BotActionInvoker(level: Int, method: Method, instance: Any) : Default
                     val o = catch.invoke(context, r)
                     if (o != null) context[o::class.java.simpleName.toLowerCaseFirstOne()] = o
                 }
+                taskLimitHandler?.end(context)
                 throw r
             } catch (ee: Exception) {
+                taskLimitHandler?.end(context)
                 throw context.onError(ee) ?: return true
             }
         }

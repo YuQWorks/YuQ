@@ -12,7 +12,7 @@ import com.icecreamqaq.yuq.entity.Friend
 import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.error.SendMessageFailedByCancel
 import com.icecreamqaq.yuq.event.*
-import com.icecreamqaq.yuq.job.RainInfo
+import com.icecreamqaq.yuq.job.YuQRunningInfo
 import com.icecreamqaq.yuq.message.At
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
@@ -25,9 +25,9 @@ import javax.inject.Inject
 import javax.inject.Named
 import kotlin.coroutines.resume
 
-open class RainBot {
+open class YuQInternalBotImpl {
 
-    private val log = LoggerFactory.getLogger(RainBot::class.java)
+    private val log = LoggerFactory.getLogger(YuQInternalBotImpl::class.java)
 
     @Inject
     private lateinit var eventBus: EventBus
@@ -48,7 +48,7 @@ open class RainBot {
     private lateinit var contextRouter: ContextRouter
 
     @Inject
-    private lateinit var rainInfo: RainInfo
+    private lateinit var runningInfo: YuQRunningInfo
 
     @Inject
     private lateinit var internalFun: YuQInternalFun
@@ -63,7 +63,7 @@ open class RainBot {
 
     @Inject
     fun init() {
-        rainBot = this
+        internalBot = this
     }
 
     private fun Message.getOnlyAtFlag(): Int {
@@ -87,7 +87,7 @@ open class RainBot {
 
     open suspend fun receiveFriendMessage(sender: Friend, message: Message) {
         log.info("${sender.toLogString()} -> ${message.toLogString()}")
-        rainInfo.receiveMessage()
+        runningInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.FriendMessage(sender, message))) return
         val flag = message.getOnlyAtFlag()
         if (flag > 0) {
@@ -100,7 +100,7 @@ open class RainBot {
 
     open suspend fun receiveTempMessage(sender: Member, message: Message) {
         log.info("${sender.toLogString()} -> ${message.toLogString()}")
-        rainInfo.receiveMessage()
+        runningInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.TempMessage(sender, message))) return
         val flag = message.getOnlyAtFlag()
         if (flag > 0) {
@@ -113,12 +113,12 @@ open class RainBot {
 
     open suspend fun receiveGroupMessage(sender: Member, message: Message) {
         log.info("[${sender.group.toLogString()}]${sender.toLogStringSingle()} -> ${message.toLogString()}")
-        rainInfo.receiveMessage()
+        runningInfo.receiveMessage()
         internalFun.setMemberLastMessageTime(sender, System.currentTimeMillis())
         if (eventBus.post(GroupMessageEvent(sender, sender.group, message))) return
-        val groupSession = rainBot.getContextSession("g${sender.group.id}")
+        val groupSession = internalBot.getContextSession("g${sender.group.id}")
         if (groupSession.suspendCoroutineIt != null) {
-            groupSession.suspendCoroutineIt!!.resume(message)
+            groupSession.suspendCoroutineIt!!.complete(message)
             return
         }
         val flag = message.getOnlyAtFlag()
@@ -142,7 +142,7 @@ open class RainBot {
         if (context.path.isEmpty()) return
         kotlin.runCatching {
             if (context.session.suspendCoroutineIt != null) {
-                context.session.suspendCoroutineIt!!.resume(context.message)
+                context.session.suspendCoroutineIt!!.complete(context.message)
                 return
             }
             if (eventBus.post(ActionContextInvokeEvent.Per(context))) return
@@ -176,7 +176,7 @@ open class RainBot {
             {
                 val m = send(obj)
                 log.info("$ts <- $ms")
-                rainInfo.sendMessage()
+                runningInfo.sendMessage()
                 SendMessageEvent.Post(contact, message, m)()
                 message.recallDelay?.let {
                     GlobalScope.launch {

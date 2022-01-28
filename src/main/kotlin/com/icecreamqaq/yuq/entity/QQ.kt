@@ -6,7 +6,7 @@ import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.mif
-import com.icecreamqaq.yuq.rainBot
+import com.icecreamqaq.yuq.internalBot
 import com.icecreamqaq.yuq.util.WebHelper.Companion.postWithQQKey
 import com.icecreamqaq.yuq.yuq
 import java.io.File
@@ -17,10 +17,12 @@ interface Contact : User {
 
     val guid: String
 
+    val session: ContextSession
+        get() = internalBot.getContextSession(guid)
+
     fun sendMessage(message: Message): MessageSource
-    fun sendMessage(message: MessageLineQ): MessageSource = sendMessage(message.message)
+    fun sendMessage(message: SendAble): MessageSource = sendMessage(message.toMessage())
     fun sendMessage(message: String): MessageSource = sendMessage(message.toMessage())
-    fun sendMessage(messageItem: MessageItem): MessageSource = sendMessage(messageItem.toMessage())
 
     //    fun convertMessage(message: Message): Message
     /***
@@ -80,9 +82,6 @@ interface Friend : Contact {
 
 interface Group : Contact {
 
-    val session: ContextSession
-        get() = rainBot.getContextSession("g$id")
-
     val members: Map<Long, Member>
     val bot: Member
     val maxCount: Int
@@ -135,6 +134,12 @@ interface Member : Contact, User {
 
     fun click()
     fun clickWithTemp()
+
+    override val session: ContextSession
+        get() = internalBot.getContextSession(id.toString())
+
+    val groupChatSession: ContextSession
+        get() = internalBot.getContextSession(guid)
 
 //    fun lastMessageTime() = -1L
 

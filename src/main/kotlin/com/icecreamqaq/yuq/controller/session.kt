@@ -128,7 +128,7 @@ class BotContextControllerLoader : BotControllerLoader() {
 
 class ContextSession(val id: String, private val saves: MutableMap<String, Any> = ConcurrentHashMap()) {
 
-    var suspendCoroutineIt: Continuation<Message>? = null
+    var suspendCoroutineIt: CompletableDeferred<Message>? = null
     var context: String? = null
 
     operator fun get(name: String) = saves[name]
@@ -171,17 +171,9 @@ class ContextSession(val id: String, private val saves: MutableMap<String, Any> 
     fun waitNextMessage(maxTime: Long = 30000): Message =
             runBlocking {
                 try {
+                    suspendCoroutineIt = CompletableDeferred()
                     withTimeout(maxTime){
-                        val message = suspendCoroutine<Message> {
-                            suspendCoroutineIt = it
-//                        GlobalScope.launch {
-//                            delay(maxTime)
-//                            if (suspendCoroutineIt != null && suspendCoroutineIt === it) {
-//                                suspendCoroutineIt = null
-//                                it.resumeWithException(WaitNextMessageTimeoutException())
-//                            }
-//                        }
-                        }
+                        val message = suspendCoroutineIt!!.await()
                         suspendCoroutineIt = null
                         message
                     }

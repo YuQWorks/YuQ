@@ -2,57 +2,32 @@ package com.icecreamqaq.yuq.message
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
 import com.icecreamqaq.yuq.entity.Member
+import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.mif
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
 
-//@AutoBind
-//@Deprecated("相关 API 变动，Message 已经不再承载消息目标，请直接 new Message。")
-//interface MessageFactory {
-//
-//    fun newMessage():Message
-//    fun newGroup(group:Long):Message
-//    fun newPrivate(qq:Long):Message
-//    fun newTemp(group:Long,qq:Long):Message
-//
-//}
-
-//class MessageFactoryImpl : MessageFactory {
-//    override fun newMessage(): Message {
-//        return Message()
-//    }
-//
-//    override fun newGroup(group: Long): Message {
-//        val message = newMessage()
-//        message.group = group
-//        return message
-//    }
-//
-//    override fun newPrivate(qq: Long): Message {
-//        val message = Message()
-//        message.qq = qq
-//        return message
-//    }
-//
-//    override fun newTemp(group: Long, qq: Long): Message {
-//        val message = Message()
-//        message.temp = true
-//        message.qq = qq
-//        message.group = group
-//        return message
-//    }
-//}
-
-open class MessageLineQ(val message: Message = Message()) {
+open class MessageLineQ(val message: Message = Message()) : SendAble {
     fun plus(item: MessageItem): MessageLineQ {
         message.plus(item)
+        return this
+    }
+
+    fun plus(chain: MessageItemChain): MessageLineQ {
+        message.plus(chain)
+        return this
+    }
+
+    fun plus(chain: Message): MessageLineQ {
+        message.plus(chain)
         return this
     }
 
     fun line() = plus(mif.text("\n"))
     fun text(text: String) = plus(mif.text(text))
     fun textLine(text: String) = plus(mif.text("$text\n"))
+    fun rainCode(codeString: String) = plus(codeString.toMessageByRainCode())
 
     fun at(qq: Long) = plus(mif.at(qq))
     fun at(member: Member) = plus(mif.at(member))
@@ -81,6 +56,8 @@ open class MessageLineQ(val message: Message = Message()) {
         message.recallDelay = time
         return this
     }
+
+    override fun toMessage() = message
 }
 
 fun buildMessage(body: MessageLineQ.() -> Unit): Message = MessageLineQ().apply(body).message

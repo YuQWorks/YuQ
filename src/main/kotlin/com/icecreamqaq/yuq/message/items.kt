@@ -6,11 +6,15 @@ import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.mif
 
 
-abstract class MessageItemBase : MessageItem {
-    override operator fun plus(item: MessageItem): Message = toMessage() + item
-    override operator fun plus(item: String): Message = toMessage() + item
-    override operator fun plus(item: Message): Message = toMessage() + item
-    override fun toMessage(): Message = Message() + this
+abstract class MessageItemBase : MessageItem, SendAble {
+
+    override operator fun plus(item: MessageItem): MessageItemChain = toItemChain() + item
+    override operator fun plus(item: String): MessageItemChain = toItemChain() + item
+    override operator fun plus(item: Message): MessageItemChain = toItemChain() + item
+    override fun plus(item: MessageItemChain): MessageItemChain = item.unshift(this)
+    override fun toMessage(): Message = this.toItemChain().toMessage()
+
+    override fun toItemChain() = MessageItemChain().append(this)
 
     override fun equals(other: Any?): Boolean {
         if (other == null) return false
@@ -26,12 +30,13 @@ abstract class MessageItemBase : MessageItem {
     override fun toString() = toPath()
 }
 
-interface MessageItem : MessagePlus {
+interface MessageItem : MessagePlus, SendAble {
     fun toLocal(contact: Contact): Any
     fun toPath(): String
     fun convertByPathVar(type: PathVar.Type): Any?
 
-    fun toMessage(): Message
+    fun toItemChain(): MessageItemChain
+
     fun toLogString(): String = toPath()
 
     fun equal(other: MessageItem): Boolean
@@ -63,7 +68,7 @@ interface Text : MessageItem {
         return text == other.text
     }
 
-    companion object{
+    companion object {
         fun String.toText() = mif.text(this)
     }
 }
@@ -130,7 +135,7 @@ interface Image : MessageItem {
         return id == other.id
     }
 
-    companion object{
+    companion object {
         fun Image.toFlash() = mif.imageToFlash(this)
     }
 }
