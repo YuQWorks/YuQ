@@ -235,7 +235,7 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
             return null
 
         } catch (e: InvocationTargetException) {
-            throw e.cause!!
+            throw e.targetException!!
         }
     }
 
