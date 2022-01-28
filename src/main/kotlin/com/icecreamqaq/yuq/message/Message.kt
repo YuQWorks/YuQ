@@ -162,6 +162,7 @@ open class Message(val body: MessageItemChain = MessageItemChain()) : SendAble, 
                             item.value.replace("<", "&&&lt&&&").replace(">", "&&&gt&&&")
                         }>"
                         is JsonEx -> "<Rain:Json:${item.value}>"
+                        is Voice -> "<Rain:Voice:${item.id}>"
                         else -> "<Rain:NoImpl:${item.toPath()}>"
                     }
                 )
