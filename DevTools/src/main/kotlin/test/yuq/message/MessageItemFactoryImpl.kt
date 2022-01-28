@@ -16,20 +16,15 @@ class MessageItemFactoryImpl : MessageItemFactory {
 
     override fun face(id: Int) = FaceImpl(id)
 
-
-    override fun image(file: File) = imageByFile(file)
-
-    override fun image(url: String) = imageByUrl(url)
-
-    override fun imageByBufferedImage(bufferedImage: BufferedImage) = TODO()//ImageSend(bufferedImage.data.)
+    override fun imageByBufferedImage(bufferedImage: BufferedImage) = ImageReceive("bufferedImage", "")
 
     override fun imageByFile(file: File) = ImageReceive(file.absolutePath, "")
 
     override fun imageById(id: String) = ImageReceive(id, "")
 
-    override fun imageByInputStream(inputStream: InputStream) = TODO()
+    override fun imageByInputStream(inputStream: InputStream) = ImageReceive("inputStream", "")
 
-    override fun imageByUrl(url: String) = imageByInputStream(web.download(url))
+    override fun imageByUrl(url: String) = ImageReceive(url, "")
 
     override fun imageToFlash(image: Image) = FlashImageImpl(image)
 
@@ -38,4 +33,6 @@ class MessageItemFactoryImpl : MessageItemFactory {
     override fun xmlEx(serviceId: Int, value: String): XmlEx = XmlImpl(serviceId, value)
 
     override fun jsonEx(value: String) = JsonImpl(value)
+
+    override fun messagePackage(flag: Int, body: MutableList<IMessageItemChain>) = MessagePackageImpl(flag, body)
 }

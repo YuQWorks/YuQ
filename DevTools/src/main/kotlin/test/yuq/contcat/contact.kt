@@ -8,6 +8,7 @@ import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageSource
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.post
+import org.slf4j.LoggerFactory
 import test.yuq.TestBot
 import test.yuq.message.MessageSourceImpl
 import java.io.File

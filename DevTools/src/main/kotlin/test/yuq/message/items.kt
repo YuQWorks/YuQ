@@ -7,6 +7,7 @@ import com.icecreamqaq.yuq.message.At
 import com.icecreamqaq.yuq.message.Face
 import com.icecreamqaq.yuq.message.FlashImage
 import com.icecreamqaq.yuq.message.Image
+import com.icecreamqaq.yuq.message.MessagePackage
 import com.icecreamqaq.yuq.message.Voice
 import kotlinx.coroutines.runBlocking
 import java.io.InputStream
@@ -51,5 +52,11 @@ class JsonImpl(override val value: String) : MessageItemBaseX(), JsonEx {
 }
 
 class NoImplItemImpl(override var source: Any) : MessageItemBaseX(), NoImplItem {
+}
+
+class MessagePackageImpl(override var type: Int, override val body: MutableList<IMessageItemChain>):MessageItemBaseX(),MessagePackage{
+    override fun toString(): String {
+        return "MessagePackage(type=$type, body=$body)"
+    }
 }
 
