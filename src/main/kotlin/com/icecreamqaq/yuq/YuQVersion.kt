@@ -5,8 +5,9 @@ import com.IceCreamQAQ.Yu.annotation.AutoBind
 @AutoBind
 interface YuQVersion {
 
-    fun apiVersion() = "0.1.0.0-DEV24"
-    fun runtimeName():String
-    fun runtimeVersion():String
+    fun apiVersion(): String = "0.1.0.0-DEV24"
+    fun platform(): String = "qq"
+    fun runtimeName(): String
+    fun runtimeVersion(): String
 
 }
