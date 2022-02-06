@@ -5,9 +5,7 @@ import com.IceCreamQAQ.Yu.di.YuContext
 import com.IceCreamQAQ.Yu.event.EventBus
 import com.IceCreamQAQ.Yu.util.Web
 import com.icecreamqaq.yuq.*
-import com.icecreamqaq.yuq.entity.Friend
-import com.icecreamqaq.yuq.entity.Group
-import com.icecreamqaq.yuq.entity.User
+import com.icecreamqaq.yuq.entity.*
 import com.icecreamqaq.yuq.message.MessageItemFactory
 import test.yuq.event.RegisterContactEvent
 import test.yuq.message.MessageItemFactoryImpl
@@ -53,18 +51,18 @@ class TestBot : YuQ, ApplicationService, User, YuQVersion {
     override val botInfo: User = this
     override val cookieEx: YuQ.QQCookie
         get() = TODO("Not yet implemented")
-    override val friends: MutableMap<Long, Friend> = hashMapOf()
-    override val groups: MutableMap<Long, Group> = hashMapOf()
+    override val friends: UserList<Friend> = UserListImpl()
+    override val groups: UserList<Group> = UserListImpl()
     override val messageItemFactory: MessageItemFactory = MessageItemFactoryImpl()
 
     @Inject
     override lateinit var web: Web
 
-    override fun refreshFriends(): Map<Long, Friend> {
+    override fun refreshFriends(): UserList<Friend> {
         TODO("Not yet implemented")
     }
 
-    override fun refreshGroups(): Map<Long, Group> {
+    override fun refreshGroups(): UserList<Group> {
         TODO("Not yet implemented")
     }
 }

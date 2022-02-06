@@ -18,13 +18,27 @@ interface UserList<E : User> : Map<Long, E> {
 
 class UserListImpl<E : User> : UserList<E> {
 
-    class ProEntry<E : User>(
-        val idEntry: Entry<Long, E>,
-        val platformIdEntry: Entry<String, E>,
-        val user: E
-    ) {
+    class ProEntry<E : User>(var user: E) {
         inline val id get() = user.id
         inline val platformId get() = user.platformId
+
+        val idEntry: Entry<Long, E> = IdEntry()
+        val platformIdEntry: Entry<String, E> = PlatformIdEntry()
+
+        inner class IdEntry : Entry<Long, E> {
+            override val key: Long
+                get() = id
+            override val value: E
+                get() = user
+        }
+
+        inner class PlatformIdEntry : Entry<String, E> {
+            override val key: String
+                get() = platformId
+            override val value: E
+                get() = user
+        }
+
         override fun toString(): String {
             return "ProEntry(id=$id, platformId=$platformId, User=$user)"
         }
@@ -102,6 +116,47 @@ class UserListImpl<E : User> : UserList<E> {
     }
 
     override fun isEmpty() = size == 0
+
+    fun add(user: E) {
+        list.add(ProEntry(user))
+    }
+
+    operator fun set(id: Long, user: E) {
+        for (i in 0 until list.size) {
+            val u = list[i]
+            if (u.id == id) {
+                u.user = user
+                return
+            }
+        }
+        add(user)
+    }
+
+    fun remove(id: Long): E? {
+        for (i in 0 until list.size) {
+            val u = list[i]
+            if (u.id == id) {
+                list.removeAt(i)
+                return u.user
+            }
+        }
+        return null
+    }
+
+    fun remove(platformId: String): E? {
+        for (i in 0 until list.size) {
+            val u = list[i]
+            if (u.platformId == platformId) {
+                list.removeAt(i)
+                return u.user
+            }
+        }
+        return null
+    }
+
+    fun remove(user: E): E? {
+        return remove(user.id)
+    }
 
     private fun <T> proSet(body: (Int) -> T): ProSet<T> {
         return object : ProSet<T>() {

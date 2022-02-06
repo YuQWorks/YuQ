@@ -5,6 +5,7 @@ import com.IceCreamQAQ.Yu.util.Web
 import com.icecreamqaq.yuq.entity.Friend
 import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.entity.User
+import com.icecreamqaq.yuq.entity.UserList
 import com.icecreamqaq.yuq.message.MessageItemFactory
 
 @AutoBind
@@ -25,22 +26,22 @@ interface YuQ {
     /***
      * 好友列表
      */
-    val friends: Map<Long, Friend>
+    val friends: FriendList
 
     /***
      * 群列表
      */
-    val groups: Map<Long, Group>
+    val groups: GroupList
 
     /***
      * 刷新好友列表
      */
-    fun refreshFriends(): Map<Long, Friend>
+    fun refreshFriends(): FriendList
 
     /***
      * 刷新群列表
      */
-    fun refreshGroups(): Map<Long, Group>
+    fun refreshGroups(): GroupList
 
 //    /***
 //     * 发送消息。

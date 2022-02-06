@@ -1,14 +1,12 @@
 package com.icecreamqaq.yuq.entity
 
-import com.icecreamqaq.yuq.YuQ
+import com.icecreamqaq.yuq.*
 import com.icecreamqaq.yuq.annotation.Dev
 import com.icecreamqaq.yuq.controller.ContextSession
+import com.icecreamqaq.yuq.internalBot
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
-import com.icecreamqaq.yuq.mif
-import com.icecreamqaq.yuq.internalBot
 import com.icecreamqaq.yuq.util.WebHelper.Companion.postWithQQKey
-import com.icecreamqaq.yuq.yuq
 import java.io.File
 
 interface Contact : User {
@@ -83,7 +81,7 @@ interface Friend : Contact {
 
 interface Group : Contact {
 
-    val members: Map<Long, Member>
+    val members: MemberList
     val bot: Member
     val maxCount: Int
 

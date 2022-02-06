@@ -70,7 +70,7 @@ class GroupImpl(id: Long, override val name: String, override val maxCount: Int)
 
     override operator fun get(qq: Long) = super.get(qq) as GroupMemberImpl
 
-    override val members: MutableMap<Long, GroupMemberImpl> = hashMapOf()
+    override val members: UserListImpl<GroupMemberImpl> = UserListImpl()
     override lateinit var bot: GroupMemberImpl
 
 
