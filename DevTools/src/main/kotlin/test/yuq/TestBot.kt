@@ -20,7 +20,7 @@ class TestBot : YuQ, ApplicationService, User, YuQVersion {
     override fun isFriend() = false
 
     override fun runtimeName() = "YuQDevTools"
-    override fun runtimeVersion() = "0.1"
+    override fun runtimeVersion() = apiVersion()
 
     @Inject
     private lateinit var eventBus: EventBus
@@ -65,4 +65,8 @@ class TestBot : YuQ, ApplicationService, User, YuQVersion {
     override fun refreshGroups(): UserList<Group> {
         TODO("Not yet implemented")
     }
+
+    override fun id2platformId(id: Long): String = id.toString()
+
+    override fun platformId2id(platformId: String) = platformId.toLong()
 }
