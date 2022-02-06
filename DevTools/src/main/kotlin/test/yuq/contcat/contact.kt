@@ -13,7 +13,9 @@ import test.yuq.TestBot
 import test.yuq.message.MessageSourceImpl
 import java.io.File
 
-abstract class ContactImpl : Contact {
+abstract class ContactImpl(override val id: Long) : Contact {
+
+    override val platformId: String = id.toString()
 
     companion object {
         private val log = LoggerFactory.getLogger(ContactImpl::class.java)
@@ -38,9 +40,9 @@ abstract class ContactImpl : Contact {
 }
 
 class FriendImpl(
-    override val id: Long,
+    id: Long,
     override val name: String
-) : ContactImpl(), Friend {
+) : ContactImpl(id), Friend {
 
     override val avatar: String = ""
     override val guid = id.toString()
@@ -57,7 +59,7 @@ class FriendImpl(
 
 }
 
-class GroupImpl(override val id: Long, override val name: String, override val maxCount: Int) : ContactImpl(), Group {
+class GroupImpl(id: Long, override val name: String, override val maxCount: Int) : ContactImpl(id), Group {
     override val admins = arrayListOf<GroupMemberImpl>()
     override val guid = "g$id"
 
@@ -96,14 +98,14 @@ class GroupImpl(override val id: Long, override val name: String, override val m
 
 class GroupMemberImpl(
     override val group: GroupImpl,
-    override val id: Long,
+    id: Long,
     override var name: String,
     override var nameCard: String,
     override var title: String,
     override var permission: Int,
     override var ban: Int,
     override var lastMessageTime: Long,
-) : ContactImpl(), Member {
+) : ContactImpl(id), Member {
 
 
     override fun at() = mif.at(this)

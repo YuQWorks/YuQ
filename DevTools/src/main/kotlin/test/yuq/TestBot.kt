@@ -16,6 +16,7 @@ import javax.inject.Inject
 class TestBot : YuQ, ApplicationService, User, YuQVersion {
     override val avatar: String = ""
     override val id: Long = 25331213
+    override val platformId: String = id.toString()
     override val name: String = "测试用 Bot"
     override fun canSendMessage() = false
     override fun isFriend() = false

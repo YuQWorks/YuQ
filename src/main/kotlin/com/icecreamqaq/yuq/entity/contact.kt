@@ -56,6 +56,7 @@ interface ContactUser {
 
 interface User {
     val id: Long
+    val platformId: String
     val avatar: String
     val name: String
 
@@ -176,6 +177,7 @@ enum class UserSex {
 
 data class UserInfo(
     override val id: Long,
+    override val platformId: String = id.toString(),
     override val avatar: String,
     override val name: String,
     val sex: UserSex,
@@ -183,8 +185,7 @@ data class UserInfo(
     val qqAge: Int,
     val level: Int,
     val loginDays: Int,
-
-    val vips: List<UserVip>
+    val vips: List<UserVip>,
 ) : User {
     override fun isFriend() = yuq.friends.containsKey(id)
 
