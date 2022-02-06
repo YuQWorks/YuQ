@@ -43,17 +43,11 @@ interface YuQ {
      */
     fun refreshGroups(): GroupList
 
-//    /***
-//     * 发送消息。
-//     */
-//    @Deprecated("建议直接使用 Contact 对象的 sendMessage 方法。")
-//    fun sendMessage(message: Message): MessageSource
-//
-//    /***
-//     * 撤回消息。
-//     */
-//    @Deprecated("建议直接使用 Message 或 MessageSource 的 recall 方法。")
-//    fun recallMessage(messageSource: MessageSource): Int
+    // 通过 ID 获取 Platform ID。
+    fun id2platformId(id: Long): String
+
+    // 通过 Platform ID 获取 ID。
+    fun platformId2id(platformId: String): Long
 
     val cookieEx: QQCookie
     val web: Web
