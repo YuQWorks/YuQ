@@ -1,10 +1,9 @@
 package com.icecreamqaq.yuq
 
-import com.icecreamqaq.yuq.entity.Friend
-import com.icecreamqaq.yuq.entity.Group
-import com.icecreamqaq.yuq.entity.Member
-import com.icecreamqaq.yuq.entity.UserList
+import com.icecreamqaq.yuq.entity.*
 
 typealias FriendList = UserList<out Friend>
 typealias GroupList = UserList<out Group>
 typealias MemberList = UserList<out Member>
+typealias GuildList = UserList<out Guild>
+typealias GuildMemberList = UserList<out GuildMember>

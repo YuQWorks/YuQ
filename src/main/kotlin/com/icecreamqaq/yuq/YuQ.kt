@@ -34,6 +34,11 @@ interface YuQ {
     val groups: GroupList
 
     /***
+     * 频道列表
+     */
+    val guilds: GuildList
+
+    /***
      * 刷新好友列表
      */
     fun refreshFriends(): FriendList
@@ -42,6 +47,11 @@ interface YuQ {
      * 刷新群列表
      */
     fun refreshGroups(): GroupList
+
+    /***
+     * 刷新频道列表
+     */
+    fun refreshGuilds(): GuildList
 
     // 通过 ID 获取 Platform ID。
     fun id2platformId(id: Long): String

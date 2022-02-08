@@ -1,5 +1,7 @@
 package com.icecreamqaq.yuq.entity
 
+import com.icecreamqaq.yuq.GuildMemberList
+
 interface Guild:User {
 
 //    val id: Long
@@ -12,7 +14,7 @@ interface Guild:User {
     val channels: List<Channel>
 
     // 该列表并不提供完整的成员列表！
-    val member: UserList<GuildMember>
+    val member: GuildMemberList
 
 }
 
