@@ -1,8 +1,9 @@
 package com.icecreamqaq.yuq.entity
 
+import com.icecreamqaq.yuq.GuildChannelList
 import com.icecreamqaq.yuq.GuildMemberList
 
-interface Guild:User {
+interface Guild : User {
 
 //    val id: Long
 //    val platformId: Long
@@ -11,7 +12,7 @@ interface Guild:User {
 //    val avatar: String
 
     val defaultChannel: Channel
-    val channels: List<Channel>
+    val channels: GuildChannelList
 
     // 该列表并不提供完整的成员列表！
     val member: GuildMemberList
@@ -24,4 +25,6 @@ interface Channel : Contact {
         get() = ""
 }
 
-interface GuildMember : Contact
+interface GuildMember : Contact {
+    val guild: Guild
+}
