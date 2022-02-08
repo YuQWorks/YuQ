@@ -121,6 +121,15 @@ class UserListImpl<E : User> : UserList<E> {
         list.add(ProEntry(user))
     }
 
+    fun getOrPut(id: Long, value: E): E {
+        val r = get(id)
+        if (r != null) return r
+        add(value)
+        return value
+    }
+
+    fun getOrPut(id: Long, value: () -> E) = getOrPut(id, value())
+
     operator fun set(id: Long, user: E) {
         for (i in 0 until list.size) {
             val u = list[i]
