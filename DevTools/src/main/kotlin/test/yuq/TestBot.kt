@@ -53,6 +53,8 @@ class TestBot : YuQ, ApplicationService, User, YuQVersion {
         get() = TODO("Not yet implemented")
     override val friends: UserList<Friend> = UserListImpl()
     override val groups: UserList<Group> = UserListImpl()
+    override val guilds: GuildList
+        get() = TODO("Not yet implemented")
     override val messageItemFactory: MessageItemFactory = MessageItemFactoryImpl()
 
     @Inject
@@ -63,6 +65,10 @@ class TestBot : YuQ, ApplicationService, User, YuQVersion {
     }
 
     override fun refreshGroups(): UserList<Group> {
+        TODO("Not yet implemented")
+    }
+
+    override fun refreshGuilds(): GuildList {
         TODO("Not yet implemented")
     }
 
