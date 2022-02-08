@@ -15,6 +15,13 @@ open class MessageEvent(open val sender: Contact, val message: Message) : Event(
 open class GroupMessageEvent(override val sender: Member, val group: Group, message: Message) :
     MessageEvent(sender, message)
 
+open class GuildMessageEvent(
+    override val sender: GuildMember,
+    val guild: Guild,
+    val channel: Channel,
+    message: Message
+) : MessageEvent(sender, message)
+
 open class PrivateMessageEvent(sender: Contact, message: Message) : MessageEvent(sender, message) {
     open class FriendMessage(override val sender: Friend, message: Message) : PrivateMessageEvent(sender, message)
     open class TempMessage(override val sender: Member, message: Message) : PrivateMessageEvent(sender, message)
@@ -149,6 +156,9 @@ open class ClickBotEvent(operator: Contact, action: String, suffix: String) : Cl
 
 open class AtBotEvent(open val type: Int, open val sender: Contact, open val source: Contact) : Event() {
     open class ByGroup(type: Int, override val sender: Member, override val source: Group) :
+        AtBotEvent(type, sender, source)
+
+    open class ByGuild(type: Int, override val sender: GuildMember, override val source: Channel, val guild: Guild) :
         AtBotEvent(type, sender, source)
 
     open class ByPrivate(type: Int, sender: Contact, source: Contact) : AtBotEvent(type, sender, source) {
