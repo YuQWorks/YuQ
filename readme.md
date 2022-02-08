@@ -1,4 +1,8 @@
-YuQ 是一个 QQ 机器人快速开发框架。[开发文档](https://yuqworks.github.io/YuQ-Doc/)
+YuQ 是一个机器人快速开发框架。[开发文档](https://yuqworks.github.io/YuQ-Doc/)
+
+现在 YuQ 将不仅仅是 QQ 机器人。  
+借由高度封装，YuQ 可以在各个平台做出兼容实现的 Runtime。  
+帮助您在多平台快速展开机器人。
 
  - 路由映射
  - 依赖注入
@@ -6,19 +10,16 @@ YuQ 是一个 QQ 机器人快速开发框架。[开发文档](https://yuqworks.g
  - ORM支持
  - 上下文消息
  
-YuQ 使用 Kotlin 开发，并且完美支持 Java 与 Kotlin。 
-
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.IceCreamQAQ.YuQ/YuQ/badge.svg)](https://search.maven.org/#search|ga|1|com.IceCreamQAQ.YuQ.YuQ-Mirai)
-
+YuQ 使用 Kotlin 开发，并且完美支持 Java 与 Kotlin。
  
 在 YuQ 我们仅需很简单的代码，就可以完成很复杂的功能。  
-比如，我们要针对一个指令"菜单"，进行一个标准的菜单消息回复。
+比如，我们要针对一个指令 "Hello"，进行一个标准的 "Hello World!" 消息回复。
 ```Java
 @GroupController
 public class GroupMenu{ 
-    @Action("菜单")
+    @Action("Hello")
     public String menu(){
-        return "这是具体的菜单内容。";
+        return "Hello World!";
     } 
 }
 ```
