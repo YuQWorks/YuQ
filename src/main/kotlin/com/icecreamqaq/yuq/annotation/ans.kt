@@ -20,6 +20,11 @@ annotation class GroupController
 @Named("priv")
 annotation class PrivateController
 
+@LoadBy(BotControllerLoader::class)
+@EnchantBy(MethodParaNamedEnchanter::class)
+@Named("guild")
+annotation class GuildController
+
 @LoadBy(BotContextControllerLoader::class)
 @EnchantBy(MethodParaNamedEnchanter::class)
 annotation class ContextController
