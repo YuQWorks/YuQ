@@ -54,9 +54,9 @@ class UserListImpl<E : User> : UserList<E> {
 
             var i = 0
 
-            override fun hasNext() = i >= size
+            override fun hasNext() = i < size
 
-            override fun next() = getByIndex(i)
+            override fun next() = getByIndex(i++)
 
         }
 
