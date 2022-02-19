@@ -17,13 +17,7 @@ class YuQStarter {
         fun start() {
             val startTime = System.currentTimeMillis()
 
-            val classloader = AppClassloader(YuQStarter::class.java.classLoader)
-
-            val yuClass = classloader.loadClass("com.IceCreamQAQ.Yu.DefaultApp")
-            val start: Method? = yuClass.getMethod("start")
-
-            val yu = yuClass.newInstance()
-            start!!.invoke(yu)
+            DefaultStarter.start()
 
             val overTime = System.currentTimeMillis()
 
@@ -38,12 +32,8 @@ class YuQStarter {
 
         @JvmStatic
         fun start(args: Array<String>) {
-
-
             DefaultStarter.init(args)
             start()
-
-
         }
 
     }
