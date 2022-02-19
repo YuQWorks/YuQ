@@ -6,7 +6,7 @@ plugins {
 }
 val baseVersion = "0.1.0.0"
 val channel = "DEV"
-val buildNum = 26
+val buildNum = 27
 
 group = "com.IceCreamQAQ"
 version = "$baseVersion-$channel$buildNum"
