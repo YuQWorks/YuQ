@@ -79,13 +79,6 @@ open class YuQInternalBotImpl {
     @Config("YuQ.Controller.RainCode")
     lateinit var rainCode: RainCodeConfig
 
-    @Deprecated("应该使用具体的 receiveFriendMessage 或是 receiveTempMessage")
-    open suspend fun receivePrivateMessage(sender: Contact, message: Message) = when (sender) {
-        is Friend -> receiveFriendMessage(sender, message)
-        is Member -> receiveTempMessage(sender, message)
-        else -> error("Not A PrivateContact")
-    }
-
     open suspend fun receiveFriendMessage(sender: Friend, message: Message) {
         log.info("${sender.toLogString()} -> ${message.toLogString()}")
         runningInfo.receiveMessage()
@@ -209,22 +202,19 @@ open class YuQInternalBotImpl {
         val ms = message.toLogString()
         val ts = contact.toLogString()
         log.debug("Send Message To: $ts, $ms")
-        return SendMessageEvent.Per(contact, message)(
-            {
-                val m = send(obj)
-                log.info("$ts <- $ms")
-                runningInfo.sendMessage()
-                SendMessageEvent.Post(contact, message, m)()
-                message.recallDelay?.let {
-                    GlobalScope.launch {
-                        delay(it)
-                        m.recall()
-                    }
-                }
-                m
-            },
-            { throw SendMessageFailedByCancel() }
-        )!!
+
+        SendMessageEvent.Per(contact, message)(SendMessageFailedByCancel())
+        val m = send(obj)
+        log.info("$ts <- $ms")
+        runningInfo.sendMessage()
+        SendMessageEvent.Post(contact, message, m)()
+        message.recallDelay?.let {
+            GlobalScope.launch {
+                delay(it)
+                m.recall()
+            }
+        }
+        return m
     }
 
     open fun getContextSession(sessionId: String) = sessionCache[sessionId] ?: run {

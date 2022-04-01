@@ -6,7 +6,7 @@ plugins {
 }
 val baseVersion = "0.1.0.0"
 val channel = "DEV"
-val buildNum = 27
+val buildNum = 28
 
 group = "com.IceCreamQAQ"
 version = "$baseVersion-$channel$buildNum"
@@ -18,7 +18,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    api("com.IceCreamQAQ:Yu-Core:0.2.0.0-DEV19")
+    api("com.IceCreamQAQ:Yu-Core:0.2.0.0-DEV20")
 }
 
 java {
