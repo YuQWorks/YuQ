@@ -12,72 +12,99 @@ import com.icecreamqaq.yuq.yuq
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import javax.inject.Named
+import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
-import kotlin.reflect.full.callSuspend
+import kotlin.reflect.KParameter
+import kotlin.reflect.full.callSuspendBy
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.jvm.kotlinFunction
 
-class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Method, val instance: Any?, level: Int? = null) : MethodInvoker {
+class BotReflectMethodInvoker @JvmOverloads constructor(
+    private val method: Method,
+    val instance: Any?,
+    level: Int? = null
+) : MethodInvoker {
 
     private var returnFlag: Boolean = false
-    private var mps: Array<MethodPara?>? = null
-    private val saves: Array<Saves>
-    lateinit var kFun: KFunction<*>
-    var isSuspend = false
+
+
+    private val action = method.getAnnotation(Action::class.java)
+    private val isAction = action != null && level != null
+    private val actionPaths = action?.value?.split(" ", "/")
+    private val needMatch = ((actionPaths?.size ?: 0) > 1) && isAction
+
+    private val l = if (needMatch) level!! - actionPaths!!.size - 1 else 0
 
     data class ParaItem(val value: Int, val type: PathVar.Type)
 
+    val invoker: suspend (BotActionContext) -> Any?
+
     init {
-        if (instance != null) {
-            returnFlag = (method.returnType?.name ?: "void") != "void"
 
-            val paras = method.parameters!!
-            val mps = arrayOfNulls<MethodPara>(paras.size)
+        returnFlag = (method.returnType?.name ?: "void") != "void"
 
-            val saves = ArrayList<Saves>(paras.size)
+        val isKotlin = method.kotlinFunction != null
 
-            val action = method.getAnnotation(Action::class.java)
-            val isAction = action != null && level != null
-            val actionPaths = action?.value?.split(" ", "/")
-            val needMatch = (actionPaths?.size ?: 0 > 1) && isAction
-            val l = if (needMatch) level!! - actionPaths!!.size - 1 else 0
+        if (isKotlin) {
+            val kfun = method.kotlinFunction!!
+            var instanceParameter: KParameter? = null
+            val isSuspend = kfun.isSuspend
 
-            para@ for ((i, para) in paras.withIndex()) {
-//                val para = paras[i]!!
-                val name = para.getAnnotation(Named::class.java)!!.value
-                val save = para.getAnnotation(Save::class.java)
-                if (save != null) {
-                    saves.add(Saves(i, name))
+            kfun.parameters.filter {
+                if (it.kind == KParameter.Kind.INSTANCE) instanceParameter = it
+                it.kind == KParameter.Kind.VALUE
+            }.map {
+
+                it to getMethodPara(
+                    (it.type.classifier!! as KClass<*>).java,
+                    it.findAnnotation<Named>()?.value ?: it.name ?: "",
+                    it.findAnnotation()
+                )
+            }.apply {
+                invoker = { context ->
+                    val paraMap = HashMap<KParameter, Any?>()
+                    paraMap[instanceParameter!!] = instance
+                    forEach { getPara(context, it.second)?.let { para -> paraMap[it.first] = para } }
+                    if (isSuspend) kfun.callSuspendBy(paraMap)
+                    else kfun.callBy(paraMap)
                 }
-
-                val pathVar = para.getAnnotation(PathVar::class.java)
-                if (pathVar != null) {
-                    mps[i] = MethodPara(para.type, 1, pathVar)
-                    continue
-                }
-
-                if (needMatch) {
-                    for ((ii, actionPath) in actionPaths!!.withIndex()) {
-                        if (actionPath.startsWith("{") && actionPath.endsWith("}")) {
-                            val needName = actionPath.subSequence(1, actionPath.length - 1)
-                            if (name == needName) {
-                                val type = toTyped(para.type)
-                                mps[i] = MethodPara(para.type, 2, ParaItem(l + ii, type))
-                                continue@para
-                            }
-                        }
-                    }
-//                    val actionPath = actionPaths!![i]
-                }
-
-                val pt = when (name) {
-                    "qq" -> MethodPara(para.type, 11, toTyped(para.type))
-                    "sender" -> MethodPara(para.type, 11, toTyped(para.type))
-                    "group" -> MethodPara(para.type, 12, toTyped(para.type))
-                    else -> null
-                }
-                if (pt != null) mps[i] = pt
-                else mps[i] = MethodPara(para.type, 0, name)
             }
+
+
+        } else {
+            val mps = method.parameters.map {
+                getMethodPara(
+                    it.type,
+                    it.getAnnotation(Named::class.java)!!.value,
+                    it.getAnnotation(PathVar::class.java)
+                )
+            }.toTypedArray()
+            invoker = {
+                try {
+                    method.invoke(instance, *getParas(mps, it))
+                } catch (e: InvocationTargetException) {
+                    throw e.targetException!!
+                }
+            }
+        }
+//        val paras = method.parameters!!
+//        val mps = arrayOfNulls<MethodPara>(paras.size)
+//
+//        val saves = ArrayList<Saves>(paras.size)
+//
+//
+//
+//
+//        para@ for ((i, para) in paras.withIndex()) {
+////                val para = paras[i]!!
+//            val name = para.getAnnotation(Named::class.java)!!.value
+//            val save = para.getAnnotation(Save::class.java)
+//            if (save != null) {
+//                saves.add(Saves(i, name))
+//            }
+//
+//
+//        }
 
 
 //            for (i in paras.indices) {
@@ -99,16 +126,40 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
 
 //            if (mps.last().)
 
-            method.kotlinFunction?.let {
-                kFun = it
-                if (it.isSuspend) isSuspend = true
-            }
+//        method.kotlinFunction?.let {
+//            kFun = it
+//            if (it.isSuspend) isSuspend = true
+//        }
+//
+//        this.mps = mps
+//        this.saves = saves.toTypedArray()
 
-            this.mps = mps
-            this.saves = saves.toTypedArray()
-        } else {
-            saves = ArrayList<Saves>().toTypedArray()
+    }
+
+    fun getMethodPara(type: Class<*>, name: String, pathVar: PathVar?): MethodPara {
+//        val pathVar = para.getAnnotation(PathVar::class.java)
+        if (pathVar != null) return MethodPara(type, 1, pathVar)
+
+        if (needMatch) {
+            for ((ii, actionPath) in actionPaths!!.withIndex()) {
+                if (actionPath.startsWith("{") && actionPath.endsWith("}")) {
+                    val needName = actionPath.subSequence(1, actionPath.length - 1)
+                    if (name == needName) {
+                        val ct = toTyped(type)
+                        return MethodPara(type, 2, ParaItem(l + ii, ct))
+                    }
+                }
+            }
+//                    val actionPath = actionPaths!![i]
         }
+
+        val pt = when (name) {
+            "qq" -> MethodPara(type, 11, toTyped(type))
+            "sender" -> MethodPara(type, 11, toTyped(type))
+            "group" -> MethodPara(type, 12, toTyped(type))
+            else -> null
+        }
+        return pt ?: MethodPara(type, 0, name)
     }
 
     fun toTyped(pt: Class<*>): PathVar.Type {
@@ -168,81 +219,64 @@ class BotReflectMethodInvoker @JvmOverloads constructor(private val method: Meth
     }
 
 
-    fun getParas(len: Int, context: BotActionContext): Array<Any?> {
-        if (mps == null) return arrayOfNulls<Any>(0)
+    fun getParas(mps: Array<MethodPara>, context: BotActionContext): Array<Any?> {
+        val len = mps.size
         val paras = arrayOfNulls<Any>(len)
-        for (i in 0 until len) {
-            val mp = mps!![i] ?: continue
-            paras[i] = when (mp.type) {
-                0 -> context[mp.data as String]
-                1 -> {
-                    val pv = mp.data as PathVar
-                    getByPathVar(pv.value, pv.type, context)
-                }
-                2 -> {
-                    val pv = mp.data as ParaItem
-                    getByPathVar(pv.value, pv.type, context)
-                }
-
-                11 -> {
-                    when (mp.data as PathVar.Type) {
-                        PathVar.Type.Long -> context.sender.id
-                        PathVar.Type.Contact -> context.sender
-                        PathVar.Type.Member -> if (context.sender is Member) context.sender else null
-                        PathVar.Type.Friend ->
-                            when (context.sender) {
-                                is Friend -> context.sender
-                                is Member -> context.sender.toFriend()
-                                else -> null
-                            }
-                        else -> null
-                    }
-                }
-                12 -> {
-                    if (context.source is Group)
-                        when (mp.data as PathVar.Type) {
-                            PathVar.Type.Long -> context.source.id
-                            PathVar.Type.Contact -> context.source
-                            PathVar.Type.Group -> context.source
-                            else -> null
-                        }
-                    else null
-                }
-                else -> null
-            }
-        }
+        for (i in 0 until len) paras[i] = getPara(context, mps[i])
         return paras
     }
 
-    override suspend fun invoke(context: ActionContext): Any? {
-        if (context !is BotActionContext) return null
-        val mps = mps!!
-        val paras = if (isSuspend) getParas(mps.size - 1, context) else getParas(mps.size, context)
-
-        try {
-
-            val re = if (isSuspend) kFun.callSuspend(instance, *paras)
-            else if (mps.isEmpty()) method.invoke(instance)
-            else method.invoke(instance, *paras)
-
-
-
-            for (save in saves) {
-                context.session[save.name] = paras[save.i] ?: continue
+    fun getPara(context: BotActionContext, mp: MethodPara): Any? =
+        when (mp.type) {
+            0 -> context[mp.data as String]
+            1 -> {
+                val pv = mp.data as PathVar
+                getByPathVar(pv.value, pv.type, context)
+            }
+            2 -> {
+                val pv = mp.data as ParaItem
+                getByPathVar(pv.value, pv.type, context)
             }
 
-            if (returnFlag) return re
-            return null
-
-        } catch (e: InvocationTargetException) {
-            throw e.targetException!!
+            11 -> {
+                when (mp.data as PathVar.Type) {
+                    PathVar.Type.Long -> context.sender.id
+                    PathVar.Type.Contact -> context.sender
+                    PathVar.Type.Member -> if (context.sender is Member) context.sender else null
+                    PathVar.Type.Friend ->
+                        when (context.sender) {
+                            is Friend -> context.sender
+                            is Member -> context.sender.toFriend()
+                            else -> null
+                        }
+                    else -> null
+                }
+            }
+            12 -> {
+                if (context.source is Group)
+                    when (mp.data as PathVar.Type) {
+                        PathVar.Type.Long -> context.source.id
+                        PathVar.Type.Contact -> context.source
+                        PathVar.Type.Group -> context.source
+                        else -> null
+                    }
+                else null
+            }
+            else -> null
         }
+
+    override suspend fun invoke(context: ActionContext): Any? {
+        if (context !is BotActionContext) return null
+        val re = invoker(context)
+
+        if (returnFlag) return re
+        return null
     }
 
     data class MethodPara(
-            val clazz: Class<*>,
-            val type: Int,
-            val data: Any
+        val clazz: Class<*>,
+        val type: Int,
+        val data: Any
     )
 
     data class Saves(val i: Int, val name: String)
