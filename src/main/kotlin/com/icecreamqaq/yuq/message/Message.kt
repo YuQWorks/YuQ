@@ -73,7 +73,7 @@ open class Message(val body: MessageItemChain = MessageItemChain()) : SendAble, 
      * 消息源是定位消息在腾讯所在位置的记录，用于消息撤回，回复等操作。
      * 当你将消息发出时，并不会将发出消息的消息源写到本参数，而是 sendMessage 方法返回的消息源。
      */
-    lateinit var source: MessageSource
+    var source: MessageSource? = null
 
     var codeStr: String = ""
         get() {
@@ -123,7 +123,7 @@ open class Message(val body: MessageItemChain = MessageItemChain()) : SendAble, 
     }
 
     fun recall(): Int {
-        return source.recall()
+        return source!!.recall()
     }
 
     override fun toString(): String {
