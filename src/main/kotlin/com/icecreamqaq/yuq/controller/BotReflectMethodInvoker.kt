@@ -70,8 +70,13 @@ class BotReflectMethodInvoker @JvmOverloads constructor(
                             paraMap[it.first] = para
                         }
                     }
-                    if (isSuspend) kfun.callSuspendBy(paraMap)
-                    else kfun.callBy(paraMap)
+                    kotlin.runCatching {
+                        if (isSuspend) kfun.callSuspendBy(paraMap)
+                        else kfun.callBy(paraMap)
+                    }.getOrElse {
+                        if (it is InvocationTargetException) throw it.targetException
+                        else throw it
+                    }
                 }
             }
 
