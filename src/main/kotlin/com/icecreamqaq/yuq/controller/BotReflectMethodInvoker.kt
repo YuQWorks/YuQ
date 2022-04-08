@@ -55,7 +55,7 @@ class BotReflectMethodInvoker @JvmOverloads constructor(
                 it.kind == KParameter.Kind.VALUE
             }.map {
 
-                it to getMethodPara(
+                (it) to getMethodPara(
                     (it.type.classifier!! as KClass<*>).java,
                     it.findAnnotation<Named>()?.value ?: it.name ?: "",
                     it.findAnnotation()
@@ -64,7 +64,12 @@ class BotReflectMethodInvoker @JvmOverloads constructor(
                 invoker = { context ->
                     val paraMap = HashMap<KParameter, Any?>()
                     paraMap[instanceParameter!!] = instance
-                    forEach { getPara(context, it.second)?.let { para -> paraMap[it.first] = para } }
+                    forEach {
+                        getPara(context, it.second).let { para ->
+                            if (para == null && it.first.isOptional) return@let
+                            paraMap[it.first] = para
+                        }
+                    }
                     if (isSuspend) kfun.callSuspendBy(paraMap)
                     else kfun.callBy(paraMap)
                 }

@@ -9,12 +9,12 @@ class TestController {
 
     @Action("HelloSuspend")
     suspend fun helloSuspend(qq: Long, spx: Int = 3): String {
-        delay(5000)
+        delay(1000)
         return "Hello Suspend! $qq! $spx"
     }
 
     @Action("HelloKotlin")
-    fun helloKotlin(qq: Long, spx: Int = 3): String {
+    fun helloKotlin(qq: Long, spx: String?): String {
         return "Hello Kotlin! $qq! $spx"
     }
 
