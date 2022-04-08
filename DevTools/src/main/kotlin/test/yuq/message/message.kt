@@ -6,7 +6,7 @@ import com.icecreamqaq.yuq.message.MessageSource
 import com.icecreamqaq.yuq.message.Text
 import kotlin.random.Random
 
-class MessageSourceImpl(override val sender: Long) : MessageSource {
+class MessageSourceImpl(override val sender: Long, override val sendTo: Long) : MessageSource {
     override val id: Int = Random.nextInt()
     override val liteMsg: String = ""
     override val sendTime: Long = System.currentTimeMillis()

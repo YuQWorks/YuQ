@@ -24,8 +24,8 @@ abstract class ContactImpl(override val id: Long) : Contact {
     override val yuq = com.icecreamqaq.yuq.yuq
 
     override fun sendMessage(message: Message): MessageSource {
-        return (yuq as TestBot).rainBot.sendMessage(message,this, null) {
-            MessageSourceImpl(id)
+        return (yuq as TestBot).rainBot.sendMessage(message, this, null) {
+            MessageSourceImpl(id, yuq.botId)
         }
     }
 

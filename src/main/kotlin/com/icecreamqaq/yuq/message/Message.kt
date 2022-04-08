@@ -20,48 +20,6 @@ interface SendAble {
     fun toThrowable(): MessageThrowable = MessageThrowable(toMessage())
 }
 
-interface MessageSource {
-    val id: Int
-    val sender: Long
-    val sendTime: Long
-    val liteMsg: String
-
-    fun recall(): Int
-}
-
-
-interface GroupMessageSource : MessageSource {
-    val groupCode: Long
-}
-
-interface TempMessageSource : MessageSource {
-    val groupCode: Long
-}
-
-data class MessageFailByCancel(
-    override val id: Int,
-    override val sender: Long,
-    override val sendTime: Long,
-    override val liteMsg: String,
-    override val groupCode: Long,
-) : GroupMessageSource, TempMessageSource {
-    override fun recall(): Int {
-        return 0
-    }
-}
-
-data class MessageFailByReadTimeOut(
-    override val id: Int,
-    override val sender: Long,
-    override val sendTime: Long,
-    override val liteMsg: String,
-    override val groupCode: Long,
-) : GroupMessageSource, TempMessageSource {
-    override fun recall(): Int {
-        return 0
-    }
-}
-
 
 open class Message(val body: MessageItemChain = MessageItemChain()) : SendAble, IMessageItemChain by body {
 
