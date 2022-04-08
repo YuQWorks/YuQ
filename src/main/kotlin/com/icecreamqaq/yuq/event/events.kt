@@ -126,19 +126,23 @@ open class SendMessageEvent(val sendTo: Contact, val message: Message) : Event()
         SendMessageEvent(sendTo, message)
 }
 
-/***
- * 消息发送未达预期事件。
- * 消息发送成功了，但是消息被拒发。
- * 他有别于消息发送失败，因为消息发送这个过程完成了。
- * 一般指消息正常上报给了服务端，但服务端拒绝广播本消息。
- * 也就是俗称的吞消息。
- */
+// 消息发送未达预期事件。
 open class SendMessageInvalidEvent(
     val sendTo: Contact,
-    val message: Message,
-    val messageSource: MessageSource,
-    val flag: Int
-) : Event()
+    val message: Message
+) : Event() {
+    // 发送消息被取消事件。
+    class ByCancel(sendTo: Contact, message: Message) : SendMessageInvalidEvent(sendTo, message)
+
+    /*** 读取发送消息超时事件。
+     * 消息发送成功了，但是消息被拒发。
+     * 他有别于消息发送失败，因为消息发送这个过程完成了。
+     * 一般指消息正常上报给了服务端，但服务端拒绝广播本消息。
+     * 也就是俗称的吞消息。
+     */
+    class ByReadTimeout(sendTo: Contact, message: Message) : SendMessageInvalidEvent(sendTo, message)
+}
+
 
 open class ClickEvent(open val operator: Contact, val action: String, val suffix: String) : Event()
 open class ClickBotEvent(operator: Contact, action: String, suffix: String) : ClickEvent(operator, action, suffix) {
