@@ -11,12 +11,10 @@ import com.icecreamqaq.yuq.entity.*
 import com.icecreamqaq.yuq.error.SendMessageFailedByCancel
 import com.icecreamqaq.yuq.event.*
 import com.icecreamqaq.yuq.job.YuQRunningInfo
-import com.icecreamqaq.yuq.message.At
-import com.icecreamqaq.yuq.message.Message
+import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
-import com.icecreamqaq.yuq.message.MessageSource
-import com.icecreamqaq.yuq.message.Text
 import com.icecreamqaq.yuq.util.YuQInternalFun
+import com.icecreamqaq.yuq.util.liteMessage
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import javax.inject.Inject
@@ -56,6 +54,9 @@ open class YuQInternalBotImpl {
 
     @Config("YuQ.bot.name")
     private var botName: String? = null
+
+    @Config("yuq.chat.strict")
+    private var strict: Boolean = true
 
     data class RainCodeConfig(
         val prefix: String = "^",
@@ -198,12 +199,12 @@ open class YuQInternalBotImpl {
         contact: Contact,
         obj: T,
         send: (T) -> R
-    ): R {
+    ): MessageSource {
         val ms = message.toLogString()
         val ts = contact.toLogString()
         log.debug("Send Message To: $ts, $ms")
 
-        SendMessageEvent.Per(contact, message)(SendMessageFailedByCancel())
+        if (SendMessageEvent.Per(contact, message).post()) return messageSendFailedByCancel(contact, message)
         val m = send(obj)
         log.info("$ts <- $ms")
         runningInfo.sendMessage()
@@ -215,6 +216,18 @@ open class YuQInternalBotImpl {
             }
         }
         return m
+    }
+
+    open fun messageSendFailedByCancel(contact: Contact, message: Message): MessageSource {
+        SendMessageInvalidEvent.ByCancel(contact,message).post()
+        if (strict) throw SendMessageFailedByCancel()
+        return MessageFailByCancel.create(contact, message.liteMessage)
+    }
+
+    open fun messageSendFailedByReadTimeout(contact: Contact, message: Message): MessageSource {
+        SendMessageInvalidEvent.ByReadTimeout(contact,message).post()
+        if (strict) throw SendMessageFailedByCancel()
+        return MessageFailByReadTimeOut.create(contact, message.liteMessage)
     }
 
     open fun getContextSession(sessionId: String) = sessionCache[sessionId] ?: run {
