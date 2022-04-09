@@ -76,7 +76,7 @@ class BotReflectMethodInvoker @JvmOverloads constructor(
                     }.getOrElse {
                         if (it is InvocationTargetException) throw it.targetException
                         else throw it
-                    }
+                    }.let { if (it == Unit) null else it }
                 }
             }
 
