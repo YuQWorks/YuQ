@@ -9,6 +9,7 @@ import com.icecreamqaq.yuq.controller.ContextRouter
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.entity.*
 import com.icecreamqaq.yuq.error.SendMessageFailedByCancel
+import com.icecreamqaq.yuq.error.SendMessageFailedByTimeout
 import com.icecreamqaq.yuq.event.*
 import com.icecreamqaq.yuq.job.YuQRunningInfo
 import com.icecreamqaq.yuq.message.*
@@ -226,7 +227,7 @@ open class YuQInternalBotImpl {
 
     open fun messageSendFailedByReadTimeout(contact: Contact, message: Message): MessageSource {
         SendMessageInvalidEvent.ByReadTimeout(contact,message).post()
-        if (strict) throw SendMessageFailedByCancel()
+        if (strict) throw SendMessageFailedByTimeout()
         return MessageFailByReadTimeOut.create(contact, message.liteMessage)
     }
 
