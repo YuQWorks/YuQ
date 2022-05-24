@@ -172,3 +172,74 @@ data class MessageFailByReadTimeOut(
 
     }
 }
+
+data class FakeMessageSource(
+    override val id: Int,
+    override val sender: Long,
+    override val sendTime: Long,
+    override val sendTo: Long,
+    override val liteMsg: String,
+    override val groupCode: Long,
+    override val guildId: Long,
+    override val channelId: Long,
+) : FriendMessageSource, GroupMessageSource, TempMessageSource, GuildMessageSource {
+    override fun recall(): Int {
+        return 0
+    }
+
+    constructor(contact: Friend, liteMsg: String) : this(
+        -1,
+        yuq.botId,
+        System.currentTimeMillis(),
+        contact.id,
+        liteMsg,
+        -1,
+        -1,
+        -1
+    )
+
+    constructor(contact: Group, liteMsg: String) : this(
+        -1,
+        yuq.botId,
+        System.currentTimeMillis(),
+        contact.id,
+        liteMsg,
+        contact.id,
+        -1,
+        -1
+    )
+
+    constructor(contact: Member, liteMsg: String) : this(
+        -1,
+        yuq.botId,
+        System.currentTimeMillis(),
+        contact.id,
+        liteMsg,
+        contact.group.id,
+        -1,
+        -1
+    )
+
+    constructor(contact: Channel, liteMsg: String) : this(
+        -1,
+        yuq.botId,
+        System.currentTimeMillis(),
+        contact.id,
+        liteMsg,
+        -1,
+        contact.guild.id,
+        contact.id
+    )
+
+    companion object {
+        fun create(contact: Contact, liteMsg: String): FakeMessageSource =
+            when(contact){
+                is Friend -> FakeMessageSource(contact, liteMsg)
+                is Group -> FakeMessageSource(contact, liteMsg)
+                is Member -> FakeMessageSource(contact, liteMsg)
+                is Channel -> FakeMessageSource(contact, liteMsg)
+                else -> error("联系人 $contact 可能无法创建消息。")
+            }
+
+    }
+}
