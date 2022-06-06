@@ -52,7 +52,7 @@ class BotReflectMethodInvoker @JvmOverloads constructor(
 
             kfun.parameters.filter {
                 if (it.kind == KParameter.Kind.INSTANCE) instanceParameter = it
-                it.kind == KParameter.Kind.VALUE
+                it.kind != KParameter.Kind.INSTANCE
             }.map {
 
                 (it) to getMethodPara(
