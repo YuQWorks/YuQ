@@ -163,13 +163,17 @@ class BotReflectMethodInvoker @JvmOverloads constructor(
 //                    val actionPath = actionPaths!![i]
         }
 
-        val pt = when (name) {
-            "qq" -> MethodPara(type, 11, toTyped(type))
-            "sender" -> MethodPara(type, 11, toTyped(type))
-            "group" -> MethodPara(type, 12, toTyped(type))
-            else -> null
+        return when (type) {
+            BotActionContext::class.java, ActionContext::class.java -> MethodPara(type, 20, 0)
+            else -> when (name) {
+                "qq" -> MethodPara(type, 11, toTyped(type))
+                "sender" -> MethodPara(type, 11, toTyped(type))
+                "group" -> MethodPara(type, 12, toTyped(type))
+                else -> MethodPara(type, 0, name)
+            }
         }
-        return pt ?: MethodPara(type, 0, name)
+//        val pt =
+//        return pt ?:
     }
 
     fun toTyped(pt: Class<*>): PathVar.Type {
@@ -243,6 +247,7 @@ class BotReflectMethodInvoker @JvmOverloads constructor(
                 val pv = mp.data as PathVar
                 getByPathVar(pv.value, pv.type, context)
             }
+
             2 -> {
                 val pv = mp.data as ParaItem
                 getByPathVar(pv.value, pv.type, context)
@@ -259,9 +264,11 @@ class BotReflectMethodInvoker @JvmOverloads constructor(
                             is Member -> context.sender.toFriend()
                             else -> null
                         }
+
                     else -> null
                 }
             }
+
             12 -> {
                 if (context.source is Group)
                     when (mp.data as PathVar.Type) {
@@ -272,6 +279,7 @@ class BotReflectMethodInvoker @JvmOverloads constructor(
                     }
                 else null
             }
+            20 -> context
             else -> null
         }
 
