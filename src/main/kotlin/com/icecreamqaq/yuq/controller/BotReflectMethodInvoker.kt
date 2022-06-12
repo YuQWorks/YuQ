@@ -3,6 +3,7 @@ package com.icecreamqaq.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.controller.ActionContext
 import com.IceCreamQAQ.Yu.controller.MethodInvoker
+import com.icecreamqaq.yuq.Bot
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.Save
 import com.icecreamqaq.yuq.entity.*
@@ -165,6 +166,7 @@ class BotReflectMethodInvoker @JvmOverloads constructor(
 
         return when (type) {
             BotActionContext::class.java, ActionContext::class.java -> MethodPara(type, 20, 0)
+            Bot::class.java -> MethodPara(type, 30, 0)
             else -> when (name) {
                 "qq" -> MethodPara(type, 11, toTyped(type))
                 "sender" -> MethodPara(type, 11, toTyped(type))
@@ -279,7 +281,9 @@ class BotReflectMethodInvoker @JvmOverloads constructor(
                     }
                 else null
             }
+
             20 -> context
+            30 -> context.bot
             else -> null
         }
 

@@ -81,7 +81,7 @@ open class YuQInternalBotImpl {
     @Config("YuQ.Controller.RainCode")
     lateinit var rainCode: RainCodeConfig
 
-    open suspend fun receiveFriendMessage(sender: Friend, message: Message) {
+    open suspend fun receiveFriendMessage(bot: Bot, sender: Friend, message: Message) {
         log.info("${sender.toLogString()} -> ${message.toLogString()}")
         runningInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.FriendMessage(sender, message))) return
@@ -91,11 +91,11 @@ open class YuQInternalBotImpl {
             eventBus.post(AtBotEvent.ByPrivate.ByFriend(flag, sender, sender))
             return
         }
-        val context = BotActionContext(sender, sender, message, getContextSession(sender.id.toString()), null, 1)
+        val context = BotActionContext(bot, sender, sender, message, getContextSession(sender.id.toString()), null, 1)
         priv.todo(context)
     }
 
-    open suspend fun receiveTempMessage(sender: Member, message: Message) {
+    open suspend fun receiveTempMessage(bot: Bot, sender: Member, message: Message) {
         log.info("${sender.toLogString()} -> ${message.toLogString()}")
         runningInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.TempMessage(sender, message))) return
@@ -105,11 +105,11 @@ open class YuQInternalBotImpl {
             eventBus.post(AtBotEvent.ByPrivate.ByTemp(flag, sender, sender))
             return
         }
-        val context = BotActionContext(sender, sender, message, getContextSession(sender.id.toString()), null, 2)
+        val context = BotActionContext(bot, sender, sender, message, getContextSession(sender.id.toString()), null, 2)
         priv.todo(context)
     }
 
-    open suspend fun receiveGroupMessage(sender: Member, message: Message) {
+    open suspend fun receiveGroupMessage(bot: Bot, sender: Member, message: Message) {
         log.info("[${sender.group.toLogString()}]${sender.toLogStringSingle()} -> ${message.toLogString()}")
         runningInfo.receiveMessage()
         internalFun.setMemberLastMessageTime(sender, System.currentTimeMillis())
@@ -127,6 +127,7 @@ open class YuQInternalBotImpl {
         }
         val context =
             BotActionContext(
+                bot,
                 sender.group,
                 sender,
                 message,
@@ -137,7 +138,7 @@ open class YuQInternalBotImpl {
         group.todo(context)
     }
 
-    open suspend fun receiveGuildMessage(channel: Channel, sender: GuildMember, message: Message) {
+    open suspend fun receiveGuildMessage(bot: Bot, channel: Channel, sender: GuildMember, message: Message) {
         log.info("[${channel.toLogString()}]${sender.toLogString()} -> ${message.toLogString()}")
         runningInfo.receiveMessage()
 //        internalFun.setMemberLastMessageTime(sender, System.currentTimeMillis())
@@ -155,6 +156,7 @@ open class YuQInternalBotImpl {
         }
         val context =
             BotActionContext(
+                bot,
                 channel,
                 sender,
                 message,
@@ -220,13 +222,13 @@ open class YuQInternalBotImpl {
     }
 
     open fun messageSendFailedByCancel(contact: Contact, message: Message): MessageSource {
-        SendMessageInvalidEvent.ByCancel(contact,message).post()
+        SendMessageInvalidEvent.ByCancel(contact, message).post()
         if (strict) throw SendMessageFailedByCancel()
         return MessageFailByCancel.create(contact, message.liteMessage)
     }
 
     open fun messageSendFailedByReadTimeout(contact: Contact, message: Message): MessageSource {
-        SendMessageInvalidEvent.ByReadTimeout(contact,message).post()
+        SendMessageInvalidEvent.ByReadTimeout(contact, message).post()
         if (strict) throw SendMessageFailedByTimeout()
         return MessageFailByReadTimeOut.create(contact, message.liteMessage)
     }
