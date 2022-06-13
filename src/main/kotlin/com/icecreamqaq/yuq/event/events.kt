@@ -2,14 +2,22 @@ package com.icecreamqaq.yuq.event
 
 import com.IceCreamQAQ.Yu.event.events.CancelEvent
 import com.IceCreamQAQ.Yu.event.events.Event
+import com.icecreamqaq.yuq.Bot
+import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.entity.*
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageSource
 
-open class MessageEvent(open val sender: Contact, val message: Message) : Event(), CancelEvent {
+interface BotEvent {
+    val bot: Bot
+}
+
+open class MessageEvent(open val sender: Contact, val message: Message) : Event(), CancelEvent, BotEvent {
     override fun cancelAble() = true
+    override val bot: Bot
+        get() = sender.yuq
 }
 
 open class GroupMessageEvent(override val sender: Member, val group: Group, message: Message) :
@@ -27,7 +35,13 @@ open class PrivateMessageEvent(sender: Contact, message: Message) : MessageEvent
     open class TempMessage(override val sender: Member, message: Message) : PrivateMessageEvent(sender, message)
 }
 
-open class MessageRecallEvent(open val sender: Contact, open val operator: Contact, val messageId: Int) : Event()
+open class MessageRecallEvent(
+    open val sender: Contact, open val operator: Contact, val messageId: Int
+) : Event(), BotEvent {
+    override val bot: Bot
+        get() = sender.yuq
+}
+
 open class PrivateRecallEvent(sender: Contact, operator: Contact, messageId: Int) :
     MessageRecallEvent(sender, operator, messageId)
 
@@ -38,49 +52,63 @@ open class GroupRecallEvent(
     messageId: Int
 ) : MessageRecallEvent(sender, operator, messageId)
 
-open class FriendListEvent : Event()
-open class FriendAddEvent(val friend: Friend) : FriendListEvent()
-open class FriendDeleteEvent(val friend: Friend) : FriendListEvent()
+open class FriendListEvent(override val bot: Bot) : Event(), BotEvent
+open class FriendAddEvent(val friend: Friend) : FriendListEvent(friend.yuq)
+open class FriendDeleteEvent(val friend: Friend) : FriendListEvent(friend.yuq)
 
-open class GroupListEvent : Event()
-open class BotJoinGroupEvent(val group: Group) : GroupListEvent()
+open class GroupListEvent(override val bot: Bot) : Event(), BotEvent
+open class BotJoinGroupEvent(val group: Group) : GroupListEvent(group.yuq)
 
 /***
- * Bot 从某个群离开。
+ * com.icecreamqaq.yuq.Bot 从某个群离开。
  * 当事件响应前，group 就已经从列表中被移出。
  */
-open class BotLeaveGroupEvent(val group: Group) : GroupListEvent() {
+open class BotLeaveGroupEvent(val group: Group) : GroupListEvent(group.yuq) {
     /***
-     * Bot 主动退出某群。
+     * com.icecreamqaq.yuq.Bot 主动退出某群。
      */
     open class Leave(group: Group) : BotLeaveGroupEvent(group)
 
     /***
-     * Bot 因为某些特殊原因离开某群（其他客户端主动退出，群解散，群被强制解散等等）
+     * com.icecreamqaq.yuq.Bot 因为某些特殊原因离开某群（其他客户端主动退出，群解散，群被强制解散等等）
      */
     open class Other(group: Group) : BotLeaveGroupEvent(group)
 
     /***
-     * Bot 被某群移出。
+     * com.icecreamqaq.yuq.Bot 被某群移出。
      */
     open class Kick(val operator: Member) : BotLeaveGroupEvent(operator.group)
 }
 
-open class NewRequestEvent(val message: String) : Event(), CancelEvent {
+open class NewRequestEvent(override val bot: Bot, val message: String) : Event(), CancelEvent, BotEvent {
     override fun cancelAble() = true
     var accept: Boolean? = null
     var rejectMessage: String = ""
 }
 
-open class NewFriendRequestEvent(val qq: UserInfo, val group: Group?, message: String) : NewRequestEvent(message)
-open class GroupInviteEvent(val group: GroupInfo, val qq: UserInfo, message: String) : NewRequestEvent(message)
-open class GroupMemberRequestEvent(val group: Group, val qq: UserInfo, message: String) : NewRequestEvent(message),
+open class NewFriendRequestEvent(
+    bot: Bot,
+    val qq: UserInfo,
+    val group: Group?,
+    message: String
+) : NewRequestEvent(bot, message)
+
+open class GroupInviteEvent(bot: Bot, val group: GroupInfo, val qq: UserInfo, message: String) :
+    NewRequestEvent(bot, message)
+
+open class GroupMemberRequestEvent(
+    val group: Group, val qq: UserInfo, message: String
+) : NewRequestEvent(group.yuq, message),
     CancelEvent {
     override fun cancelAble() = true
     val blackList = false
 }
 
-open class GroupMemberEvent(val group: Group, val member: Member) : Event()
+open class GroupMemberEvent(val group: Group, val member: Member) : Event(), BotEvent {
+    override val bot: Bot
+        get() = group.yuq
+}
+
 open class GroupMemberJoinEvent(group: Group, member: Member) : GroupMemberEvent(group, member) {
     open class Join(group: Group, member: Member) : GroupMemberJoinEvent(group, member)
     open class Invite(group: Group, member: Member, val inviter: Member) : GroupMemberJoinEvent(group, member)
@@ -109,7 +137,7 @@ open class GroupBanBotEvent(group: Group, member: Member, val operator: Member, 
 
 open class GroupUnBanBotEvent(group: Group, member: Member, val operator: Member) : GroupMemberEvent(group, member)
 
-open class ContextSessionCreateEvent(session: ContextSession) : Event()
+open class ContextSessionCreateEvent(override val bot: Bot, session: ContextSession) : Event(), BotEvent
 open class ActionContextInvokeEvent(val context: BotActionContext) : Event(), CancelEvent {
     override fun cancelAble() = true
     open class Per(context: BotActionContext) : ActionContextInvokeEvent(context)
@@ -117,20 +145,23 @@ open class ActionContextInvokeEvent(val context: BotActionContext) : Event(), Ca
     open class Post(context: BotActionContext, val routerMatchFlag: Boolean) : ActionContextInvokeEvent(context)
 }
 
-open class SendMessageEvent(val sendTo: Contact, val message: Message) : Event() {
+open class SendMessageEvent(val sendTo: Contact, val message: Message) : Event(), BotEvent {
     open class Per(sendTo: Contact, message: Message) : SendMessageEvent(sendTo, message), CancelEvent {
         override fun cancelAble() = true
     }
 
     open class Post(sendTo: Contact, message: Message, val messageSource: MessageSource) :
         SendMessageEvent(sendTo, message)
+
+    override val bot: Bot
+        get() = sendTo.yuq
 }
 
 // 消息发送未达预期事件。
 open class SendMessageInvalidEvent(
     val sendTo: Contact,
     val message: Message
-) : Event() {
+) : Event(), BotEvent {
     // 发送消息被取消事件。
     class ByCancel(sendTo: Contact, message: Message) : SendMessageInvalidEvent(sendTo, message)
 
@@ -141,10 +172,17 @@ open class SendMessageInvalidEvent(
      * 也就是俗称的吞消息。
      */
     class ByReadTimeout(sendTo: Contact, message: Message) : SendMessageInvalidEvent(sendTo, message)
+
+    override val bot: Bot
+        get() = sendTo.yuq
 }
 
 
-open class ClickEvent(open val operator: Contact, val action: String, val suffix: String) : Event()
+open class ClickEvent(open val operator: Contact, val action: String, val suffix: String) : Event(), BotEvent {
+    override val bot: Bot
+        get() = operator.yuq
+}
+
 open class ClickBotEvent(operator: Contact, action: String, suffix: String) : ClickEvent(operator, action, suffix) {
     open class Private(operator: Contact, action: String, suffix: String) : ClickBotEvent(operator, action, suffix) {
         open class FriendClick(override val operator: Friend, action: String, suffix: String) :
@@ -158,7 +196,7 @@ open class ClickBotEvent(operator: Contact, action: String, suffix: String) : Cl
         ClickBotEvent(operator, action, suffix)
 }
 
-open class AtBotEvent(open val type: Int, open val sender: Contact, open val source: Contact) : Event() {
+open class AtBotEvent(open val type: Int, open val sender: Contact, open val source: Contact) : Event(), BotEvent {
     open class ByGroup(type: Int, override val sender: Member, override val source: Group) :
         AtBotEvent(type, sender, source)
 
@@ -172,6 +210,9 @@ open class AtBotEvent(open val type: Int, open val sender: Contact, open val sou
         open class ByTemp(type: Int, override val sender: Member, override val source: Member) :
             ByPrivate(type, sender, source)
     }
+
+    override val bot: Bot
+        get() = sender.yuq
 }
 
 open class ClickSomeBodyEvent(operator: Contact, open val target: Contact, action: String, suffix: String) :
