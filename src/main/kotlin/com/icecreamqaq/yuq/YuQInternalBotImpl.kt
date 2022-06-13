@@ -91,7 +91,7 @@ open class YuQInternalBotImpl {
             eventBus.post(AtBotEvent.ByPrivate.ByFriend(flag, sender, sender))
             return
         }
-        val context = BotActionContext(bot, sender, sender, message, getContextSession(sender.id.toString()), null, 1)
+        val context = BotActionContext(bot, sender, sender, message, getContextSession(bot,sender.id.toString()), null, 1)
         priv.todo(context)
     }
 
@@ -105,7 +105,7 @@ open class YuQInternalBotImpl {
             eventBus.post(AtBotEvent.ByPrivate.ByTemp(flag, sender, sender))
             return
         }
-        val context = BotActionContext(bot, sender, sender, message, getContextSession(sender.id.toString()), null, 2)
+        val context = BotActionContext(bot, sender, sender, message, getContextSession(bot,sender.id.toString()), null, 2)
         priv.todo(context)
     }
 
@@ -114,7 +114,7 @@ open class YuQInternalBotImpl {
         runningInfo.receiveMessage()
         internalFun.setMemberLastMessageTime(sender, System.currentTimeMillis())
         if (eventBus.post(GroupMessageEvent(sender, sender.group, message))) return
-        val groupSession = internalBot.getContextSession("g${sender.group.id}")
+        val groupSession = internalBot.getContextSession(bot,"g${sender.group.id}")
         if (groupSession.suspendCoroutineIt != null) {
             groupSession.suspendCoroutineIt!!.complete(message)
             return
@@ -131,7 +131,7 @@ open class YuQInternalBotImpl {
                 sender.group,
                 sender,
                 message,
-                getContextSession("${sender.group.id}_${sender.id}"),
+                getContextSession(bot,"${sender.group.id}_${sender.id}"),
                 groupSession,
                 0
             )
@@ -143,7 +143,7 @@ open class YuQInternalBotImpl {
         runningInfo.receiveMessage()
 //        internalFun.setMemberLastMessageTime(sender, System.currentTimeMillis())
         if (eventBus.post(GuildMessageEvent(sender, channel.guild, channel, message))) return
-        val channelSession = internalBot.getContextSession(channel.guid)
+        val channelSession = internalBot.getContextSession(bot,channel.guid)
         if (channelSession.suspendCoroutineIt != null) {
             channelSession.suspendCoroutineIt!!.complete(message)
             return
@@ -160,7 +160,7 @@ open class YuQInternalBotImpl {
                 channel,
                 sender,
                 message,
-                getContextSession("gcm${channel.guid}_${sender.guid}"),
+                getContextSession(bot,"gcm${channel.guid}_${sender.guid}"),
                 channelSession,
                 0
             )
@@ -233,12 +233,18 @@ open class YuQInternalBotImpl {
         return MessageFailByReadTimeOut.create(contact, message.liteMessage)
     }
 
-    open fun getContextSession(sessionId: String) = sessionCache[sessionId] ?: run {
-        val session = ContextSession(sessionId)
-        eventBus.post(ContextSessionCreateEvent(session))
-        sessionCache[sessionId] = session
-        session
-    }
+    open fun getContextSession(bot: Bot, sessionId: String) =
+        sessionCache.getOrPut(
+            sessionId,
+            ContextSession(sessionId).apply { ContextSessionCreateEvent(bot, this).post() }
+        )
+//    sessionCache[sessionId] ?: run
+//    {
+//        val session = ContextSession(sessionId)
+//        eventBus.post(ContextSessionCreateEvent(session))
+//        sessionCache[sessionId] = session
+//        session
+//    }
 
 //    open fun
 
