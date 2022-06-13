@@ -11,7 +11,7 @@ import java.io.File
 
 interface Contact : User {
 
-    val yuq: YuQ
+    val yuq: Bot
 
     val guid: String
 
