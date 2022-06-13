@@ -6,10 +6,10 @@ plugins {
 }
 val baseVersion = "0.1.0.0"
 val channel = "DEV"
-val buildNum = 33
+val buildNum = 1
 
 group = "com.IceCreamQAQ"
-version = "$baseVersion-$channel$buildNum"
+version = "$baseVersion-${channel}33+MultiBot-DEV$buildNum"
 
 repositories {
     mavenLocal()
