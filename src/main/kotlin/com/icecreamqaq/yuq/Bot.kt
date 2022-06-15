@@ -2,51 +2,36 @@ package com.icecreamqaq.yuq
 
 import com.IceCreamQAQ.Yu.util.Web
 import com.icecreamqaq.yuq.entity.User
+import java.io.Closeable
 
-interface Bot {
+interface Bot : Closeable {
 
     // 机器人运行的平台
     val platform: String
 
-    /***
-     * 机器人的 QQ 号码
-     */
+    // 机器人的 QQ 号码
     val botId: Long
         get() = botInfo.id
 
-    /***
-     * 机器人的个人信息
-     */
+    // 机器人的个人信息
     val botInfo: User
 
-    /***
-     * 好友列表
-     */
+    // 好友列表
     val friends: FriendList
 
-    /***
-     * 群列表
-     */
+    // 群列表
     val groups: GroupList
 
-    /***
-     * 频道列表
-     */
+    // 频道列表
     val guilds: GuildList
 
-    /***
-     * 刷新好友列表
-     */
+    // 刷新好友列表
     fun refreshFriends(): FriendList
 
-    /***
-     * 刷新群列表
-     */
+    // 刷新群列表
     fun refreshGroups(): GroupList
 
-    /***
-     * 刷新频道列表
-     */
+    // 刷新频道列表
     fun refreshGuilds(): GuildList
 
     // 通过 ID 获取 Platform ID。
@@ -59,4 +44,5 @@ interface Bot {
     val web: Web
 
 
+    fun login()
 }

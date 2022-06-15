@@ -21,7 +21,7 @@ abstract class ContactImpl(override val id: Long) : Contact {
         private val log = LoggerFactory.getLogger(ContactImpl::class.java)
     }
 
-    override val yuq = com.icecreamqaq.yuq.yuq
+    override val yuq = com.icecreamqaq.yuq.yuq.bots[0]
 
     override fun sendMessage(message: Message): MessageSource {
         return (yuq as TestBot).rainBot.sendMessage(message, this, null) {

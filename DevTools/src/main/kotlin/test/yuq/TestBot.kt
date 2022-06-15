@@ -61,6 +61,9 @@ class TestBot : YuQ, ApplicationService, User, YuQVersion {
 
     @Inject
     override lateinit var web: Web
+    override fun createBot(id: String, pwd: String, botName: String?, extData: String?): Bot {
+        TODO("Not yet implemented")
+    }
 
     override fun refreshFriends(): UserList<Friend> {
         TODO("Not yet implemented")
