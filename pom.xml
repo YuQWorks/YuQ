@@ -31,7 +31,7 @@
     </parent>
 
     <properties>
-        <kotlin.version>1.4.10</kotlin.version>
+        <kotlin.version>1.6.0</kotlin.version>
 
         <Yu-Core.version>0.2.0.0-DEV15</Yu-Core.version>
 
