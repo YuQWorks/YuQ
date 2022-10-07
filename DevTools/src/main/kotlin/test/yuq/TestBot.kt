@@ -15,7 +15,7 @@ class TestBot : YuQ, ApplicationService, User, YuQVersion {
     override val avatar: String = ""
     override val id: Long = 25331213
     override val platformId: String = id.toString()
-    override val name: String = "测试用 Bot"
+    override val name: String = "测试用 com.icecreamqaq.yuq.Bot"
     override fun canSendMessage() = false
     override fun isFriend() = false
 
@@ -56,9 +56,14 @@ class TestBot : YuQ, ApplicationService, User, YuQVersion {
     override val guilds: GuildList
         get() = TODO("Not yet implemented")
     override val messageItemFactory: MessageItemFactory = MessageItemFactoryImpl()
+    override val bots: List<Bot>
+        get() = TODO("Not yet implemented")
 
     @Inject
     override lateinit var web: Web
+    override fun createBot(id: String, pwd: String, botName: String?, extData: String?): Bot {
+        TODO("Not yet implemented")
+    }
 
     override fun refreshFriends(): UserList<Friend> {
         TODO("Not yet implemented")

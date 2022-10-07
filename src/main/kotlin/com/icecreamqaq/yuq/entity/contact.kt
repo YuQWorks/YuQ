@@ -11,12 +11,12 @@ import java.io.File
 
 interface Contact : User {
 
-    val yuq: YuQ
+    val yuq: Bot
 
     val guid: String
 
     val session: ContextSession
-        get() = internalBot.getContextSession(guid)
+        get() = internalBot.getContextSession(yuq, guid)
 
     fun sendMessage(message: Message): MessageSource
     fun sendMessage(message: SendAble): MessageSource = sendMessage(message.toMessage())
@@ -135,10 +135,10 @@ interface Member : Contact, User {
     fun clickWithTemp()
 
     override val session: ContextSession
-        get() = internalBot.getContextSession(id.toString())
+        get() = internalBot.getContextSession(yuq, id.toString())
 
     val groupChatSession: ContextSession
-        get() = internalBot.getContextSession(guid)
+        get() = internalBot.getContextSession(yuq, guid)
 
 //    fun lastMessageTime() = -1L
 

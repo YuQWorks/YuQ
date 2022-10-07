@@ -3,6 +3,7 @@ package com.icecreamqaq.yuq.controller
 import com.IceCreamQAQ.Yu.controller.ActionContext
 import com.IceCreamQAQ.Yu.entity.DoNone
 import com.IceCreamQAQ.Yu.entity.Result
+import com.icecreamqaq.yuq.Bot
 import com.icecreamqaq.yuq.entity.Contact
 import com.icecreamqaq.yuq.error.MessageThrowable
 import com.icecreamqaq.yuq.message.Message
@@ -16,6 +17,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 
 class BotActionContext(
+    val bot: Bot,
     val source: Contact,
     val sender: Contact,
     val message: Message,
@@ -74,14 +76,17 @@ class BotActionContext(
                 this.reMessage = buildResult(e.c)
                 null
             }
+
             is Result -> {
                 this.reMessage = buildResult(e)
                 null
             }
+
             is NextActionContext -> {
                 this.nextContext = e
                 null
             }
+
             else -> e
         }
 
@@ -101,6 +106,7 @@ class BotActionContext(
                         else obj.toMessage()
                     else obj.toMessage()
                 }
+
             is Array<*> -> {
                 for (any in obj) {
                     when (any) {
@@ -111,12 +117,14 @@ class BotActionContext(
                 }
                 null
             }
+
             is MessageItem -> {
                 val message = Message()
                 val mb = message.body
                 mb.append(obj)
                 message
             }
+
             is MessageItemChain -> obj.toMessage()
             is Message -> obj
             is MessageLineQ -> obj.message
