@@ -1,3 +1,10 @@
+<div align="center">
+   <img width="160" src="readme/img/73.png" alt="logo">
+<br />
+<h3>YuQ</h3>
+</div>
+
+----
 YuQ 是一个机器人快速开发框架。[开发文档](https://yuqworks.github.io/YuQ-Doc/)
 
 现在 YuQ 将不仅仅是 QQ 机器人。  
