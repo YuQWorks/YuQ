@@ -1,5 +1,5 @@
 <div align="center">
-   <img width="160" src="readme/img/73.png" alt="logo">
+   <img width="160" src="readme/img/73.png">
 <br />
 <h3>YuQ</h3>
 </div>
