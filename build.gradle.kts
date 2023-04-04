@@ -4,12 +4,10 @@ plugins {
     `java-library`
     `maven-publish`
 }
-val baseVersion = "0.1.0.0"
-val channel = "DEV"
-val buildNum = 2
+val baseVersion = "0.2.0"
 
 group = "com.IceCreamQAQ"
-version = "$baseVersion-${channel}33+MultiBot-DEV$buildNum"
+version = baseVersion
 
 repositories {
     mavenLocal()
@@ -18,7 +16,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    api("com.IceCreamQAQ:Yu-Core:0.2.0.0-DEV23")
+    api("com.IceCreamQAQ:Yu-Core:0.3.0")
 }
 
 java {

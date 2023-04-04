@@ -65,17 +65,11 @@ class TestBot : YuQ, ApplicationService, User, YuQVersion {
         TODO("Not yet implemented")
     }
 
-    override fun refreshFriends(): UserList<Friend> {
-        TODO("Not yet implemented")
-    }
+    override fun refreshFriends(): UserList<Friend> = friends
 
-    override fun refreshGroups(): UserList<Group> {
-        TODO("Not yet implemented")
-    }
+    override fun refreshGroups(): UserList<Group>  = groups
 
-    override fun refreshGuilds(): GuildList {
-        TODO("Not yet implemented")
-    }
+    override fun refreshGuilds(): GuildList  = guilds
 
     override fun id2platformId(id: Long): String = id.toString()
 

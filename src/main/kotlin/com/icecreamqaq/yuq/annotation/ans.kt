@@ -3,8 +3,8 @@ package com.icecreamqaq.yuq.annotation
 import com.IceCreamQAQ.Yu.annotation.EnchantBy
 import com.IceCreamQAQ.Yu.annotation.LoadBy
 import com.IceCreamQAQ.Yu.loader.enchant.MethodParaNamedEnchanter
-import com.icecreamqaq.yuq.controller.BotContextControllerLoader
 import com.icecreamqaq.yuq.controller.BotControllerLoader
+import com.icecreamqaq.yuq.controller.MessageChannel
 
 import java.lang.annotation.Repeatable
 import javax.inject.Named
@@ -25,46 +25,63 @@ annotation class PrivateController
 @Named("guild")
 annotation class GuildController
 
-@LoadBy(BotContextControllerLoader::class)
+@Target(AnnotationTarget.CLASS)
+@LoadBy(BotControllerLoader::class)
 @EnchantBy(MethodParaNamedEnchanter::class)
-annotation class ContextController
-annotation class ContextAction(val value: String)
+annotation class QQController
 
-annotation class ContextTips(val value: Array<ContextTip>)
+@Target(AnnotationTarget.FUNCTION)
+annotation class QQAction(val value: String, vararg val channel: MessageChannel)
+@Target(AnnotationTarget.FUNCTION)
+annotation class GroupAction(val value: String)
+@Target(AnnotationTarget.FUNCTION)
+annotation class FriendAction(val value: String)
+@Target(AnnotationTarget.FUNCTION)
+annotation class TemporaryAction(val value: String)
+@Target(AnnotationTarget.FUNCTION)
+annotation class PrivateAction(val value: String)
+
+//
+//@LoadBy(BotContextControllerLoader::class)
+//@EnchantBy(MethodParaNamedEnchanter::class)
+//annotation class ContextController
+//annotation class ContextAction(val value: String)
+
+//annotation class ContextTips(val value: Array<ContextTip>)
 
 annotation class RainCodeString
 
-@Repeatable(ContextTips::class)
-annotation class ContextTip(val value: String, val status: Int = 0)
-annotation class NextContext(val value: String, val status: Int = 0)
-annotation class Save(val value: String = "")
+//@Repeatable(ContextTips::class)
+//annotation class ContextTip(val value: String, val status: Int = 0)
+//annotation class NextContext(val value: String, val status: Int = 0)
+//annotation class Save(val value: String = "")
 
-annotation class QMsg(
-    val at: Boolean = false,
-    val reply: Boolean = false,
-    val atNewLine: Boolean = false,
-    val mastAtBot: Boolean = false,
-    val recall: Long = 0,
-    val forceMatch: Boolean = false,
-)
-
-annotation class PathVar(val value: Int, val type: Type = Type.String) {
-    enum class Type {
-        Source, String, Integer, Switch, Long, Double, Contact, Friend, Group, Member, User
-    }
-}
-
-annotation class AsyncAction
-annotation class TaskLimit(
-    val value: Long,
-    val type: TaskLimitSource = TaskLimitSource.SENDER,
-    val extraPermission: String = "",
-    val coldDownTip: String = "冷却中。",
-) {
-    enum class TaskLimitSource {
-        SENDER, SOURCE, ALL
-    }
-}
+//annotation class QMsg(
+//    val at: Boolean = false,
+//    val reply: Boolean = false,
+//    val atNewLine: Boolean = false,
+//    val mastAtBot: Boolean = false,
+//    val recall: Long = 0,
+//    val forceMatch: Boolean = false,
+//)
+//
+//annotation class PathVar(val value: Int, val type: Type = Type.String) {
+//    enum class Type {
+//        Source, String, Integer, Switch, Long, Double, Contact, Friend, Group, Member, User
+//    }
+//}
+//
+//annotation class AsyncAction
+//annotation class TaskLimit(
+//    val value: Long,
+//    val type: TaskLimitSource = TaskLimitSource.SENDER,
+//    val extraPermission: String = "",
+//    val coldDownTip: String = "冷却中。",
+//) {
+//    enum class TaskLimitSource {
+//        SENDER, SOURCE, ALL
+//    }
+//}
 
 /***
  * 被此注解标记的内容仍在开发状态，相关类型以及名字可能随时变动，请自行评估使用价值。

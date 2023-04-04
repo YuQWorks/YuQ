@@ -6,7 +6,7 @@ import com.IceCreamQAQ.Yu.controller.Router
 import com.IceCreamQAQ.Yu.event.EventBus
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextRouter
-import com.icecreamqaq.yuq.controller.ContextSession
+import com.icecreamqaq.yuq.entity.ContactSession
 import com.icecreamqaq.yuq.entity.*
 import com.icecreamqaq.yuq.error.SendMessageFailedByCancel
 import com.icecreamqaq.yuq.error.SendMessageFailedByTimeout
@@ -30,7 +30,7 @@ open class YuQInternalBotImpl {
 
     @Inject
     @field:Named("ContextSession")
-    lateinit var sessionCache: EhcacheHelp<ContextSession>
+    lateinit var sessionCache: EhcacheHelp<ContactSession>
 
     @Inject
     @field:Named("group")
@@ -236,7 +236,7 @@ open class YuQInternalBotImpl {
     open fun getContextSession(bot: Bot, sessionId: String) =
         sessionCache.getOrPut(
             sessionId,
-            ContextSession(sessionId).apply { ContextSessionCreateEvent(bot, this).post() }
+            ContactSession(sessionId).apply { ContextSessionCreateEvent(bot, this).post() }
         )
 //    sessionCache[sessionId] ?: run
 //    {

@@ -1,6 +1,6 @@
 package com.icecreamqaq.yuq
 
-import com.IceCreamQAQ.Yu.DefaultStarter
+import com.IceCreamQAQ.Yu.FullStackApplicationLauncher
 import com.IceCreamQAQ.Yu.hook.*
 import com.IceCreamQAQ.Yu.loader.AppClassloader
 import org.slf4j.LoggerFactory
@@ -17,7 +17,7 @@ class YuQStarter {
         fun start() {
             val startTime = System.currentTimeMillis()
 
-            DefaultStarter.start()
+            FullStackApplicationLauncher.launch()
 
             val overTime = System.currentTimeMillis()
 
@@ -27,12 +27,12 @@ class YuQStarter {
                     " \\ \\/ /_ __/ __ \\\n" +
                     "  \\  / // / /_/ /\n" +
                     "  /_/\\_,_/\\___\\_\\\n")
-            println("感谢您使用 YuQ 进行开发，在您使用中如果遇到任何问题，可以到 Github，Gitee 提出 issue，您也可以添加 YuQ 的开发交流群（696129128）进行交流。")
+            println("感谢您使用 YuQ 进行开发，在您使用中如果遇到任何问题，可以到 Github，Gitee 提出 issue，您也可以添加 YuQ 的开发交流群（787049553）进行交流。")
         }
 
         @JvmStatic
         fun start(args: Array<String>) {
-            DefaultStarter.init(args)
+            FullStackApplicationLauncher.launch(args)
             start()
         }
 

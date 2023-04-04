@@ -2,7 +2,6 @@ package com.icecreamqaq.yuq.entity
 
 import com.icecreamqaq.yuq.*
 import com.icecreamqaq.yuq.annotation.Dev
-import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.internalBot
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
@@ -15,7 +14,7 @@ interface Contact : User {
 
     val guid: String
 
-    val session: ContextSession
+    val session: ContactSession
         get() = internalBot.getContextSession(yuq, guid)
 
     fun sendMessage(message: Message): MessageSource
@@ -134,10 +133,10 @@ interface Member : Contact, User {
     fun click()
     fun clickWithTemp()
 
-    override val session: ContextSession
+    override val session: ContactSession
         get() = internalBot.getContextSession(yuq, id.toString())
 
-    val groupChatSession: ContextSession
+    val groupChatSession: ContactSession
         get() = internalBot.getContextSession(yuq, guid)
 
 //    fun lastMessageTime() = -1L

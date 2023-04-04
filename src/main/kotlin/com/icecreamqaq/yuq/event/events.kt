@@ -3,9 +3,8 @@ package com.icecreamqaq.yuq.event
 import com.IceCreamQAQ.Yu.event.events.CancelEvent
 import com.IceCreamQAQ.Yu.event.events.Event
 import com.icecreamqaq.yuq.Bot
-import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.controller.BotActionContext
-import com.icecreamqaq.yuq.controller.ContextSession
+import com.icecreamqaq.yuq.entity.ContactSession
 import com.icecreamqaq.yuq.entity.*
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageSource
@@ -137,7 +136,7 @@ open class GroupBanBotEvent(group: Group, member: Member, val operator: Member, 
 
 open class GroupUnBanBotEvent(group: Group, member: Member, val operator: Member) : GroupMemberEvent(group, member)
 
-open class ContextSessionCreateEvent(override val bot: Bot, session: ContextSession) : Event(), BotEvent
+open class ContextSessionCreateEvent(override val bot: Bot, session: ContactSession) : Event(), BotEvent
 open class ActionContextInvokeEvent(val context: BotActionContext) : Event(), CancelEvent {
     override fun cancelAble() = true
     open class Per(context: BotActionContext) : ActionContextInvokeEvent(context)
