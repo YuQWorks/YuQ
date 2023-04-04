@@ -26,7 +26,7 @@ class TestBot : YuQ, ApplicationService, User, YuQVersion {
     private lateinit var eventBus: EventBus
 
     @Inject
-    lateinit var rainBot: YuQInternalBotImpl
+    lateinit var rainBot: BotService
 
     @Inject
     private lateinit var context: YuContext

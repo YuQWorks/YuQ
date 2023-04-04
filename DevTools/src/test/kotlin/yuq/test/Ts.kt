@@ -3,7 +3,7 @@ package yuq.test
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.IceCreamQAQ.Yu.event.events.AppStartEvent
-import com.icecreamqaq.yuq.YuQInternalBotImpl
+import com.icecreamqaq.yuq.BotService
 import com.icecreamqaq.yuq.message.Message
 import kotlinx.coroutines.runBlocking
 import test.yuq.contcat.FriendImpl
@@ -15,7 +15,7 @@ import javax.inject.Inject
 class Ts {
 
     @Inject
-    private lateinit var rainBot: YuQInternalBotImpl
+    private lateinit var rainBot: BotService
 
     @Event
     fun registerEvent(e:RegisterContactEvent){

@@ -2,10 +2,10 @@ package com.icecreamqaq.yuq
 
 import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.cache.EhcacheHelp
-import com.IceCreamQAQ.Yu.controller.Router
 import com.IceCreamQAQ.Yu.event.EventBus
 import com.icecreamqaq.yuq.controller.BotActionContext
-import com.icecreamqaq.yuq.controller.ContextRouter
+import com.icecreamqaq.yuq.controller.MessageChannel
+import com.icecreamqaq.yuq.controller.router.BotRootRouter
 import com.icecreamqaq.yuq.entity.ContactSession
 import com.icecreamqaq.yuq.entity.*
 import com.icecreamqaq.yuq.error.SendMessageFailedByCancel
@@ -13,7 +13,6 @@ import com.icecreamqaq.yuq.error.SendMessageFailedByTimeout
 import com.icecreamqaq.yuq.event.*
 import com.icecreamqaq.yuq.job.YuQRunningInfo
 import com.icecreamqaq.yuq.message.*
-import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.util.YuQInternalFun
 import com.icecreamqaq.yuq.util.liteMessage
 import kotlinx.coroutines.*
@@ -21,43 +20,24 @@ import org.slf4j.LoggerFactory
 import javax.inject.Inject
 import javax.inject.Named
 
-open class YuQInternalBotImpl {
-
-    private val log = LoggerFactory.getLogger(YuQInternalBotImpl::class.java)
-
-    @Inject
-    private lateinit var eventBus: EventBus
-
-    @Inject
-    @field:Named("ContextSession")
-    lateinit var sessionCache: EhcacheHelp<ContactSession>
-
-    @Inject
-    @field:Named("group")
-    private lateinit var group: Router
-
-    @Inject
-    @field:Named("priv")
-    private lateinit var priv: Router
-
-    @Inject
-    @field:Named("guild")
-    private lateinit var guild: Router
-
-    @Inject
-    private lateinit var contextRouter: ContextRouter
-
-    @Inject
-    private lateinit var runningInfo: YuQRunningInfo
-
-    @Inject
-    private lateinit var internalFun: YuQInternalFun
-
+open class BotService(
+    val rootRouter: BotRootRouter,
+    val eventBus: EventBus,
+    val runningInfo: YuQRunningInfo,
+    val internalFun: YuQInternalFun,
+    @Named("ContextSession")
+    val sessionCache: EhcacheHelp<ContactSession>,
     @Config("YuQ.bot.name")
-    private var botName: String? = null
-
+    val botName: String,
     @Config("yuq.chat.strict")
-    private var strict: Boolean = true
+    val strict: Boolean,
+    @Config("YuQ.Controller.RainCode")
+    val rainCode: RainCodeConfig
+) {
+
+    companion object {
+        private val log = LoggerFactory.getLogger(BotService::class.java)
+    }
 
     data class RainCodeConfig(
         val prefix: String = "^",
@@ -66,7 +46,7 @@ open class YuQInternalBotImpl {
 
     @Inject
     fun init() {
-        internalBot = this
+        botService = this
     }
 
     private fun Message.getOnlyAtFlag(): Int {
@@ -78,9 +58,6 @@ open class YuQInternalBotImpl {
         return 0
     }
 
-    @Config("YuQ.Controller.RainCode")
-    lateinit var rainCode: RainCodeConfig
-
     open suspend fun receiveFriendMessage(bot: Bot, sender: Friend, message: Message) {
         log.info("${sender.toLogString()} -> ${message.toLogString()}")
         runningInfo.receiveMessage()
@@ -91,8 +68,11 @@ open class YuQInternalBotImpl {
             eventBus.post(AtBotEvent.ByPrivate.ByFriend(flag, sender, sender))
             return
         }
-        val context = BotActionContext(bot, sender, sender, message, getContextSession(bot,sender.id.toString()), null, 1)
-        priv.todo(context)
+        sender.session.suspendCoroutineIt?.let {
+            it.complete(message)
+            return
+        }
+        doRouter(BotActionContext(bot, MessageChannel.Friend, sender, sender, message))
     }
 
     open suspend fun receiveTempMessage(bot: Bot, sender: Member, message: Message) {
@@ -105,8 +85,11 @@ open class YuQInternalBotImpl {
             eventBus.post(AtBotEvent.ByPrivate.ByTemp(flag, sender, sender))
             return
         }
-        val context = BotActionContext(bot, sender, sender, message, getContextSession(bot,sender.id.toString()), null, 2)
-        priv.todo(context)
+        sender.session.suspendCoroutineIt?.let {
+            it.complete(message)
+            return
+        }
+        doRouter(BotActionContext(bot, MessageChannel.GroupTemporary, sender, sender, message))
     }
 
     open suspend fun receiveGroupMessage(bot: Bot, sender: Member, message: Message) {
@@ -114,7 +97,7 @@ open class YuQInternalBotImpl {
         runningInfo.receiveMessage()
         internalFun.setMemberLastMessageTime(sender, System.currentTimeMillis())
         if (eventBus.post(GroupMessageEvent(sender, sender.group, message))) return
-        val groupSession = internalBot.getContextSession(bot,"g${sender.group.id}")
+        val groupSession = botService.getContextSession(bot, "g${sender.group.id}")
         if (groupSession.suspendCoroutineIt != null) {
             groupSession.suspendCoroutineIt!!.complete(message)
             return
@@ -125,25 +108,22 @@ open class YuQInternalBotImpl {
             eventBus.post(AtBotEvent.ByGroup(flag, sender, sender.group))
             return
         }
-        val context =
-            BotActionContext(
-                bot,
-                sender.group,
-                sender,
-                message,
-                getContextSession(bot,"${sender.group.id}_${sender.id}"),
-                groupSession,
-                0
-            )
-        group.todo(context)
+        sender.group.session.suspendCoroutineIt?.let {
+            it.complete(message)
+            return
+        }
+        sender.session.suspendCoroutineIt?.let {
+            it.complete(message)
+            return
+        }
+        doRouter(BotActionContext(bot, MessageChannel.Group, sender, sender.group, message))
     }
 
     open suspend fun receiveGuildMessage(bot: Bot, channel: Channel, sender: GuildMember, message: Message) {
         log.info("[${channel.toLogString()}]${sender.toLogString()} -> ${message.toLogString()}")
         runningInfo.receiveMessage()
-//        internalFun.setMemberLastMessageTime(sender, System.currentTimeMillis())
         if (eventBus.post(GuildMessageEvent(sender, channel.guild, channel, message))) return
-        val channelSession = internalBot.getContextSession(bot,channel.guid)
+        val channelSession = botService.getContextSession(bot, channel.guid)
         if (channelSession.suspendCoroutineIt != null) {
             channelSession.suspendCoroutineIt!!.complete(message)
             return
@@ -154,50 +134,31 @@ open class YuQInternalBotImpl {
             eventBus.post(AtBotEvent.ByGuild(flag, sender, channel, channel.guild))
             return
         }
-        val context =
-            BotActionContext(
-                bot,
-                channel,
-                sender,
-                message,
-                getContextSession(bot,"gcm${channel.guid}_${sender.guid}"),
-                channelSession,
-                0
-            )
-        guild.todo(context)
+        channel.session.suspendCoroutineIt?.let {
+            it.complete(message)
+            return
+        }
+        sender.session.suspendCoroutineIt?.let {
+            it.complete(message)
+            return
+        }
+        doRouter(BotActionContext(bot, MessageChannel.Guild, sender, channel, message))
     }
 
-    open suspend fun Router.todo(context: BotActionContext) {
-        if (context.path.isEmpty()) return
+    open suspend fun doRouter(context: BotActionContext) {
+//        if (context.path.isEmpty()) return
         kotlin.runCatching {
-            if (context.session.suspendCoroutineIt != null) {
-                context.session.suspendCoroutineIt!!.complete(context.message)
-                return
-            }
             if (eventBus.post(ActionContextInvokeEvent.Per(context))) return
-            val session = context.session
-            val flag = if (session.context != null) contextRouter.invoke(session.context!!, context)
-            else this.invoke(context.path[0], context)
+            val flag = rootRouter.router(context)
             if (eventBus.post(ActionContextInvokeEvent.Post(context, flag))) return
-            session.context = context.nextContext?.router
-            if (context.nextContext != null) {
-                val msg = contextRouter.routers[context.nextContext?.router]?.tips?.get(context.nextContext?.status)
-                if (msg != null) context.source.sendMessage(msg.toMessage())
-            }
         }.onFailure {
             it.printStackTrace()
             return
         }
-        val source = context.source.sendMessage(context.reMessage ?: return)
-        (context.recall ?: context.reMessage!!.recallDelay)?.let {
-            coroutineScope {
-                delay(it)
-                source.recall()
-            }
-        }
+        context.result?.let { context.source.sendMessage(it as Message) }
     }
 
-    fun <T, R : MessageSource> sendMessage(
+    suspend fun <T, R : MessageSource> sendMessage(
         message: Message,
         contact: Contact,
         obj: T,
@@ -213,8 +174,7 @@ open class YuQInternalBotImpl {
         runningInfo.sendMessage()
         SendMessageEvent.Post(contact, message, m)()
         message.recallDelay?.let {
-            GlobalScope.launch {
-                delay(it)
+            asyncDelay(it) {
                 m.recall()
             }
         }

@@ -2,7 +2,7 @@ package com.icecreamqaq.yuq.entity
 
 import com.icecreamqaq.yuq.*
 import com.icecreamqaq.yuq.annotation.Dev
-import com.icecreamqaq.yuq.internalBot
+import com.icecreamqaq.yuq.botService
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.util.WebHelper.Companion.postWithQQKey
@@ -15,7 +15,7 @@ interface Contact : User {
     val guid: String
 
     val session: ContactSession
-        get() = internalBot.getContextSession(yuq, guid)
+        get() = botService.getContextSession(yuq, guid)
 
     fun sendMessage(message: Message): MessageSource
     fun sendMessage(message: SendAble): MessageSource = sendMessage(message.toMessage())
@@ -134,10 +134,10 @@ interface Member : Contact, User {
     fun clickWithTemp()
 
     override val session: ContactSession
-        get() = internalBot.getContextSession(yuq, id.toString())
+        get() = botService.getContextSession(yuq, id.toString())
 
     val groupChatSession: ContactSession
-        get() = internalBot.getContextSession(yuq, guid)
+        get() = botService.getContextSession(yuq, guid)
 
 //    fun lastMessageTime() = -1L
 
