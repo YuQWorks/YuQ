@@ -164,5 +164,3 @@ open class BotControllerLoader(
     }
 
 }
-
-}

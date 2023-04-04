@@ -25,9 +25,9 @@ class Ts {
     @Event
     fun appStartEvent(e:AppStartEvent){
         runBlocking {
-            rainBot.receiveFriendMessage(FriendImpl(123132456,"测试"), (Message() + "HelloSuspend").make())
-            rainBot.receiveFriendMessage(FriendImpl(123132456,"测试"), (Message() + "HelloKotlin").make())
-            rainBot.receiveFriendMessage(FriendImpl(123132456,"测试"), (Message() + "HelloJava").make())
+//            rainBot.receiveFriendMessage(FriendImpl(123132456,"测试"), (Message() + "HelloSuspend").make())
+//            rainBot.receiveFriendMessage(FriendImpl(123132456,"测试"), (Message() + "HelloKotlin").make())
+//            rainBot.receiveFriendMessage(FriendImpl(123132456,"测试"), (Message() + "HelloJava").make())
         }
     }
 
