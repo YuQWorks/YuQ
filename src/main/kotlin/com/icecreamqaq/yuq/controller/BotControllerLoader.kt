@@ -1,6 +1,7 @@
 package com.icecreamqaq.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation
+import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.After
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.annotation.Catch
@@ -8,14 +9,14 @@ import com.IceCreamQAQ.Yu.annotation.Path
 import com.IceCreamQAQ.Yu.controller.*
 import com.IceCreamQAQ.Yu.controller.dss.router.NamedVariableMatcher
 import com.IceCreamQAQ.Yu.controller.dss.router.RegexMatcher
+import com.IceCreamQAQ.Yu.controller.simple.SimpleCatchMethodInvoker
 import com.IceCreamQAQ.Yu.di.YuContext
-import com.icecreamqaq.yuq.annotation.GroupAction
-import com.icecreamqaq.yuq.annotation.GroupController
-import com.icecreamqaq.yuq.annotation.PrivateAction
-import com.icecreamqaq.yuq.annotation.PrivateController
+import com.IceCreamQAQ.Yu.hasAnnotation
+import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.router.BotRouter
 import com.icecreamqaq.yuq.controller.router.RouterMatcher
 import java.lang.reflect.Method
+import kotlin.reflect.KProperty1
 
 open class BotControllerLoader(
     context: YuContext
@@ -25,6 +26,10 @@ open class BotControllerLoader(
 
     override fun findRootRouter(name: String) = rootInfo
 
+    fun readPath(path: String): List<RouterMatcher> {
+        TODO()
+    }
+
     override fun controllerInfo(
         root: BotRootInfo,
         annotation: Annotation?,
@@ -33,19 +38,12 @@ open class BotControllerLoader(
     ): ControllerProcessFlowInfo<BotActionContext, BotRouter>? {
         val channels = controllerChannel(annotation, controllerClass) ?: return null
         var controllerRouter = root.router
-//        controllerClass.annotation<Path>()?.value?.split("/")?.forEach {
-//            controllerRouter = makePathMatcher(it).let { (path, matchers) ->
-//                if (matchers.isEmpty()) getSubStaticRouter(controllerRouter, path)
-//                else {
-//                    getSubDynamicRouter(
-//                        controllerRouter,
-//                        if (path.isEmpty() && matchers.size == 1 && matchers[0].second == ".*")
-//                            NamedVariableMatcher(matchers[0].first)
-//                        else RegexMatcher(path, matchers.map { item -> item.first }.toTypedArray())
-//                    )
-//                }
-//            }
-//        }
+        controllerClass.annotation<Path> {
+            readPath(value).forEach { m ->
+                controllerRouter = controllerRouter.subRouters.firstOrNull { it.matcher == m }
+                    ?: BotRouter(m).also { controllerRouter.subRouters.add(it) }
+            }
+        }
 
         return ControllerProcessFlowInfo(controllerClass, channels, controllerRouter)
     }
@@ -95,7 +93,7 @@ open class BotControllerLoader(
             catchAnnotation.weight,
             catchAnnotation.except,
             catchAnnotation.only,
-            BotCatchMethodInvoker(catchMethod, instanceGetter, catchAnnotation.error.java)
+            SimpleCatchMethodInvoker(catchAnnotation.error.java, BotMethodInvoker(catchMethod, instanceGetter))
         )
 
     override fun postLoad() {
@@ -109,7 +107,62 @@ open class BotControllerLoader(
         actionMethod: Method,
         instanceGetter: ControllerInstanceGetter
     ): ActionProcessFlowInfo<BotActionContext>? {
-        TODO("Not yet implemented")
+        var path = ""
+        var channels: Array<MessageChannel> = emptyArray()
+        actionMethod.annotation<GroupAction> {
+            path = value
+            channels = arrayOf(MessageChannel.Group)
+        }
+        actionMethod.annotation<PrivateAction> {
+            path = value
+            channels = arrayOf(MessageChannel.GroupTemporary, MessageChannel.Friend)
+        }
+        actionMethod.annotation<FriendAction> {
+            path = value
+            channels = arrayOf(MessageChannel.Friend)
+        }
+        actionMethod.annotation<TemporaryAction> {
+            path = value
+            channels = arrayOf(MessageChannel.GroupTemporary)
+        }
+        actionMethod.annotation<Action> {
+            path = value
+            channels = controllerFlow.controllerChannels.map { MessageChannel.valueOf(it) }.toTypedArray()
+        }
+
+        if (channels.isEmpty()) return null
+
+        val actionName = actionMethod.name
+
+        val actionFlow = ActionProcessFlowInfo<BotActionContext>(controllerClass, actionMethod)
+        val matchers = readPath(path)
+        fun checkPf(property: KProperty1<ProcessFlowInfo<BotActionContext>, MutableList<ProcessInfo<BotActionContext>>>): Array<ProcessInvoker<BotActionContext>> =
+            ArrayList<ProcessInfo<BotActionContext>>()
+                .apply {
+                    val checkPi = { it: ProcessInfo<BotActionContext> ->
+                        if (actionName !in it.except && it.only.isNotEmpty() && actionName in it.only) add(it)
+                    }
+                    property.get(rootRouter).forEach(checkPi)
+                    property.get(controllerFlow).forEach(checkPi)
+                    property.get(actionFlow).forEach(checkPi)
+                    sortBy { it.priority }
+                }
+                .map { it.invoker }
+                .toTypedArray()
+
+        actionFlow.creator = ActionInvokerCreator {
+            BotActionInvoker(
+                channels,
+                matchers,
+                BotMethodInvoker(actionMethod, instanceGetter),
+                checkPf(ProcessFlowInfo<BotActionContext>::beforeProcesses),
+                checkPf(ProcessFlowInfo<BotActionContext>::afterProcesses),
+                checkPf(ProcessFlowInfo<BotActionContext>::catchProcesses)
+            )
+        }
+        return actionFlow
     }
+
+}
 
 }
