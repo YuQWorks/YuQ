@@ -57,7 +57,7 @@ class MessageItemFactory {
     fun imageToFlash(image: Image): FlashImage =
         FlashImage(image)
 
-//    fun imageById(id: String): Image
+    fun imageById(id: String): Image = TODO()
 
 
     /*** 发送一段语音
