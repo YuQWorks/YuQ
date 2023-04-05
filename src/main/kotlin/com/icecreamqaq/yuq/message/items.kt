@@ -2,42 +2,12 @@ package com.icecreamqaq.yuq.message
 
 import com.icecreamqaq.yuq.contact.GroupMember
 import com.icecreamqaq.yuq.mif
+import java.io.File
 
 
-abstract class MessageItemBase : MessageItem, SendAble {
-
-    override operator fun plus(item: MessageItem): MessageItemChain = toItemChain() + item
-    override operator fun plus(item: String): MessageItemChain = toItemChain() + item
-    override operator fun plus(item: Message): MessageItemChain = toItemChain() + item
-    override fun plus(item: MessageItemChain): MessageItemChain = item.unshift(this)
-    override fun toMessage(): Message = this.toItemChain().toMessage()
-
-    override fun toItemChain() = MessageItemChain().append(this)
-
-    override fun equals(other: Any?): Boolean {
-        if (other == null) return false
-        if (this === other) return true
-        if (other !is MessageItem) return false
-        return equal(other)
-    }
-
-    override fun hashCode(): Int {
-        return javaClass.hashCode()
-    }
-
-    override fun toString() = logString
-}
-
-interface MessageItem : MessagePlus, SendAble {
-
-    val logString: String
-
-    fun toItemChain(): MessageItemChain
-    fun equal(other: MessageItem): Boolean
-}
-
-interface Text : MessageItem {
-    val text: String
+class Text(val text: String) : MessageItemBase() {
+    override val logString: String
+        get() = text
 
     override fun equal(other: MessageItem): Boolean {
         if (other !is Text) return false
@@ -49,8 +19,10 @@ interface Text : MessageItem {
     }
 }
 
-interface At : MessageItem {
-    val user: Long
+open class At(val user: Long) : MessageItemBase() {
+
+    override val logString: String
+        get() = "@$user"
 
     override fun equal(other: MessageItem): Boolean {
         if (other !is At) return false
@@ -58,17 +30,16 @@ interface At : MessageItem {
     }
 }
 
-interface AtByMember : At {
-    val member: GroupMember
-    override val user: Long
-        get() = member.id
+class AtByMember(val member: GroupMember) : At(member.id) {
 
     override val logString: String
         get() = "@${member.nameCardOrName()}($user)"
 }
 
-interface Face : MessageItem {
-    val faceId: Int
+class Face(val faceId: Int) : MessageItemBase() {
+
+    override val logString: String
+        get() = "表情: $faceId"
 
     override fun equal(other: MessageItem): Boolean {
         if (other !is Face) return false
@@ -76,9 +47,14 @@ interface Face : MessageItem {
     }
 }
 
-interface Image : MessageItem {
-    val id: String
+abstract class Image(
+    val platform: String,
+    val id: String,
     val url: String
+) : MessageItemBase() {
+
+    override val logString: String
+        get() = "图片: $id"
 
     override fun equal(other: MessageItem): Boolean {
         if (other !is Image) return false
@@ -90,18 +66,23 @@ interface Image : MessageItem {
     }
 }
 
-interface FlashImage : Image {
-    val image: Image
+class OnlineImage(platform: String, id: String, url: String) : Image(platform, id, url)
+class OfflineImage(val imageFile: File) : Image("universal", imageFile.name, "")
 
-    override val id: String
-        get() = image.id
-    override val url: String
-        get() = image.url
+class FlashImage(val image: Image) : Image(image.platform, image.id, image.url) {
+
+    override val logString: String
+        get() = "闪照: $id"
+
 }
 
-interface XmlEx : MessageItem {
-    val serviceId: Int
+class XmlEx(
+    val serviceId: Int,
     val value: String
+) : MessageItemBase() {
+
+    override val logString: String
+        get() = "Xml: $serviceId"
 
     override fun equal(other: MessageItem): Boolean {
         if (other !is XmlEx) return false
@@ -109,8 +90,10 @@ interface XmlEx : MessageItem {
     }
 }
 
-interface JsonEx : MessageItem {
-    val value: String
+class JsonEx(val value: String) : MessageItemBase() {
+
+    override val logString: String
+        get() = "JSON"
 
     override fun equal(other: MessageItem): Boolean {
         if (other !is JsonEx) return false
@@ -118,9 +101,16 @@ interface JsonEx : MessageItem {
     }
 }
 
-interface Voice : MessageItem {
-    val id: String
+
+
+abstract class Voice(
+    val platform: String,
+    val id: String,
     val url: String
+) : MessageItemBase() {
+
+    override val logString: String
+        get() = "语音: $id"
 
     override fun equal(other: MessageItem): Boolean {
         if (other !is Voice) return false
@@ -128,8 +118,16 @@ interface Voice : MessageItem {
     }
 }
 
-interface NoImplItem : MessageItem {
+class OnlineVoice(platform: String, id: String, url: String) : Voice(platform, id, url)
+class OfflineVoice(val voiceFile: File) : Voice("universal", voiceFile.name, "")
+
+class NoImplItem(
+    val platformIdentifier: String,
     val source: Any
+) : MessageItemBase() {
+
+    override val logString: String
+        get() = "NotImpl"
 
     override fun equal(other: MessageItem): Boolean {
         if (other !is NoImplItem) return false

@@ -62,22 +62,14 @@ open class Message(val body: MessageItemChain = MessageItemChain()) : SendAble, 
         if (reply != null) sb.append("Reply To: ${reply!!.id}, ")
         if (at != null) sb.append("At them${if (at!!.newLine) " \\n" else ""}, ")
         if (body.size > 0) {
-            sb.append("[ ${body[0].toLogString()}")
+            sb.append("[ ${body[0].logString}")
             for (i in 1 until body.size) {
-                sb.append(", ${body[i].toLogString()}")
+                sb.append(", ${body[i].logString}")
             }
             sb.append(" ]")
         }
         sb.append(")")
         return sb.toString()
-    }
-
-    fun toPath(): List<String> {
-        val paths = ArrayList<String>()
-        for (item in path) {
-            paths.add(item.toPath())
-        }
-        return paths
     }
 
     fun recall(): Int {
@@ -141,11 +133,11 @@ open class Message(val body: MessageItemChain = MessageItemChain()) : SendAble, 
                         is Face -> "<Rain:Face:${item.faceId}>"
                         is Image -> "<Rain:Image:${item.id}${if (item is FlashImage) ", Flash>" else ">"}"
                         is XmlEx -> "<Rain:Xml:${item.serviceId},${
-                            item.value.replace("<", "&&&lt&&&").replace(">", "&&&gt&&&")
+                            item.value.replace("<", "\\<").replace(">", "\\>")
                         }>"
                         is JsonEx -> "<Rain:Json:${item.value}>"
                         is Voice -> "<Rain:Voice:${item.id}>"
-                        else -> "<Rain:NoImpl:${item.toPath()}>"
+                        else -> "<Rain:NoImpl>"
                     }
                 )
             }
