@@ -1,4 +1,4 @@
-package com.icecreamqaq.yuq.job
+package com.icecreamqaq.yuq.internal
 
 import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Cron
@@ -9,16 +9,14 @@ import com.icecreamqaq.yuq.yuq
 import javax.inject.Inject
 
 @JobCenter
-class YuQRunningInfo {
-
-    @Inject
-    private lateinit var version: YuQVersion
-
-    @Inject
-    private lateinit var web: Web
-
+class FrameworkInfo(
+    private val version: YuQVersion,
+    private val web: Web,
     @Config("yu.scanPackages")
-    private lateinit var scanPackages: MutableList<String>
+    private var scanPackages: MutableList<String>,
+    @Config("yuq.framework.uploadInfo")
+    private val uploadFrameworkInfo: Boolean = true
+) {
 
     private var rc = 0
     private var sc = 0
@@ -78,8 +76,7 @@ class YuQRunningInfo {
         ss.set(0)
     }
 
-    @Inject
-    fun init() {
+    init {
         scanPackages = scanPackages.filter { !it.toLowerCase().startsWith("com.icecreamqaq.yu") } as MutableList<String>
     }
 
@@ -91,21 +88,22 @@ class YuQRunningInfo {
     @Cron("1m", runWithStart = true)
     fun upInfo() {
         try {
-            web.postJSON(
-                    "http://yuq.icecreamqaq.com/YuQ/runInfo2",
+            if (uploadFrameworkInfo)
+                web.postJSON(
+                    "https://yuq.icecreamapi.com/YuQ/runInfo2",
                     mapOf(
-                            "uid" to yuq.botId,
-                            "yv" to version.apiVersion(),
-                            "rt" to version.runtimeName(),
-                            "rv" to version.runtimeVersion(),
-                            "sp" to scanPackages,
-                            "rm" to countRm,
-                            "sm" to countSm,
-                            "ra" to rc,
-                            "sa" to sc,
+                        "uids" to yuq.bots.map { it.botId },
+                        "yv" to version.apiVersion(),
+                        "rt" to version.runtimeName(),
+                        "rv" to version.runtimeVersion(),
+                        "sp" to scanPackages,
+                        "rm" to countRm,
+                        "sm" to countSm,
+                        "ra" to rc,
+                        "sa" to sc,
                     )
-            )
-        } catch (e: Exception) {
+                )
+        } catch (_: Exception) {
 
         }
     }

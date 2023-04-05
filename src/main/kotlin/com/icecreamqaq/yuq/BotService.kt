@@ -11,7 +11,7 @@ import com.icecreamqaq.yuq.contact.*
 import com.icecreamqaq.yuq.error.SendMessageFailedByCancel
 import com.icecreamqaq.yuq.error.SendMessageFailedByTimeout
 import com.icecreamqaq.yuq.event.*
-import com.icecreamqaq.yuq.job.YuQRunningInfo
+import com.icecreamqaq.yuq.internal.FrameworkInfo
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.util.liteMessage
 import kotlinx.coroutines.*
@@ -19,18 +19,18 @@ import org.slf4j.LoggerFactory
 import javax.inject.Inject
 import javax.inject.Named
 
-open class BotService(
-    val rootRouter: BotRootRouter,
-    val eventBus: EventBus,
-    val runningInfo: YuQRunningInfo,
+class BotService(
+    private val rootRouter: BotRootRouter,
+    private val eventBus: EventBus,
+    private val frameworkInfo: FrameworkInfo,
     @Named("ContextSession")
-    val sessionCache: EhcacheHelp<ContactSession>,
+    private val sessionCache: EhcacheHelp<ContactSession>,
     @Config("YuQ.bot.name")
-    val botName: String?,
+    private val botName: String?,
     @Config("yuq.chat.strict")
-    val strict: Boolean,
+    private val strict: Boolean,
     @Config("YuQ.Controller.RainCode")
-    val rainCode: RainCodeConfig
+    private val rainCode: RainCodeConfig
 ) {
 
     companion object {
@@ -42,8 +42,7 @@ open class BotService(
         val enable: Boolean = false
     )
 
-    @Inject
-    fun init() {
+    init {
         botService = this
     }
 
@@ -56,9 +55,9 @@ open class BotService(
         return 0
     }
 
-    open suspend fun receiveFriendMessage(bot: Bot, sender: Friend, message: Message) {
+    suspend fun receiveFriendMessage(bot: Bot, sender: Friend, message: Message) {
         log.info("${sender.logString} -> ${message.toLogString()}")
-        runningInfo.receiveMessage()
+        frameworkInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.FriendMessage(sender, message))) return
         if (message.body.isEmpty()) return
         val flag = message.getOnlyAtFlag()
@@ -73,9 +72,9 @@ open class BotService(
         doRouter(BotActionContext(bot, MessageChannel.Friend, sender, sender, message))
     }
 
-    open suspend fun receiveTempMessage(bot: Bot, sender: GroupMember, message: Message) {
+    suspend fun receiveTempMessage(bot: Bot, sender: GroupMember, message: Message) {
         log.info("${sender.logString} -> ${message.toLogString()}")
-        runningInfo.receiveMessage()
+        frameworkInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.TempMessage(sender, message))) return
         if (message.body.isEmpty()) return
         val flag = message.getOnlyAtFlag()
@@ -90,9 +89,9 @@ open class BotService(
         doRouter(BotActionContext(bot, MessageChannel.GroupTemporary, sender, sender, message))
     }
 
-    open suspend fun receiveGroupMessage(bot: Bot, sender: GroupMember, message: Message) {
+    suspend fun receiveGroupMessage(bot: Bot, sender: GroupMember, message: Message) {
         log.info("[${sender.group.logString}]${sender.logStringSingle} -> ${message.toLogString()}")
-        runningInfo.receiveMessage()
+        frameworkInfo.receiveMessage()
         if (eventBus.post(GroupMessageEvent(sender, sender.group, message))) return
         val groupSession = botService.getContextSession(bot, "g${sender.group.id}")
         if (groupSession.suspendCoroutineIt != null) {
@@ -116,9 +115,9 @@ open class BotService(
         doRouter(BotActionContext(bot, MessageChannel.Group, sender, sender.group, message))
     }
 
-    open suspend fun receiveGuildMessage(bot: Bot, channel: Channel, sender: GuildMember, message: Message) {
+    suspend fun receiveGuildMessage(bot: Bot, channel: Channel, sender: GuildMember, message: Message) {
         log.info("[${channel.logString}]${sender.logString} -> ${message.toLogString()}")
-        runningInfo.receiveMessage()
+        frameworkInfo.receiveMessage()
         if (eventBus.post(GuildMessageEvent(sender, channel.guild, channel, message))) return
         val channelSession = botService.getContextSession(bot, channel.guid)
         if (channelSession.suspendCoroutineIt != null) {
@@ -142,7 +141,7 @@ open class BotService(
         doRouter(BotActionContext(bot, MessageChannel.Guild, sender, channel, message))
     }
 
-    open suspend fun doRouter(context: BotActionContext) {
+    suspend fun doRouter(context: BotActionContext) {
 //        if (context.path.isEmpty()) return
         kotlin.runCatching {
             if (eventBus.post(ActionContextInvokeEvent.Per(context))) return
@@ -168,7 +167,7 @@ open class BotService(
         if (SendMessageEvent.Per(contact, message).post()) return messageSendFailedByCancel(contact, message)
         val m = send(obj)
         log.info("$ts <- $ms")
-        runningInfo.sendMessage()
+        frameworkInfo.sendMessage()
         SendMessageEvent.Post(contact, message, m)()
         message.recallDelay?.let {
             asyncDelay(it) {
@@ -178,32 +177,22 @@ open class BotService(
         return m
     }
 
-    open fun messageSendFailedByCancel(contact: Contact, message: Message): MessageSource {
+    fun messageSendFailedByCancel(contact: Contact, message: Message): MessageSource {
         SendMessageInvalidEvent.ByCancel(contact, message).post()
         if (strict) throw SendMessageFailedByCancel()
         return MessageFailByCancel.create(contact, message.liteMessage)
     }
 
-    open fun messageSendFailedByReadTimeout(contact: Contact, message: Message): MessageSource {
+    fun messageSendFailedByReadTimeout(contact: Contact, message: Message): MessageSource {
         SendMessageInvalidEvent.ByReadTimeout(contact, message).post()
         if (strict) throw SendMessageFailedByTimeout()
         return MessageFailByReadTimeOut.create(contact, message.liteMessage)
     }
 
-    open fun getContextSession(bot: Bot, sessionId: String) =
+    fun getContextSession(bot: Bot, sessionId: String) =
         sessionCache.getOrPut(
             sessionId,
             ContactSession(sessionId).apply { ContextSessionCreateEvent(bot, this).post() }
         )
-//    sessionCache[sessionId] ?: run
-//    {
-//        val session = ContextSession(sessionId)
-//        eventBus.post(ContextSessionCreateEvent(session))
-//        sessionCache[sessionId] = session
-//        session
-//    }
 
-//    open fun
-
-//    data class Spx
 }
