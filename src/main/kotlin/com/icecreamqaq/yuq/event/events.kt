@@ -1,4 +1,4 @@
-package com.icecreamqaq.bot.event
+package com.icecreamqaq.yuq.event
 
 import com.IceCreamQAQ.Yu.event.events.CancelEvent
 import com.IceCreamQAQ.Yu.event.events.Event

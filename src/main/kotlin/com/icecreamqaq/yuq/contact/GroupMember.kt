@@ -40,6 +40,7 @@ interface GroupMember : Contact {
      * 该值为禁言到期时间戳，单位毫秒。
      */
     val ban: Long
+
     // 群成员最后发言时间，单位毫秒
     val lastMessageTime: Long
 
@@ -55,6 +56,7 @@ interface GroupMember : Contact {
      * @throws [PermissionDeniedException] 当权限不足时抛出
      */
     fun unBan()
+
     // 在群名片为空时返回昵称，否则返回群名片
     fun nameCardOrName() = if (namecard == "") nickname else namecard
 
@@ -66,6 +68,7 @@ interface GroupMember : Contact {
      * 如果需要精确判断，请判断 [permission] 值。
      */
     fun isAdmin() = permission > 0
+
     // 该成员是否为群主
     fun isOwner() = permission == 2
 
@@ -79,6 +82,8 @@ interface GroupMember : Contact {
      * @throws [PermissionDeniedException] 当权限不足时抛出
      */
     fun kick(message: String = "")
+
+    val logStringSingle: String
 
     companion object {
         @JvmStatic

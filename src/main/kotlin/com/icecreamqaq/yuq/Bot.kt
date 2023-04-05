@@ -1,7 +1,7 @@
 package com.icecreamqaq.yuq
 
 import com.IceCreamQAQ.Yu.util.Web
-import com.icecreamqaq.yuq.contact.User
+import com.icecreamqaq.yuq.contact.Account
 import java.io.Closeable
 
 interface Bot : Closeable {
@@ -14,7 +14,7 @@ interface Bot : Closeable {
         get() = botInfo.id
 
     // 机器人的个人信息
-    val botInfo: User
+    val botInfo: Account
 
     // 好友列表
     val friends: FriendList

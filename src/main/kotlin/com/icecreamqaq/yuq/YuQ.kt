@@ -1,7 +1,7 @@
 package com.icecreamqaq.yuq
 
 import com.IceCreamQAQ.Yu.util.Web
-import com.icecreamqaq.yuq.contact.User
+import com.icecreamqaq.yuq.contact.Account
 import com.icecreamqaq.yuq.message.MessageItemFactory
 
 interface YuQ {
@@ -28,7 +28,7 @@ interface YuQ {
      * YuQ 内实现的一切 Bot 函数都是获取首位 Bot 内值。
      * 单 Bot 用户可正常使用，多 Bot 用户请自己获取目标 Bot。
      */
-    val botInfo: User
+    val botInfo: Account
         get() = bots[0].botInfo
 
     /*** 好友列表

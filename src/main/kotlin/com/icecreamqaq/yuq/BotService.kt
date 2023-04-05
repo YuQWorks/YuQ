@@ -57,7 +57,7 @@ open class BotService(
     }
 
     open suspend fun receiveFriendMessage(bot: Bot, sender: Friend, message: Message) {
-        log.info("${sender.toLogString()} -> ${message.toLogString()}")
+        log.info("${sender.logString} -> ${message.toLogString()}")
         runningInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.FriendMessage(sender, message))) return
         if (message.body.isEmpty()) return
@@ -73,8 +73,8 @@ open class BotService(
         doRouter(BotActionContext(bot, MessageChannel.Friend, sender, sender, message))
     }
 
-    open suspend fun receiveTempMessage(bot: Bot, sender: Member, message: Message) {
-        log.info("${sender.toLogString()} -> ${message.toLogString()}")
+    open suspend fun receiveTempMessage(bot: Bot, sender: GroupMember, message: Message) {
+        log.info("${sender.logString} -> ${message.toLogString()}")
         runningInfo.receiveMessage()
         if (eventBus.post(PrivateMessageEvent.TempMessage(sender, message))) return
         if (message.body.isEmpty()) return
@@ -90,8 +90,8 @@ open class BotService(
         doRouter(BotActionContext(bot, MessageChannel.GroupTemporary, sender, sender, message))
     }
 
-    open suspend fun receiveGroupMessage(bot: Bot, sender: Member, message: Message) {
-        log.info("[${sender.group.toLogString()}]${sender.toLogStringSingle()} -> ${message.toLogString()}")
+    open suspend fun receiveGroupMessage(bot: Bot, sender: GroupMember, message: Message) {
+        log.info("[${sender.group.logString}]${sender.logStringSingle} -> ${message.toLogString()}")
         runningInfo.receiveMessage()
         if (eventBus.post(GroupMessageEvent(sender, sender.group, message))) return
         val groupSession = botService.getContextSession(bot, "g${sender.group.id}")
@@ -117,7 +117,7 @@ open class BotService(
     }
 
     open suspend fun receiveGuildMessage(bot: Bot, channel: Channel, sender: GuildMember, message: Message) {
-        log.info("[${channel.toLogString()}]${sender.toLogString()} -> ${message.toLogString()}")
+        log.info("[${channel.logString}]${sender.logString} -> ${message.toLogString()}")
         runningInfo.receiveMessage()
         if (eventBus.post(GuildMessageEvent(sender, channel.guild, channel, message))) return
         val channelSession = botService.getContextSession(bot, channel.guid)
@@ -162,7 +162,7 @@ open class BotService(
         send: (T) -> R
     ): MessageSource {
         val ms = message.toLogString()
-        val ts = contact.toLogString()
+        val ts = contact.logString
         log.debug("Send Message To: $ts, $ms")
 
         if (SendMessageEvent.Per(contact, message).post()) return messageSendFailedByCancel(contact, message)
