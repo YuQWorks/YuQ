@@ -1,5 +1,6 @@
 package com.icecreamqaq.yuq.contact
 
+import com.icecreamqaq.yuq.Bot
 import com.icecreamqaq.yuq.botService
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
@@ -15,6 +16,9 @@ import java.io.File
  * 联系人对象每个 Bot 唯一，可以保存。
  */
 interface Contact : Account {
+
+    // 该联系人所属的机器人
+    val bot: Bot
 
     // YuQ 框架内对联系人的唯一识别码，全局唯一
     val guid: String
