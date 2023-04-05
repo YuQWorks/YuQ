@@ -1,9 +1,9 @@
-package com.icecreamqaq.yuq.entity
+package com.icecreamqaq.yuq.contact
 
 import com.icecreamqaq.yuq.GuildChannelList
 import com.icecreamqaq.yuq.GuildMemberList
 
-interface Guild : User {
+interface Guild : Account {
 
 //    val id: Long
 //    val platformId: Long

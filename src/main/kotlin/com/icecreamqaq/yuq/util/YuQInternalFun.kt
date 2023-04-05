@@ -1,6 +1,6 @@
 package com.icecreamqaq.yuq.util
 
-import com.icecreamqaq.yuq.entity.Member
+import com.icecreamqaq.yuq.contact.Member
 
 abstract class YuQInternalFun {
 

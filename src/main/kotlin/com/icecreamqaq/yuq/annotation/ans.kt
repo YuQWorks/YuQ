@@ -10,6 +10,12 @@ import java.lang.annotation.Repeatable
 import javax.inject.Named
 
 
+// 被此注解标记的内容仍在开发状态，相关类型以及名字可能随时变动，请自行评估使用价值。
+annotation class Dev
+
+// 被此注解标记的内容不推荐使用。
+annotation class NoRecommendation
+
 @LoadBy(BotControllerLoader::class)
 @EnchantBy(MethodParaNamedEnchanter::class)
 @Named("group")
@@ -31,13 +37,20 @@ annotation class GuildController
 annotation class QQController
 
 @Target(AnnotationTarget.FUNCTION)
-annotation class QQAction(val value: String, vararg val channel: MessageChannel)
+annotation class QQAction(
+    val value: String,
+    vararg val channel: MessageChannel = [MessageChannel.Friend, MessageChannel.GroupTemporary, MessageChannel.Group]
+)
+
 @Target(AnnotationTarget.FUNCTION)
 annotation class GroupAction(val value: String)
+
 @Target(AnnotationTarget.FUNCTION)
 annotation class FriendAction(val value: String)
+
 @Target(AnnotationTarget.FUNCTION)
 annotation class TemporaryAction(val value: String)
+
 @Target(AnnotationTarget.FUNCTION)
 annotation class PrivateAction(val value: String)
 
@@ -82,13 +95,3 @@ annotation class RainCodeString
 //        SENDER, SOURCE, ALL
 //    }
 //}
-
-/***
- * 被此注解标记的内容仍在开发状态，相关类型以及名字可能随时变动，请自行评估使用价值。
- */
-annotation class Dev
-
-/***
- * 被此注解标记的内容不推荐使用。
- */
-annotation class NoRecommendation

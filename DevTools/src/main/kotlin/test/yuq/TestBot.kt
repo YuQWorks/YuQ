@@ -5,7 +5,7 @@ import com.IceCreamQAQ.Yu.di.YuContext
 import com.IceCreamQAQ.Yu.event.EventBus
 import com.IceCreamQAQ.Yu.util.Web
 import com.icecreamqaq.yuq.*
-import com.icecreamqaq.yuq.entity.*
+import com.icecreamqaq.yuq.contact.*
 import com.icecreamqaq.yuq.message.MessageItemFactory
 import test.yuq.event.RegisterContactEvent
 import test.yuq.message.MessageItemFactoryImpl

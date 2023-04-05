@@ -4,8 +4,8 @@ import com.IceCreamQAQ.Yu.event.events.CancelEvent
 import com.IceCreamQAQ.Yu.event.events.Event
 import com.icecreamqaq.yuq.Bot
 import com.icecreamqaq.yuq.controller.BotActionContext
-import com.icecreamqaq.yuq.entity.ContactSession
-import com.icecreamqaq.yuq.entity.*
+import com.icecreamqaq.yuq.contact.ContactSession
+import com.icecreamqaq.yuq.contact.*
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageSource
 

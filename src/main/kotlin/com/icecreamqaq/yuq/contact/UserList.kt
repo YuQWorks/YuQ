@@ -1,11 +1,11 @@
-package com.icecreamqaq.yuq.entity
+package com.icecreamqaq.yuq.contact
 
 import kotlin.collections.Map.Entry
 
 /***
  * 注意，这虽然名字叫 List，但是他并不是一个按下标维护的 List！
  */
-interface UserList<E : User> : Map<Long, E> {
+interface UserList<E : Account> : Map<Long, E> {
 
     fun containsKey(platformId: String): Boolean
     operator fun get(platformId: String): E?
@@ -16,9 +16,9 @@ interface UserList<E : User> : Map<Long, E> {
     val platformEntries: Set<Entry<String, E>>
 }
 
-class UserListImpl<E : User> : UserList<E> {
+class UserListImpl<E : Account> : UserList<E> {
 
-    class ProEntry<E : User>(var user: E) {
+    class ProEntry<E : Account>(var user: E) {
         inline val id get() = user.id
         inline val platformId get() = user.platformId
 

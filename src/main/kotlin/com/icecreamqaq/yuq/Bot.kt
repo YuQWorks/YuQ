@@ -1,7 +1,7 @@
 package com.icecreamqaq.yuq
 
 import com.IceCreamQAQ.Yu.util.Web
-import com.icecreamqaq.yuq.entity.User
+import com.icecreamqaq.yuq.contact.User
 import java.io.Closeable
 
 interface Bot : Closeable {

@@ -1,7 +1,7 @@
 package com.icecreamqaq.yuq.message
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
-import com.icecreamqaq.yuq.entity.Member
+import com.icecreamqaq.yuq.contact.Member
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.FileInputStream

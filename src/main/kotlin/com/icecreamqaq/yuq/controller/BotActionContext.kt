@@ -2,7 +2,7 @@ package com.icecreamqaq.yuq.controller
 
 import com.IceCreamQAQ.Yu.controller.ActionContext
 import com.icecreamqaq.yuq.Bot
-import com.icecreamqaq.yuq.entity.Contact
+import com.icecreamqaq.yuq.contact.Contact
 import com.icecreamqaq.yuq.message.Message
 
 class BotActionContext(

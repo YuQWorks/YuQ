@@ -1,7 +1,6 @@
 package com.icecreamqaq.yuq.message
 
-import com.IceCreamQAQ.Yu.annotation.AutoBind
-import com.icecreamqaq.yuq.entity.Member
+import com.icecreamqaq.yuq.contact.Member
 import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.mif
 import java.awt.image.BufferedImage

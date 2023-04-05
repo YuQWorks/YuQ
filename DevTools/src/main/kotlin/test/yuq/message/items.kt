@@ -1,16 +1,13 @@
 package test.yuq.message
 
-import com.icecreamqaq.yuq.entity.Contact
-import com.icecreamqaq.yuq.entity.Member
+import com.icecreamqaq.yuq.contact.Contact
+import com.icecreamqaq.yuq.contact.Member
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.message.At
 import com.icecreamqaq.yuq.message.Face
 import com.icecreamqaq.yuq.message.FlashImage
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.MessagePackage
-import com.icecreamqaq.yuq.message.Voice
-import kotlinx.coroutines.runBlocking
-import java.io.InputStream
 
 abstract class MessageItemBaseX:MessageItemBase(){
     override fun toLocal(contact: Contact) = ""

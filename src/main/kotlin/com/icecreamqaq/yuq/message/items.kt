@@ -1,8 +1,8 @@
 package com.icecreamqaq.yuq.message
 
 import com.icecreamqaq.yuq.annotation.PathVar
-import com.icecreamqaq.yuq.entity.Contact
-import com.icecreamqaq.yuq.entity.Member
+import com.icecreamqaq.yuq.contact.Contact
+import com.icecreamqaq.yuq.contact.Member
 import com.icecreamqaq.yuq.mif
 
 

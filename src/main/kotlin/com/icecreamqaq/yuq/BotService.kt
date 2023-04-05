@@ -6,14 +6,13 @@ import com.IceCreamQAQ.Yu.event.EventBus
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.MessageChannel
 import com.icecreamqaq.yuq.controller.router.BotRootRouter
-import com.icecreamqaq.yuq.entity.ContactSession
-import com.icecreamqaq.yuq.entity.*
+import com.icecreamqaq.yuq.contact.ContactSession
+import com.icecreamqaq.yuq.contact.*
 import com.icecreamqaq.yuq.error.SendMessageFailedByCancel
 import com.icecreamqaq.yuq.error.SendMessageFailedByTimeout
 import com.icecreamqaq.yuq.event.*
 import com.icecreamqaq.yuq.job.YuQRunningInfo
 import com.icecreamqaq.yuq.message.*
-import com.icecreamqaq.yuq.util.YuQInternalFun
 import com.icecreamqaq.yuq.util.liteMessage
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
@@ -24,11 +23,10 @@ open class BotService(
     val rootRouter: BotRootRouter,
     val eventBus: EventBus,
     val runningInfo: YuQRunningInfo,
-    val internalFun: YuQInternalFun,
     @Named("ContextSession")
     val sessionCache: EhcacheHelp<ContactSession>,
     @Config("YuQ.bot.name")
-    val botName: String,
+    val botName: String?,
     @Config("yuq.chat.strict")
     val strict: Boolean,
     @Config("YuQ.Controller.RainCode")
@@ -95,7 +93,6 @@ open class BotService(
     open suspend fun receiveGroupMessage(bot: Bot, sender: Member, message: Message) {
         log.info("[${sender.group.toLogString()}]${sender.toLogStringSingle()} -> ${message.toLogString()}")
         runningInfo.receiveMessage()
-        internalFun.setMemberLastMessageTime(sender, System.currentTimeMillis())
         if (eventBus.post(GroupMessageEvent(sender, sender.group, message))) return
         val groupSession = botService.getContextSession(bot, "g${sender.group.id}")
         if (groupSession.suspendCoroutineIt != null) {

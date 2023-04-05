@@ -1,6 +1,6 @@
 package test.yuq.contcat
 
-import com.icecreamqaq.yuq.entity.*
+import com.icecreamqaq.yuq.contact.*
 import com.icecreamqaq.yuq.event.BotLeaveGroupEvent
 import com.icecreamqaq.yuq.event.GroupMemberLeaveEvent
 import com.icecreamqaq.yuq.message.Image

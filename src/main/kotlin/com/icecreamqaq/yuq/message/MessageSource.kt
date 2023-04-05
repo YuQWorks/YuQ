@@ -1,6 +1,6 @@
 package com.icecreamqaq.yuq.message
 
-import com.icecreamqaq.yuq.entity.*
+import com.icecreamqaq.yuq.contact.*
 import com.icecreamqaq.yuq.yuq
 
 interface MessageSource {

@@ -1,8 +1,7 @@
 package test.yuq.message
 
-import com.icecreamqaq.yuq.entity.Member
+import com.icecreamqaq.yuq.contact.Member
 import com.icecreamqaq.yuq.message.*
-import com.icecreamqaq.yuq.web
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
