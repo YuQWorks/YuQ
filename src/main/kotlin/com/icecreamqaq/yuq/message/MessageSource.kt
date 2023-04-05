@@ -67,7 +67,7 @@ data class MessageFailByCancel(
         -1
     )
 
-    constructor(contact: Member, liteMsg: String) : this(
+    constructor(contact: GroupMember, liteMsg: String) : this(
         -1,
         yuq.botId,
         System.currentTimeMillis(),
@@ -94,7 +94,7 @@ data class MessageFailByCancel(
             when(contact){
                 is Friend -> MessageFailByCancel(contact, liteMsg)
                 is Group -> MessageFailByCancel(contact, liteMsg)
-                is Member -> MessageFailByCancel(contact, liteMsg)
+                is GroupMember -> MessageFailByCancel(contact, liteMsg)
                 is Channel -> MessageFailByCancel(contact, liteMsg)
                 else -> error("联系人 $contact 可能无法创建消息。")
             }
@@ -138,7 +138,7 @@ data class MessageFailByReadTimeOut(
         -1
     )
 
-    constructor(contact: Member, liteMsg: String) : this(
+    constructor(contact: GroupMember, liteMsg: String) : this(
         -1,
         yuq.botId,
         System.currentTimeMillis(),
@@ -165,7 +165,7 @@ data class MessageFailByReadTimeOut(
             when(contact){
                 is Friend -> MessageFailByReadTimeOut(contact, liteMsg)
                 is Group -> MessageFailByReadTimeOut(contact, liteMsg)
-                is Member -> MessageFailByReadTimeOut(contact, liteMsg)
+                is GroupMember -> MessageFailByReadTimeOut(contact, liteMsg)
                 is Channel -> MessageFailByReadTimeOut(contact, liteMsg)
                 else -> error("联系人 $contact 可能无法创建消息。")
             }
@@ -209,7 +209,7 @@ data class FakeMessageSource(
         -1
     )
 
-    constructor(contact: Member, liteMsg: String) : this(
+    constructor(contact: GroupMember, liteMsg: String) : this(
         -1,
         yuq.botId,
         System.currentTimeMillis(),
@@ -236,7 +236,7 @@ data class FakeMessageSource(
             when(contact){
                 is Friend -> FakeMessageSource(contact, liteMsg)
                 is Group -> FakeMessageSource(contact, liteMsg)
-                is Member -> FakeMessageSource(contact, liteMsg)
+                is GroupMember -> FakeMessageSource(contact, liteMsg)
                 is Channel -> FakeMessageSource(contact, liteMsg)
                 else -> error("联系人 $contact 可能无法创建消息。")
             }

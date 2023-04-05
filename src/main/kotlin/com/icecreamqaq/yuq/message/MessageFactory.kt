@@ -1,6 +1,6 @@
 package com.icecreamqaq.yuq.message
 
-import com.icecreamqaq.yuq.contact.Member
+import com.icecreamqaq.yuq.contact.GroupMember
 import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.mif
 import java.awt.image.BufferedImage
@@ -29,7 +29,7 @@ open class MessageLineQ(val message: Message = Message()) : SendAble {
     fun rainCode(codeString: String) = plus(codeString.toMessageByRainCode())
 
     fun at(qq: Long) = plus(mif.at(qq))
-    fun at(member: Member) = plus(mif.at(member))
+    fun at(member: GroupMember) = plus(mif.at(member))
 
     fun face(id: Int) = plus(mif.face(id))
 

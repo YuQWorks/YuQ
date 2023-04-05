@@ -1,7 +1,7 @@
 package com.icecreamqaq.yuq.message
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
-import com.icecreamqaq.yuq.contact.Member
+import com.icecreamqaq.yuq.contact.GroupMember
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.FileInputStream
@@ -30,7 +30,7 @@ interface MessageItemFactory {
      * 创建一个 At 内容
      * @param member 欲 At 的目标 QQ 号码。
      */
-    fun at(member: Member): At
+    fun at(member: GroupMember): At
 
     /***
      * 创建一个基础的 QQ 表情。

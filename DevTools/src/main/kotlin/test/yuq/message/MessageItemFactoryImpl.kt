@@ -1,6 +1,6 @@
 package test.yuq.message
 
-import com.icecreamqaq.yuq.contact.Member
+import com.icecreamqaq.yuq.contact.GroupMember
 import com.icecreamqaq.yuq.message.*
 import java.awt.image.BufferedImage
 import java.io.File
@@ -9,7 +9,7 @@ import java.io.InputStream
 class MessageItemFactoryImpl : MessageItemFactory {
     override fun text(text: String) = TextImpl(text)
 
-    override fun at(member: Member) = AtMemberImpl(member)
+    override fun at(member: GroupMember) = AtMemberImpl(member)
 
     override fun at(qq: Long) = AtImpl(qq)
 
