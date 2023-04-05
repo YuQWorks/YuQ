@@ -12,6 +12,9 @@ class BotActionContext(
     val source: Contact,
     val message: Message
 ) : ActionContext {
+
+    internal val matcherItem = MatcherItem(message.body)
+
     private val saved = HashMap<String, Any?>()
 
     override var result: Any? = null
