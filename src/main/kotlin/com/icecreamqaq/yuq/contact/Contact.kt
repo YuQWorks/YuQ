@@ -43,7 +43,7 @@ interface Contact : Account {
     fun sendFile(file: File)
 
     // 当前联系人是否能发送消息
-    fun canSendMessage(): Boolean
+    fun canSendMessage(): Boolean = true
 
     // 用于描述输出到日志中的内容。
     val logString: String
