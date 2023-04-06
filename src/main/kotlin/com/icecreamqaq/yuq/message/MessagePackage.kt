@@ -1,7 +1,5 @@
 package com.icecreamqaq.yuq.message
 
-import com.icecreamqaq.yuq.annotation.PathVar
-
 interface MessagePackage : MessageItem {
     /***
      * 发送方式
@@ -16,12 +14,4 @@ interface MessagePackage : MessageItem {
     var type: Int
 
     val body: MutableList<IMessageItemChain>
-
-    override fun toPath() = "MessagePackage"
-    override fun convertByPathVar(type: PathVar.Type) = null
-
-    override fun equal(other: MessageItem): Boolean {
-        if (other !is MessagePackage) return false
-        return body == other.body
-    }
 }
