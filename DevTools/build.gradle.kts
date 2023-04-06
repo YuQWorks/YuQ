@@ -16,6 +16,8 @@ repositories {
 dependencies{
     implementation(kotlin("stdlib"))
     implementation(rootProject)
+    // SnakeYAML 默认不向后传递。
+    testImplementation("org.yaml:snakeyaml:2.0")
 }
 
 publishing {
