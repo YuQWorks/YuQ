@@ -1,0 +1,45 @@
+yu:
+  scanPackages: yuq.test
+yuq:
+  devTools:
+    bots:
+      - id: 100001
+        name: DevToolsBot01
+        friends:
+          - id: 1001001
+            name: DevBot01Friend01
+          - id: 1001002
+            name: DevBot01Friend02
+        groups:
+          - id: 1002001
+            name: DevBot01Group01
+            members:
+              - id: 1003001
+                name: DevBot01Group01Member01
+                permissions: 2
+              - id: 1003002
+                name: DevBot01Group01Member02
+                permissions: 1
+              - id: 1003003
+                name: DevBot01Group01Member03
+                permissions: 0
+      - id: 100002
+        name: DevToolsBot02
+        friends:
+          - id: 1002001
+            name: DevBot02Friend01
+          - id: 1002002
+            name: DevBot02Friend02
+        groups:
+          - id: 1004001
+            name: DevBot02Group01
+            members:
+              - id: 1005001
+                name: DevBot02Group01Member01
+                permissions: 2
+              - id: 1005002
+                name: DevBot02Group01Member02
+                permissions: 1
+              - id: 1005003
+                name: DevBot02Group01Member03
+                permissions: 0
