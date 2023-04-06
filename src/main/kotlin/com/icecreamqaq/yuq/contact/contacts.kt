@@ -19,7 +19,6 @@ enum class UserSex {
 }
 
 data class UserInfo(
-    override val bot: Bot,
     override val id: Long,
     override val platformId: String = id.toString(),
     override val avatar: String,
