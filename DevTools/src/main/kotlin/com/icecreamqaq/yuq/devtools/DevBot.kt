@@ -3,11 +3,13 @@ package com.icecreamqaq.yuq.devtools
 import com.IceCreamQAQ.Yu.util.Web
 import com.icecreamqaq.yuq.*
 import com.icecreamqaq.yuq.contact.Account
+import com.icecreamqaq.yuq.devtools.contact.DevFriendList
+import com.icecreamqaq.yuq.devtools.contact.DevGroupList
 
 class DevBot(
     override val botInfo: Account,
-    override val friends: FriendList,
-    override val groups: GroupList,
+    override val friends: DevFriendList,
+    override val groups: DevGroupList,
     override val guilds: GuildList,
 ): Bot {
 

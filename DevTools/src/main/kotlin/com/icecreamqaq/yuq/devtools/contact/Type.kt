@@ -1,3 +1,8 @@
 package com.icecreamqaq.yuq.devtools.contact
 
-//typealias Dev
+import com.icecreamqaq.yuq.contact.UserList
+import com.icecreamqaq.yuq.contact.UserListImpl
+
+typealias DevFriendList = UserListImpl<DevFriend>
+typealias DevGroupList = UserListImpl<DevGroup>
+typealias DevGroupMemberList = UserListImpl<DevGroupMember>
