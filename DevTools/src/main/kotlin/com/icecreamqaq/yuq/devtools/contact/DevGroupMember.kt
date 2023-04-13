@@ -1,11 +1,8 @@
 package com.icecreamqaq.yuq.devtools.contact
 
-import com.icecreamqaq.yuq.Bot
-import com.icecreamqaq.yuq.contact.Group
 import com.icecreamqaq.yuq.contact.GroupMember
 import com.icecreamqaq.yuq.devtools.DevBot
 import com.icecreamqaq.yuq.error.PermissionDeniedException
-import com.icecreamqaq.yuq.event.GroupMemberEvent
 import com.icecreamqaq.yuq.event.GroupMemberLeaveEvent
 import com.icecreamqaq.yuq.post
 

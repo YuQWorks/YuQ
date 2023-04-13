@@ -1,12 +1,5 @@
 package com.icecreamqaq.yuq.contact
 
-import com.icecreamqaq.yuq.*
-import com.icecreamqaq.yuq.botService
-import com.icecreamqaq.yuq.message.*
-import com.icecreamqaq.yuq.message.Message.Companion.toMessage
-import com.icecreamqaq.yuq.util.WebHelper.Companion.postWithQQKey
-import java.io.File
-
 
 /*** 匿名群成员对象
  * 匿名群成员对象是一个临时对象，不保证稳定，不保证唯一。

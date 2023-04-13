@@ -1,6 +1,5 @@
 package com.icecreamqaq.yuq.devtools.contact
 
-import com.icecreamqaq.yuq.contact.UserList
 import com.icecreamqaq.yuq.contact.UserListImpl
 
 typealias DevFriendList = UserListImpl<DevFriend>

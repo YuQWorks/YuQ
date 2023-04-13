@@ -1,6 +1,5 @@
 package com.icecreamqaq.yuq.controller
 
-import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItem
 import com.icecreamqaq.yuq.message.MessageItemChain
 import com.icecreamqaq.yuq.message.Text

@@ -4,7 +4,6 @@ import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.IceCreamQAQ.Yu.event.events.AppStartEvent
 import com.icecreamqaq.yuq.BotService
-import com.icecreamqaq.yuq.message.Message
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 

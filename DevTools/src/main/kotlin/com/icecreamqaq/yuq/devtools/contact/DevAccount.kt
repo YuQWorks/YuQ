@@ -1,6 +1,5 @@
 package com.icecreamqaq.yuq.devtools.contact
 
-import com.icecreamqaq.yuq.Bot
 import com.icecreamqaq.yuq.contact.Account
 
 open class DevAccount(

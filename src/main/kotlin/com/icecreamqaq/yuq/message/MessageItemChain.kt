@@ -1,9 +1,7 @@
 package com.icecreamqaq.yuq.message
 
-import com.icecreamqaq.yuq.error.MessageThrowable
 import com.icecreamqaq.yuq.mif
 import okio.ArrayIndexOutOfBoundsException
-import kotlin.NoSuchElementException
 
 data class ChainItem(var item: MessageItem, var next: ChainItem? = null, var previous: ChainItem? = null)
 

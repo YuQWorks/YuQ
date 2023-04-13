@@ -4,11 +4,10 @@ import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.cache.EhcacheHelp
 import com.IceCreamQAQ.Yu.event.EventBus
 import com.icecreamqaq.yuq.annotation.Internal
+import com.icecreamqaq.yuq.contact.*
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.MessageChannel
 import com.icecreamqaq.yuq.controller.router.BotRootRouter
-import com.icecreamqaq.yuq.contact.ContactSession
-import com.icecreamqaq.yuq.contact.*
 import com.icecreamqaq.yuq.error.SendMessageFailedByCancel
 import com.icecreamqaq.yuq.error.SendMessageFailedByTimeout
 import com.icecreamqaq.yuq.event.*
@@ -17,7 +16,6 @@ import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.util.liteMessage
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
-import javax.inject.Inject
 import javax.inject.Named
 
 @Internal

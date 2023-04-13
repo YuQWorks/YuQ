@@ -3,7 +3,7 @@ package com.icecreamqaq.yuq
 import com.IceCreamQAQ.Yu.event.EventBus
 import com.IceCreamQAQ.Yu.event.events.Event
 import com.IceCreamQAQ.Yu.util.Web
-import com.icecreamqaq.yuq.message.*
+import com.icecreamqaq.yuq.message.MessageItemFactory
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

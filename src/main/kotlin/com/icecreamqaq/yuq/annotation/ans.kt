@@ -5,8 +5,6 @@ import com.IceCreamQAQ.Yu.annotation.LoadBy
 import com.IceCreamQAQ.Yu.loader.enchant.MethodParaNamedEnchanter
 import com.icecreamqaq.yuq.controller.BotControllerLoader
 import com.icecreamqaq.yuq.controller.MessageChannel
-
-import java.lang.annotation.Repeatable
 import javax.inject.Named
 
 

@@ -5,7 +5,6 @@ import com.icecreamqaq.yuq.contact.GroupMember
 import com.icecreamqaq.yuq.web
 import java.awt.image.BufferedImage
 import java.io.File
-import java.io.FileInputStream
 import java.io.InputStream
 import javax.imageio.ImageIO
 

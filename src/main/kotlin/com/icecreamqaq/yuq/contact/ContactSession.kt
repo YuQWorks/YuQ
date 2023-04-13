@@ -2,7 +2,8 @@ package com.icecreamqaq.yuq.contact
 
 import com.icecreamqaq.yuq.error.WaitNextMessageTimeoutException
 import com.icecreamqaq.yuq.message.Message
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.withTimeout
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.set
 

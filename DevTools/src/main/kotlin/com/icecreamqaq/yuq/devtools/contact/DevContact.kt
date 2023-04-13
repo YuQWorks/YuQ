@@ -1,6 +1,5 @@
 package com.icecreamqaq.yuq.devtools.contact
 
-import com.icecreamqaq.yuq.Bot
 import com.icecreamqaq.yuq.contact.Contact
 import com.icecreamqaq.yuq.devtools.DevBot
 import com.icecreamqaq.yuq.message.Image
