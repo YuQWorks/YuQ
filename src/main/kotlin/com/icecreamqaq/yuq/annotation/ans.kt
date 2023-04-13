@@ -35,10 +35,10 @@ annotation class GuildController
 @Target(AnnotationTarget.CLASS)
 @LoadBy(BotControllerLoader::class)
 @EnchantBy(MethodParaNamedEnchanter::class)
-annotation class QQController
+annotation class BotController
 
 @Target(AnnotationTarget.FUNCTION)
-annotation class QQAction(
+annotation class BotAction(
     val value: String,
     vararg val channel: MessageChannel = [MessageChannel.Friend, MessageChannel.GroupTemporary, MessageChannel.Group]
 )
