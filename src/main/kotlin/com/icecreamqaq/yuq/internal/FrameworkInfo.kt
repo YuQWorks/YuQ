@@ -4,19 +4,20 @@ import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import com.IceCreamQAQ.Yu.util.Web
-import com.icecreamqaq.yuq.YuQVersion
 import com.icecreamqaq.yuq.yuq
 import javax.inject.Inject
 
 @JobCenter
 class FrameworkInfo(
-    private val version: YuQVersion,
     private val web: Web,
     @Config("yu.scanPackages")
     private var scanPackages: MutableList<String>,
     @Config("yuq.framework.uploadInfo")
     private val uploadFrameworkInfo: Boolean = true
 ) {
+
+    @Inject
+    private lateinit var version: YuQVersion
 
     private var rc = 0
     private var sc = 0

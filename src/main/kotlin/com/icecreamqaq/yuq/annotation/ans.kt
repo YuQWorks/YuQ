@@ -16,6 +16,9 @@ annotation class Dev
 // 被此注解标记的内容不推荐使用。
 annotation class NoRecommendation
 
+// 此注解标记的内容为 YuQ 内部实现，如果您不能完全理解，请不要轻易修改内容。
+annotation class Internal
+
 @LoadBy(BotControllerLoader::class)
 @EnchantBy(MethodParaNamedEnchanter::class)
 @Named("group")

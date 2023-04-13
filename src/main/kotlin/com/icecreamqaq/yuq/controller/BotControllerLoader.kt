@@ -13,6 +13,8 @@ import com.IceCreamQAQ.Yu.controller.simple.SimpleCatchMethodInvoker
 import com.IceCreamQAQ.Yu.di.YuContext
 import com.IceCreamQAQ.Yu.hasAnnotation
 import com.icecreamqaq.yuq.annotation.*
+import com.icecreamqaq.yuq.botService
+import com.icecreamqaq.yuq.controller.router.BotRootRouter
 import com.icecreamqaq.yuq.controller.router.BotRouter
 import com.icecreamqaq.yuq.controller.router.RouterMatcher
 import java.lang.reflect.Method
@@ -97,7 +99,20 @@ open class BotControllerLoader(
         )
 
     override fun postLoad() {
-        TODO("Not yet implemented")
+        val actionList = ArrayList<ActionInfo<BotActionContext>>()
+        rootInfo.controllers.forEach {
+            it.actions.forEach {
+                actionList.add(
+                    ActionInfo(
+                        it.actionClass,
+                        it.actionMethod,
+                        it.creator()
+                    )
+                )
+            }
+        }
+
+        botService.rootRouter = BotRootRouter(rootInfo.router, actionList)
     }
 
     override fun makeAction(

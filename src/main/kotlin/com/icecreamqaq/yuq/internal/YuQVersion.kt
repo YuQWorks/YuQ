@@ -1,4 +1,4 @@
-package com.icecreamqaq.yuq
+package com.icecreamqaq.yuq.internal
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
 

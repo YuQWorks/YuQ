@@ -1,0 +1,14 @@
+yu:
+  scanPackages: com.icecreamqaq.yuq
+  cache:
+    ehcaches:
+      ContextSession:
+        tti: 1800
+
+yuq:
+  controller:
+    raincode:
+      enable: true
+      prefix: ^
+  chat:
+    strict: true

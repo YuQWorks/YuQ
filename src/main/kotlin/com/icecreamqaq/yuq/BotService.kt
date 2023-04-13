@@ -3,6 +3,7 @@ package com.icecreamqaq.yuq
 import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.cache.EhcacheHelp
 import com.IceCreamQAQ.Yu.event.EventBus
+import com.icecreamqaq.yuq.annotation.Internal
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.MessageChannel
 import com.icecreamqaq.yuq.controller.router.BotRootRouter
@@ -19,8 +20,8 @@ import org.slf4j.LoggerFactory
 import javax.inject.Inject
 import javax.inject.Named
 
+@Internal
 class BotService(
-    private val rootRouter: BotRootRouter,
     private val eventBus: EventBus,
     private val frameworkInfo: FrameworkInfo,
     @Named("ContextSession")
@@ -29,9 +30,11 @@ class BotService(
     private val botName: String?,
     @Config("yuq.chat.strict")
     private val strict: Boolean,
-    @Config("YuQ.Controller.RainCode")
+    @Config("yuq.controller.raincode")
     private val rainCode: RainCodeConfig
 ) {
+
+    internal lateinit var rootRouter: BotRootRouter
 
     companion object {
         private val log = LoggerFactory.getLogger(BotService::class.java)
@@ -44,6 +47,7 @@ class BotService(
 
     init {
         botService = this
+        com.icecreamqaq.yuq.eventBus = eventBus
     }
 
     private fun Message.getOnlyAtFlag(): Int {

@@ -1,7 +1,7 @@
 yu:
   scanPackages: yuq.test
 yuq:
-  devTools:
+  devtools:
     bots:
       - id: 100001
         name: DevToolsBot01
