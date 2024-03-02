@@ -1,7 +1,5 @@
 package com.icecreamqaq.yuq.message
 
-import com.icecreamqaq.yuq.mif
-import okio.ArrayIndexOutOfBoundsException
 
 data class ChainItem(var item: MessageItem, var next: ChainItem? = null, var previous: ChainItem? = null)
 
@@ -78,7 +76,7 @@ class MessageItemChain : IMessageItemChain, List<MessageItem>, MessagePlus, Send
 
     override fun plus(item: MessageItem) = append(item)
 
-    override fun plus(item: String) = append(mif.text(item))
+    override fun plus(item: String) = TODO()
 
     override fun plus(item: Message) = append(item.body)
 

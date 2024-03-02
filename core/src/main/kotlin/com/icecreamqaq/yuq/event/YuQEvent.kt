@@ -1,8 +1,8 @@
 package com.icecreamqaq.yuq.event
 
-import com.IceCreamQAQ.Yu.event.events.Event
+import rain.api.event.Event
 
-open class YuQApplicationStatusChanged : Event(){
-    open class Started : Event()
-    open class Stopping : Event()
+interface YuQApplicationStatusChanged : Event {
+    open class Started : YuQApplicationStatusChanged
+    open class Stopping : YuQApplicationStatusChanged
 }

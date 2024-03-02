@@ -1,8 +1,7 @@
 package com.icecreamqaq.yuq.message
 
-import com.IceCreamQAQ.Yu.util.IO
 import com.icecreamqaq.yuq.contact.GroupMember
-import com.icecreamqaq.yuq.web
+import rain.function.IO
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
@@ -41,7 +40,7 @@ class MessageItemFactory {
     /*** 发送一个网络图片
      * @param url 图片的下载地址。
      */
-    fun imageByUrl(url: String): Image = OfflineImage(web.download(url, file = null))
+//    fun imageByUrl(url: String): Image = OfflineImage(web.download(url, file = null))
 
 
     fun imageByBufferedImage(bufferedImage: BufferedImage, format: String = "PNG"): Image =

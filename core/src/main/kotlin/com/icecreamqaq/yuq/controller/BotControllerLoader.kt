@@ -1,20 +1,22 @@
 package com.icecreamqaq.yuq.controller
 
-import com.IceCreamQAQ.Yu.annotation
-import com.IceCreamQAQ.Yu.annotation.*
-import com.IceCreamQAQ.Yu.controller.*
-import com.IceCreamQAQ.Yu.controller.simple.SimpleCatchMethodInvoker
-import com.IceCreamQAQ.Yu.di.YuContext
 import com.icecreamqaq.yuq.annotation.*
-import com.icecreamqaq.yuq.botService
 import com.icecreamqaq.yuq.controller.router.BotRootRouter
 import com.icecreamqaq.yuq.controller.router.BotRouter
 import com.icecreamqaq.yuq.controller.router.RouterMatcher
+import rain.api.di.DiContext
+import rain.controller.*
+import rain.controller.annotation.After
+import rain.controller.annotation.Before
+import rain.controller.annotation.Catch
+import rain.controller.annotation.Path
+import rain.controller.simple.SimpleCatchMethodInvoker
+import rain.function.annotation
 import java.lang.reflect.Method
 import kotlin.reflect.KProperty1
 
 open class BotControllerLoader(
-    context: YuContext
+    context: DiContext
 ) : ControllerLoader<BotActionContext, BotRouter, BotRootInfo>(context) {
 
     private val rootInfo = BotRootInfo(BotRouter { true })
@@ -105,7 +107,7 @@ open class BotControllerLoader(
             }
         }
 
-        botService.rootRouter = BotRootRouter(rootInfo.router, actionList)
+//        botService.rootRouter = BotRootRouter(rootInfo.router, actionList)
     }
 
     override fun makeAction(
@@ -133,10 +135,6 @@ open class BotControllerLoader(
             path = value
             channels = arrayOf(MessageChannel.GroupTemporary)
         }
-        actionMethod.annotation<Action> {
-            path = value
-            channels = controllerFlow.controllerChannels.map { MessageChannel.valueOf(it) }.toTypedArray()
-        }
 
         if (channels.isEmpty()) return null
 
@@ -158,16 +156,16 @@ open class BotControllerLoader(
                 .map { it.invoker }
                 .toTypedArray()
 
-        actionFlow.creator = ActionInvokerCreator {
-            BotActionInvoker(
-                channels,
-                matchers,
-                BotMethodInvoker(actionMethod, instanceGetter),
-                checkPf(ProcessFlowInfo<BotActionContext>::beforeProcesses),
-                checkPf(ProcessFlowInfo<BotActionContext>::afterProcesses),
-                checkPf(ProcessFlowInfo<BotActionContext>::catchProcesses)
-            )
-        }
+//        actionFlow.creator = ActionInvokerCreator {
+//            BotActionInvoker(
+//                channels,
+//                matchers,
+//                BotMethodInvoker(actionMethod, instanceGetter),
+//                checkPf(ProcessFlowInfo<BotActionContext>::beforeProcesses),
+//                checkPf(ProcessFlowInfo<BotActionContext>::afterProcesses),
+//                checkPf(ProcessFlowInfo<BotActionContext>::catchProcesses)
+//            )
+//        }
         return actionFlow
     }
 

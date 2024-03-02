@@ -1,41 +1,22 @@
 package com.icecreamqaq.yuq.event
 
-import com.IceCreamQAQ.Yu.event.events.CancelEvent
-import com.IceCreamQAQ.Yu.event.events.Event
 import com.icecreamqaq.yuq.Bot
 import com.icecreamqaq.yuq.contact.*
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageSource
+import rain.api.event.Event
+import rain.event.events.AbstractCancelAbleEvent
+import rain.event.events.CancelAbleEvent
 
-interface BotEvent {
+interface BotEvent : Event {
     val bot: Bot
 }
 
-open class MessageEvent(open val sender: Contact, val message: Message) : Event(), CancelEvent, BotEvent {
-    override fun cancelAble() = true
-    override val bot: Bot
-        get() = sender.bot
-}
-
-open class GroupMessageEvent(override val sender: GroupMember, val group: Group, message: Message) :
-    MessageEvent(sender, message)
-
-open class GuildMessageEvent(
-    override val sender: GuildMember,
-    val guild: Guild,
-    val channel: Channel,
-    message: Message
-) : MessageEvent(sender, message)
-
-open class PrivateMessageEvent(sender: Contact, message: Message) : MessageEvent(sender, message) {
-    open class FriendMessage(override val sender: Friend, message: Message) : PrivateMessageEvent(sender, message)
-    open class TempMessage(override val sender: GroupMember, message: Message) : PrivateMessageEvent(sender, message)
-}
 
 open class MessageRecallEvent(
     open val sender: Contact, open val operator: Contact, val messageId: Int
-) : Event(), BotEvent {
+) : BotEvent {
     override val bot: Bot
         get() = sender.bot
 }
@@ -50,11 +31,11 @@ open class GroupRecallEvent(
     messageId: Int
 ) : MessageRecallEvent(sender, operator, messageId)
 
-open class FriendListEvent(override val bot: Bot) : Event(), BotEvent
+open class FriendListEvent(override val bot: Bot) : BotEvent
 open class FriendAddEvent(val friend: Friend) : FriendListEvent(friend.bot)
 open class FriendDeleteEvent(val friend: Friend) : FriendListEvent(friend.bot)
 
-open class GroupListEvent(override val bot: Bot) : Event(), BotEvent
+open class GroupListEvent(override val bot: Bot) : BotEvent
 open class BotJoinGroupEvent(val group: Group) : GroupListEvent(group.bot)
 
 /***
@@ -78,8 +59,7 @@ open class BotLeaveGroupEvent(val group: Group) : GroupListEvent(group.bot) {
     open class Kick(val operator: GroupMember) : BotLeaveGroupEvent(operator.group)
 }
 
-open class NewRequestEvent(override val bot: Bot, val message: String) : Event(), CancelEvent, BotEvent {
-    override fun cancelAble() = true
+open class NewRequestEvent(override val bot: Bot, val message: String) : AbstractCancelAbleEvent(), BotEvent {
     var accept: Boolean? = null
     var rejectMessage: String = ""
 }
@@ -96,13 +76,11 @@ open class GroupInviteEvent(bot: Bot, val group: GroupInfo, val qq: UserInfo, me
 
 open class GroupMemberRequestEvent(
     val group: Group, val qq: UserInfo, message: String
-) : NewRequestEvent(group.bot, message),
-    CancelEvent {
-    override fun cancelAble() = true
+) : NewRequestEvent(group.bot, message) {
     val blackList = false
 }
 
-open class GroupMemberEvent(val group: Group, val member: GroupMember) : Event(), BotEvent {
+open class GroupMemberEvent(val group: Group, val member: GroupMember) : BotEvent {
     override val bot: Bot
         get() = group.bot
 }
@@ -129,23 +107,25 @@ open class GroupMemberKickEvent(group: Group, member: GroupMember, operator: Gro
 open class GroupBanMemberEvent(group: Group, member: GroupMember, val operator: GroupMember, val time: Int) :
     GroupMemberEvent(group, member)
 
-open class GroupUnBanMemberEvent(group: Group, member: GroupMember, val operator: GroupMember) : GroupMemberEvent(group, member)
+open class GroupUnBanMemberEvent(group: Group, member: GroupMember, val operator: GroupMember) :
+    GroupMemberEvent(group, member)
+
 open class GroupBanBotEvent(group: Group, member: GroupMember, val operator: GroupMember, val time: Int) :
     GroupMemberEvent(group, member)
 
-open class GroupUnBanBotEvent(group: Group, member: GroupMember, val operator: GroupMember) : GroupMemberEvent(group, member)
+open class GroupUnBanBotEvent(group: Group, member: GroupMember, val operator: GroupMember) :
+    GroupMemberEvent(group, member)
 
-open class ContextSessionCreateEvent(override val bot: Bot, session: ContactSession) : Event(), BotEvent
-open class ActionContextInvokeEvent(val context: BotActionContext) : Event(), CancelEvent {
-    override fun cancelAble() = true
+open class ContextSessionCreateEvent(override val bot: Bot, session: ContactSession) : BotEvent
+open class ActionContextInvokeEvent(val context: BotActionContext) : AbstractCancelAbleEvent() {
     open class Per(context: BotActionContext) : ActionContextInvokeEvent(context)
 
     open class Post(context: BotActionContext, val routerMatchFlag: Boolean) : ActionContextInvokeEvent(context)
 }
 
-open class SendMessageEvent(val sendTo: Contact, val message: Message) : Event(), BotEvent {
-    open class Per(sendTo: Contact, message: Message) : SendMessageEvent(sendTo, message), CancelEvent {
-        override fun cancelAble() = true
+open class SendMessageEvent(val sendTo: Contact, val message: Message) : BotEvent {
+    open class Per(sendTo: Contact, message: Message) : SendMessageEvent(sendTo, message), CancelAbleEvent {
+        override var isCanceled: Boolean = false
     }
 
     open class Post(sendTo: Contact, message: Message, val messageSource: MessageSource) :
@@ -159,7 +139,7 @@ open class SendMessageEvent(val sendTo: Contact, val message: Message) : Event()
 open class SendMessageInvalidEvent(
     val sendTo: Contact,
     val message: Message
-) : Event(), BotEvent {
+) : BotEvent {
     // 发送消息被取消事件。
     class ByCancel(sendTo: Contact, message: Message) : SendMessageInvalidEvent(sendTo, message)
 
@@ -176,7 +156,7 @@ open class SendMessageInvalidEvent(
 }
 
 
-open class ClickEvent(open val operator: Contact, val action: String, val suffix: String) : Event(), BotEvent {
+open class ClickEvent(open val operator: Contact, val action: String, val suffix: String) : BotEvent {
     override val bot: Bot
         get() = operator.bot
 }
@@ -194,7 +174,7 @@ open class ClickBotEvent(operator: Contact, action: String, suffix: String) : Cl
         ClickBotEvent(operator, action, suffix)
 }
 
-open class AtBotEvent(open val type: Int, open val sender: Contact, open val source: Contact) : Event(), BotEvent {
+open class AtBotEvent(open val type: Int, open val sender: Contact, open val source: Contact) : BotEvent {
     open class ByGroup(type: Int, override val sender: GroupMember, override val source: Group) :
         AtBotEvent(type, sender, source)
 
@@ -218,6 +198,10 @@ open class ClickSomeBodyEvent(operator: Contact, open val target: Contact, actio
     open class Private(operator: Contact, target: Contact, action: String, suffix: String) :
         ClickSomeBodyEvent(operator, target, action, suffix)
 
-    open class Group(override val operator: GroupMember, override val target: GroupMember, action: String, suffix: String) :
-        ClickSomeBodyEvent(operator, target, action, suffix)
+    open class Group(
+        override val operator: GroupMember,
+        override val target: GroupMember,
+        action: String,
+        suffix: String
+    ) : ClickSomeBodyEvent(operator, target, action, suffix)
 }

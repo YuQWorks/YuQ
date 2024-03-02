@@ -1,10 +1,10 @@
 package com.icecreamqaq.yuq.annotation
 
-import com.IceCreamQAQ.Yu.annotation.EnchantBy
-import com.IceCreamQAQ.Yu.annotation.LoadBy
-import com.IceCreamQAQ.Yu.loader.enchant.MethodParaNamedEnchanter
 import com.icecreamqaq.yuq.controller.BotControllerLoader
 import com.icecreamqaq.yuq.controller.MessageChannel
+import rain.api.annotation.LoadBy
+import rain.classloader.enchant.EnchantBy
+import rain.classloader.enchant.MethodParaNamedEnchanter
 import javax.inject.Named
 
 

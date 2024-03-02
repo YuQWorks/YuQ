@@ -1,19 +1,16 @@
 package com.icecreamqaq.yuq.devtools
 
-import com.IceCreamQAQ.Yu.annotation.Config
-import com.IceCreamQAQ.Yu.`as`.ApplicationService
 import com.icecreamqaq.yuq.*
 import com.icecreamqaq.yuq.devtools.contact.*
 import com.icecreamqaq.yuq.event.YuQApplicationStatusChanged
-import com.icecreamqaq.yuq.internal.YuQVersion
 import com.icecreamqaq.yuq.message.MessageItemFactory
+import rain.api.loader.ApplicationService
 
 class DevYuQ(
     override val messageItemFactory: MessageItemFactory,
     val service: BotService,
-    @Config("yuq.devtools.bots")
     configBots: List<ConfigBot>
-) : YuQ, ApplicationService, YuQVersion {
+) : YuQ, ApplicationService {
 
     data class ConfigMember(
         var id: Long = 0,
@@ -86,20 +83,12 @@ class DevYuQ(
         return DevBot(DevAccount(id.toLong(), "")).apply { bots.add(this) }
     }
 
-    override fun init() {
-
-    }
 
     override fun start() {
-        YuQApplicationStatusChanged.Started().post()
     }
 
     override fun stop() {
-        YuQApplicationStatusChanged.Stopping().post()
     }
 
-    override fun runtimeName(): String = "DevTools"
-
-    override fun runtimeVersion(): String = apiVersion()
 
 }

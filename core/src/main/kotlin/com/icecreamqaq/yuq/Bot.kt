@@ -1,6 +1,5 @@
 package com.icecreamqaq.yuq
 
-import com.IceCreamQAQ.Yu.util.Web
 import com.icecreamqaq.yuq.contact.Account
 import java.io.Closeable
 
@@ -39,9 +38,6 @@ interface Bot : Closeable {
 
     // 通过 Platform ID 获取 ID。
     fun platformId2id(platformId: String): Long
-
-    val cookieEx: YuQ.QQCookie
-    val web: Web
 
 
     fun login()

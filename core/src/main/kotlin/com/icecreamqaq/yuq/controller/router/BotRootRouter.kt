@@ -1,8 +1,8 @@
 package com.icecreamqaq.yuq.controller.router
 
-import com.IceCreamQAQ.Yu.controller.ActionInfo
-import com.IceCreamQAQ.Yu.controller.RootRouter
 import com.icecreamqaq.yuq.controller.BotActionContext
+import rain.controller.ActionInfo
+import rain.controller.RootRouter
 
 class BotRootRouter(
     router: BotRouter,

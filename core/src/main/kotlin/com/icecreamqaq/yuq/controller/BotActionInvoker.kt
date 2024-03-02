@@ -1,7 +1,5 @@
 package com.icecreamqaq.yuq.controller
 
-import com.IceCreamQAQ.Yu.controller.ProcessInvoker
-import com.IceCreamQAQ.Yu.controller.simple.SimpleActionInvoker
 import com.icecreamqaq.yuq.controller.router.RouterMatcher
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
@@ -11,6 +9,8 @@ import com.icecreamqaq.yuq.message.MessageLineQ
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import rain.controller.ProcessInvoker
+import rain.controller.simple.SimpleActionInvoker
 
 
 class BotActionInvoker(
