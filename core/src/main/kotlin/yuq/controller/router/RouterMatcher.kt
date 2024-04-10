@@ -1,4 +1,4 @@
-package com.icecreamqaq.yuq.controller.router
+package yuq.controller.router
 
 import yuq.controller.BotActionContext
 

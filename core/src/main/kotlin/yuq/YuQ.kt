@@ -1,0 +1,4 @@
+package yuq
+
+class YuQ {
+}

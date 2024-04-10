@@ -32,14 +32,6 @@ interface GuildMessageSource : MessageSource {
 
 
 data class MessageFailByCancel(
-    override val id: Int,
-    override val sender: Long,
-    override val sendTime: Long,
-    override val sendTo: Long,
-    override val liteMsg: String,
-    override val groupCode: Long,
-    override val guildId: Long,
-    override val channelId: Long,
 ) : FriendMessageSource, GroupMessageSource, TempMessageSource, GuildMessageSource {
     override fun recall(): Int {
         return 0

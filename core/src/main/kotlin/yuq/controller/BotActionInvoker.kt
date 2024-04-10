@@ -1,18 +1,16 @@
-package com.icecreamqaq.yuq.controller
+package yuq.controller
 
-import yuq.controller.router.RouterMatcher
-import com.icecreamqaq.yuq.message.Message
-import com.icecreamqaq.yuq.message.Message.Companion.toMessage
-import com.icecreamqaq.yuq.message.MessageItem
-import com.icecreamqaq.yuq.message.MessageItemChain
-import com.icecreamqaq.yuq.message.MessageLineQ
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import rain.controller.ProcessInvoker
 import rain.controller.simple.SimpleActionInvoker
-import yuq.controller.BotActionContext
-import yuq.controller.MessageChannel
+import yuq.controller.router.RouterMatcher
+import yuq.message.Message
+import yuq.message.MessageItem
+import yuq.message.MessageItemChain
+import yuq.message.chain.MessageBody
+import yuq.message.items.Text
 
 
 class BotActionInvoker(
@@ -30,11 +28,11 @@ class BotActionInvoker(
         if (checkResult(context, result)) return true
 
         context.result = when (result) {
-            is String -> result.toMessage()
+            is String -> Text(result).toMessage()
             is Message -> result
             is MessageItem -> result.toMessage()
-            is MessageItemChain -> result.toMessage()
-            is MessageLineQ -> result.toMessage()
+            is MessageBody -> result.toMessage()
+//            is MessageLineQ -> result.toMessage()
             is Array<*> ->
                 coroutineScope {
                     launch {
@@ -48,7 +46,7 @@ class BotActionInvoker(
                     }
                 }
 
-            else -> result.toString().toMessage()
+            else -> Text(result.toString()).toMessage()
         }
         return false
     }

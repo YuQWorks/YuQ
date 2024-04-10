@@ -1,4 +1,4 @@
-package com.icecreamqaq.yuq.annotation
+package yuq.annotation
 
 import yuq.controller.BotControllerLoader
 import yuq.controller.MessageChannel

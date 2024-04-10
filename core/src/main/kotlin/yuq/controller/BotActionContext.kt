@@ -1,11 +1,10 @@
-package com.icecreamqaq.yuq.controller
+package yuq.controller
 
-import com.icecreamqaq.yuq.Bot
-import com.icecreamqaq.yuq.contact.Contact
-import com.icecreamqaq.yuq.message.Message
+import rain.api.permission.IUser
 import rain.controller.ActionContext
-import yuq.controller.BotActionInvoker
-import yuq.controller.MessageChannel
+import yuq.Bot
+import yuq.contact.Contact
+import yuq.message.Message
 
 class BotActionContext(
     val bot: Bot,
@@ -14,6 +13,9 @@ class BotActionContext(
     val source: Contact,
     val message: Message
 ) : ActionContext {
+
+    override val user: IUser
+        get() = sender
 
     internal val matcherItem = MatcherItem(message.body)
 

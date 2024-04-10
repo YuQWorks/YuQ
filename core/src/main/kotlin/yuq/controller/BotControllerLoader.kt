@@ -1,6 +1,7 @@
-package com.icecreamqaq.yuq.controller
+package yuq.controller
 
 import com.icecreamqaq.yuq.annotation.*
+import com.icecreamqaq.yuq.controller.BotRootInfo
 import yuq.controller.router.BotRouter
 import yuq.controller.router.RouterMatcher
 import rain.api.di.DiContext
@@ -11,9 +12,6 @@ import rain.controller.annotation.Catch
 import rain.controller.annotation.Path
 import rain.controller.simple.SimpleCatchMethodInvoker
 import rain.function.annotation
-import yuq.controller.BotActionContext
-import yuq.controller.BotMethodInvoker
-import yuq.controller.MessageChannel
 import java.lang.reflect.Method
 import kotlin.reflect.KProperty1
 

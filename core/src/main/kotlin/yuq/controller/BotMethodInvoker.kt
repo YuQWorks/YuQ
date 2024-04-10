@@ -1,4 +1,4 @@
-package com.icecreamqaq.yuq.controller
+package yuq.controller
 
 import rain.controller.ControllerInstanceGetter
 import rain.controller.simple.SimpleKJReflectMethodInvoker

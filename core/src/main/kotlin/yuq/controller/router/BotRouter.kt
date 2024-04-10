@@ -1,11 +1,9 @@
-package com.icecreamqaq.yuq.controller.router
+package yuq.controller.router
 
 import yuq.controller.BotActionContext
 import yuq.controller.BotActionInvoker
 import yuq.controller.MatcherItem
 import rain.controller.Router
-import yuq.controller.router.BotRouter
-import yuq.controller.router.RouterMatcher
 
 class BotRouter(val matcher: RouterMatcher) : Router {
 

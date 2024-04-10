@@ -1,4 +1,4 @@
-package com.icecreamqaq.yuq.controller
+package yuq.controller
 
 import yuq.controller.router.BotRouter
 import rain.controller.RootRouterProcessFlowInfo

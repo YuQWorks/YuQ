@@ -1,8 +1,5 @@
 package com.icecreamqaq.yuq
 
-import com.icecreamqaq.yuq.annotation.Dev
-import com.icecreamqaq.yuq.annotation.Internal
-import com.icecreamqaq.yuq.annotation.NoRecommendation
 import com.icecreamqaq.yuq.message.MessageItemFactory
 
 interface YuQ {
