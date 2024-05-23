@@ -6,3 +6,8 @@ fun includeProject(name: String, dir: String? = null) {
 }
 includeProject(":core")
 includeProject(":devtools")
+
+fun platform(name:String){
+    includeProject(":yuq-$name","platforms/$name")
+}
+platform("qq")
