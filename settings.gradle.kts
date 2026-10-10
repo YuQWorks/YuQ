@@ -5,7 +5,7 @@ fun includeProject(name: String, dir: String? = null) {
     dir?.let { project(name).projectDir = file(it) }
 }
 includeProject(":core")
-includeProject(":devtools")
+//includeProject(":devtools")
 
 fun platform(name:String){
     includeProject(":yuq-$name","platforms/$name")
