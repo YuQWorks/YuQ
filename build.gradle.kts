@@ -13,7 +13,7 @@ allprojects {
     repositories {
         mavenLocal()
         mavenCentral()
-        maven("https://maven.icecreamqaq.com/repository/maven-public/")
+        maven("https://maven.cnb.cool/IceCream/maven/-/packages/")
     }
 }
 
