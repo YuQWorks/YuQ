@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm")
 }
 
-val rainVersion = "1.0.0-DEV1"
+val rainVersion = "1.0.0-DEV14"
 dependencies {
     api("com.IceCreamQAQ.Rain:application:$rainVersion")
     api("com.IceCreamQAQ.Rain:event:$rainVersion")
