@@ -8,4 +8,5 @@ dependencies {
     api("com.IceCreamQAQ.Rain:event:$rainVersion")
     api("com.IceCreamQAQ.Rain:controller:$rainVersion")
     api("com.IceCreamQAQ.Rain:job:$rainVersion")
+    testImplementation(kotlin("test-junit"))
 }

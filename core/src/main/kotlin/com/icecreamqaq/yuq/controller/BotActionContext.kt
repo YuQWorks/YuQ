@@ -4,7 +4,7 @@ import com.icecreamqaq.yuq.Bot
 import com.icecreamqaq.yuq.contact.Contact
 import com.icecreamqaq.yuq.message.Message
 import rain.controller.ActionContext
-import yuq.controller.BotActionInvoker
+import rain.api.permission.IUser
 import yuq.controller.MessageChannel
 
 class BotActionContext(
@@ -21,6 +21,8 @@ class BotActionContext(
 
     override var result: Any? = null
     override var runtimeError: Throwable? = null
+    override val user: IUser?
+        get() = sender as? IUser
 
 
     var actionInvoker: BotActionInvoker? = null

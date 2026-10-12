@@ -1,10 +1,12 @@
 package yuq.controller.router
 
 import yuq.controller.BotActionContext
-import rain.controller.ActionInfo
 import rain.controller.RootRouter
+import yuq.controller.BotActionInvoker
 
 class BotRootRouter(
     router: BotRouter,
-    actions: List<ActionInfo<BotActionContext>>
-) : RootRouter<BotActionContext, BotRouter>(router, actions)
+    actions: List<BotActionInvoker>
+) : RootRouter<BotActionContext, BotRouter, BotActionInvoker>(router, actions) {
+    suspend operator fun invoke(context: BotActionContext): Boolean = router(context)
+}

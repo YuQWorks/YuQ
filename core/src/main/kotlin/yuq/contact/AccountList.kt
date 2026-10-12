@@ -10,8 +10,6 @@ interface AccountList<P, E : Account> : Map<String, E> {
     val platformEntries: Set<Map.Entry<P, E>>
 
     operator fun get(platformId: P): E?
-    fun containsKey(platformId: P): Boolean
-
-    fun getOrDefault(platformId: String, defaultValue: E): E
+    fun containsPlatformId(platformId: P): Boolean = platformId in platformIds
 
 }

@@ -14,18 +14,23 @@ class BotActionContext(
     val message: Message
 ) : ActionContext {
 
-    override val user: IUser
-        get() = sender
-
     internal val matcherItem = MatcherItem(message.body)
 
     private val saved = HashMap<String, Any?>()
 
     override var result: Any? = null
+    override val user: IUser?
+        get() = sender as? IUser
+
     override var runtimeError: Throwable? = null
-
-
     var actionInvoker: BotActionInvoker? = null
+
+    internal fun saveValues(): Map<String, Any?> = HashMap(saved)
+
+    internal fun restoreValues(values: Map<String, Any?>) {
+        saved.clear()
+        saved.putAll(values)
+    }
 
 
     override fun get(name: String): Any? {

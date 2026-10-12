@@ -44,7 +44,7 @@ class Message(val body: MessageBody) : MessageItemChain by body, MessagePlusAble
 
 
     fun bodyEquals(other: Any?): Boolean {
-        if (other !is com.icecreamqaq.yuq.message.Message) return false
+        if (other !is Message) return false
         if (body.size != other.body.size) return false
         for ((i, item) in body.withIndex()) {
             val oi = other.body[i]

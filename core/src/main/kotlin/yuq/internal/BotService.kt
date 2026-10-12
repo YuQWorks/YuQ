@@ -13,6 +13,7 @@ import yuq.contact.Friend
 import yuq.contact.GroupMember
 import yuq.controller.BotActionContext
 import yuq.controller.MessageChannel
+import yuq.controller.router.BotRootRouter
 import yuq.error.SendMessageFailedByCancel
 import yuq.error.SendMessageFailedByTimeout
 import yuq.event.AtBotEvent
@@ -29,13 +30,15 @@ import yuq.message.source.MessageFailByReadTimeOut
 class BotService(
     val eventBus: EventBus,
     @Config("bot.name") val botName: String? = null,
-    @Config("yuq.strict") val strict: Boolean,
+    @Config("yuq.chat.strict") val strict: Boolean,
     val frameworkInfo: FrameworkInfo,
 ) {
 
     companion object {
         val log = slf4j()
     }
+
+    var rootRouter: BotRootRouter? = null
 
     private fun Message.getOnlyAtFlag(bot: Bot): Int {
         if (body.size > 1) return 0
@@ -105,8 +108,8 @@ class BotService(
         doRouter(BotActionContext(bot, MessageChannel.Group, sender, sender.group, message))
     }
 
-    suspend fun doRouter(context: BotActionContext){
-
+    suspend fun doRouter(context: BotActionContext) {
+        rootRouter?.invoke(context)
     }
 
     suspend fun hookSendMessage(

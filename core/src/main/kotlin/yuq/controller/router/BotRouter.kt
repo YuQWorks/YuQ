@@ -1,9 +1,8 @@
 package yuq.controller.router
 
+import rain.controller.Router
 import yuq.controller.BotActionContext
 import yuq.controller.BotActionInvoker
-import yuq.controller.MatcherItem
-import rain.controller.Router
 
 class BotRouter(val matcher: RouterMatcher) : Router {
 
@@ -11,21 +10,27 @@ class BotRouter(val matcher: RouterMatcher) : Router {
     val actions = ArrayList<BotActionInvoker>()
 
     suspend operator fun invoke(context: BotActionContext): Boolean {
-        val mi = context.matcherItem
-        val mark = mi.mark()
-
-        if (subRouters.any(mi, mark) { it.matcher(context) && it(context) }) return true
-//        return actions.any(mi, mark) { it(context) }
-        return false
-    }
-
-    inline fun <T> Iterable<T>.any(mi: MatcherItem, mark: Pair<Int, Int>, predicate: (T) -> Boolean): Boolean {
-        if (this is Collection && isEmpty()) return false
-        for (element in this) {
-            mi.reMark(mark)
-            if (predicate(element)) return true
+        val item = context.matcherItem
+        val mark = item.mark()
+        val values = context.saveValues()
+        fun restore() {
+            item.reMark(mark)
+            context.restoreValues(values)
         }
+
+        for (router in subRouters) {
+            restore()
+            if (router.matcher(context) && router(context)) return true
+        }
+        for (action in actions) {
+            restore()
+            if (item.hasRemaining()) continue
+            context.result = null
+            context.runtimeError = null
+            context.actionInvoker = action
+            if (action(context)) return true
+        }
+        restore()
         return false
     }
-
 }

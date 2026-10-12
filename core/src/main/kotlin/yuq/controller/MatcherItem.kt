@@ -6,48 +6,79 @@ import yuq.message.items.Text
 
 class MatcherItem(private val items: MessageBody) {
 
-    var end = false
-
+    var end = items.isEmpty()
+        private set
     var currentItemIndex = 0
+        private set
     var currentItemMatchIndex = 0
-
-    var currentItem: MessageItem = items[0]
+        private set
+    var currentItem: MessageItem = items.firstOrNull() ?: Text("")
+        private set
     var currentString: String? = (currentItem as? Text)?.text
+        private set
 
     fun changeItem(index: Int) {
-        if (index >= items.size) {
-            end = true
-            return
-        }
-        currentItem = items[index]
-        currentString = (currentItem as? Text)?.text
+        currentItemIndex = index
         currentItemMatchIndex = 0
+        end = index >= items.size
+        currentItem = if (end) Text("") else items[index]
+        currentString = (currentItem as? Text)?.text
     }
 
-    fun nextItem() {
-        changeItem(currentItemIndex + 1)
-    }
+    fun nextItem() = changeItem(currentItemIndex + 1)
 
     fun mark() = currentItemIndex to currentItemMatchIndex
 
     fun reMark(mark: Pair<Int, Int>) {
         changeItem(mark.first)
-
         currentItemMatchIndex = mark.second
     }
 
-    fun isNext(item: String): Boolean {
-        if (end) return false
-        if (currentString == null) return false
-        if (item.length > currentString!!.length - currentItemMatchIndex) return false
-        if (currentString!!.substring(currentItemMatchIndex, currentItemMatchIndex + item.length) == item) {
-            currentItemMatchIndex += item.length
+    private fun normalize() {
+        while (!end && currentString != null && currentItemMatchIndex >= currentString!!.length) nextItem()
+    }
 
-            if (currentItemMatchIndex == currentString!!.length) nextItem()
-
-            return true
+    fun skipWhitespace() {
+        normalize()
+        while (!end && currentString?.get(currentItemMatchIndex)?.isWhitespace() == true) {
+            currentItemMatchIndex++
+            normalize()
         }
+    }
 
+    fun isNext(item: String): Boolean {
+        val start = mark()
+        for (character in item) {
+            normalize()
+            if (end || currentString?.get(currentItemMatchIndex) != character) {
+                reMark(start)
+                return false
+            }
+            currentItemMatchIndex++
+        }
+        normalize()
         return true
+    }
+
+    fun isBoundary(): Boolean {
+        normalize()
+        return end || currentString == null || currentString!![currentItemMatchIndex].isWhitespace()
+    }
+
+    fun readArgument(): Any? {
+        skipWhitespace()
+        if (end) return null
+        if (currentString == null) return currentItem.also { nextItem() }
+        val result = StringBuilder()
+        while (!end && currentString != null && !currentString!![currentItemMatchIndex].isWhitespace()) {
+            result.append(currentString!![currentItemMatchIndex++])
+            normalize()
+        }
+        return result.toString()
+    }
+
+    fun hasRemaining(): Boolean {
+        skipWhitespace()
+        return !end
     }
 }

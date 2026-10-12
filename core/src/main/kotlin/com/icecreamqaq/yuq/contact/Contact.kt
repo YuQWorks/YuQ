@@ -1,7 +1,7 @@
 package com.icecreamqaq.yuq.contact
 
 import com.icecreamqaq.yuq.Bot
-import com.icecreamqaq.yuq.botService
+import com.icecreamqaq.yuq.BotService
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
@@ -25,7 +25,7 @@ interface Contact : Account {
 
     // 获取联系人的上下文会话
     val session: ContactSession
-        get() = botService.getContextSession(bot, guid)
+        get() = BotService.getContextSession(bot, guid)
 
     // 通过 Message 发送一条消息
     fun sendMessage(message: Message): MessageSource

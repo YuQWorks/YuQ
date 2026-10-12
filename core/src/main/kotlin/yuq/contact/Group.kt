@@ -1,12 +1,11 @@
 package yuq.contact
 
-import com.icecreamqaq.yuq.GroupMemberList
-import com.icecreamqaq.yuq.error.PermissionDeniedException
+import yuq.error.PermissionDeniedException
 
 interface Group : Contact {
 
     // 群成员列表，该列表中不包含机器人自己。
-    val members: GroupMemberList
+    val members: AccountList<*, GroupMember>
     // 群最大成员数量
     val maxCount: Int
 

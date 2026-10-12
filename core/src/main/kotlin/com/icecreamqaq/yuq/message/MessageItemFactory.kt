@@ -40,7 +40,7 @@ class MessageItemFactory {
     /*** 发送一个网络图片
      * @param url 图片的下载地址。
      */
-//    fun imageByUrl(url: String): Image = OfflineImage(web.download(url, file = null))
+    fun imageByUrl(url: String): Image = OnlineImage("universal", url, url)
 
 
     fun imageByBufferedImage(bufferedImage: BufferedImage, format: String = "PNG"): Image =

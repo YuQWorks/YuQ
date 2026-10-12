@@ -1,172 +1,132 @@
 package yuq.controller
 
-import com.icecreamqaq.yuq.annotation.*
-import com.icecreamqaq.yuq.controller.BotRootInfo
-import yuq.controller.router.BotRouter
-import yuq.controller.router.RouterMatcher
+import com.icecreamqaq.yuq.annotation.BotAction as LegacyBotAction
+import com.icecreamqaq.yuq.annotation.FriendAction as LegacyFriendAction
+import com.icecreamqaq.yuq.annotation.GroupAction as LegacyGroupAction
+import com.icecreamqaq.yuq.annotation.GroupController as LegacyGroupController
+import com.icecreamqaq.yuq.annotation.GuildController as LegacyGuildController
+import com.icecreamqaq.yuq.annotation.PrivateAction as LegacyPrivateAction
+import com.icecreamqaq.yuq.annotation.PrivateController as LegacyPrivateController
+import com.icecreamqaq.yuq.annotation.TemporaryAction as LegacyTemporaryAction
 import rain.api.di.DiContext
-import rain.controller.*
-import rain.controller.annotation.After
-import rain.controller.annotation.Before
-import rain.controller.annotation.Catch
+import rain.controller.ActionCreator
+import rain.controller.ControllerInstanceGetter
+import rain.controller.ControllerLoader
+import rain.controller.ProcessInvoker
 import rain.controller.annotation.Path
-import rain.controller.simple.SimpleCatchMethodInvoker
-import rain.function.annotation
+import yuq.annotation.*
+import yuq.controller.router.BotRootRouter
+import yuq.controller.router.BotRouter
+import yuq.controller.router.ParameterMatcher
+import yuq.controller.router.RouterMatcher
+import yuq.controller.router.StaticMatcher
+import yuq.internal.BotService
 import java.lang.reflect.Method
-import kotlin.reflect.KProperty1
 
 open class BotControllerLoader(
     context: DiContext
-) : ControllerLoader<BotActionContext, BotRouter, BotRootInfo>(context) {
+) : ControllerLoader<BotActionContext, BotRouter, BotRootInfo, BotActionInvoker, BotControllerProcessFlowInfo>(context) {
 
     private val rootInfo = BotRootInfo(BotRouter { true })
 
-    override fun findRootRouter(name: String) = rootInfo
+    var rootRouter: BotRootRouter? = null
+        private set
 
-    fun readPath(path: String): List<RouterMatcher> {
-        TODO()
+    override fun findRootRouter(name: String): BotRootInfo = rootInfo
+
+    fun readPath(path: String): List<RouterMatcher> =
+        path.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }.map { token ->
+            if (token.startsWith('{') && token.endsWith('}')) {
+                val name = token.substring(1, token.lastIndex)
+                require(name.isNotBlank() && '{' !in name && '}' !in name) { "Invalid route parameter: $token" }
+                ParameterMatcher(name)
+            } else {
+                require('{' !in token && '}' !in token) { "Route parameters must occupy a whole token: $token" }
+                StaticMatcher(token)
+            }
+        }
+
+    private fun pathToRouter(router: BotRouter, matchers: List<RouterMatcher>): BotRouter {
+        var current = router
+        matchers.forEach { matcher ->
+            current = current.subRouters.firstOrNull { it.matcher == matcher }
+                ?: BotRouter(matcher).also { current.subRouters.add(it) }
+        }
+        return current
     }
 
     override fun controllerInfo(
         root: BotRootInfo,
         annotation: Annotation?,
         controllerClass: Class<*>,
-        instanceGetter: ControllerInstanceGetter
-    ): ControllerProcessFlowInfo<BotActionContext, BotRouter>? {
-        val channels = controllerChannel(annotation, controllerClass) ?: return null
-        var controllerRouter = root.router
-        controllerClass.annotation<Path> {
-            readPath(value).forEach { m ->
-                controllerRouter = controllerRouter.subRouters.firstOrNull { it.matcher == m }
-                    ?: BotRouter(m).also { controllerRouter.subRouters.add(it) }
-            }
+        controllerInstance: Any
+    ): BotControllerProcessFlowInfo {
+        val channels = when (annotation) {
+            is GroupController, is LegacyGroupController -> listOf(MessageChannel.Group.channel)
+            is PrivateController, is LegacyPrivateController ->
+                listOf(MessageChannel.Friend.channel, MessageChannel.GroupTemporary.channel)
+            is GuildController, is LegacyGuildController -> listOf(MessageChannel.Guild.channel)
+            else -> MessageChannel.entries.map { it.channel }
         }
-
-        return ControllerProcessFlowInfo(controllerClass, channels, controllerRouter)
+        val router = pathToRouter(root.router, readPath(controllerClass.getAnnotation(Path::class.java)?.value ?: ""))
+        // DEV14's loader supplies a getter here, although the public signature accepts Any.
+        val instance = if (controllerInstance is ControllerInstanceGetter) controllerInstance() else controllerInstance
+        return BotControllerProcessFlowInfo(controllerClass, instance, channels, router)
     }
 
-    private fun controllerChannel(annotation: Annotation?, controllerClass: Class<*>): List<String>? {
-        if (annotation == null) return null
-        return when (annotation) {
-            is GroupController -> arrayListOf(MessageChannel.Group.channel)
-            is PrivateController -> arrayListOf(MessageChannel.Friend.channel, MessageChannel.GroupTemporary.channel)
-            else -> arrayListOf()
-        }
-    }
-
-    override fun makeAfter(
-        afterAnnotation: After,
-        controllerClass: Class<*>,
-        afterMethod: Method,
-        instanceGetter: ControllerInstanceGetter
-    ): ProcessInfo<BotActionContext>? =
-        ProcessInfo(
-            afterAnnotation.weight,
-            afterAnnotation.except,
-            afterAnnotation.only,
-            BotMethodInvoker(afterMethod, instanceGetter)
-        )
-
-    override fun makeBefore(
-        beforeAnnotation: Before,
-        controllerClass: Class<*>,
-        beforeMethod: Method,
-        instanceGetter: ControllerInstanceGetter
-    ): ProcessInfo<BotActionContext>? =
-        ProcessInfo(
-            beforeAnnotation.weight,
-            beforeAnnotation.except,
-            beforeAnnotation.only,
-            BotMethodInvoker(beforeMethod, instanceGetter)
-        )
-
-    override fun makeCatch(
-        catchAnnotation: Catch,
-        controllerClass: Class<*>,
-        catchMethod: Method,
-        instanceGetter: ControllerInstanceGetter
-    ): ProcessInfo<BotActionContext>? =
-        ProcessInfo(
-            catchAnnotation.weight,
-            catchAnnotation.except,
-            catchAnnotation.only,
-            SimpleCatchMethodInvoker(catchAnnotation.error.java, BotMethodInvoker(catchMethod, instanceGetter))
-        )
-
-    override fun postLoad() {
-        val actionList = ArrayList<ActionInfo<BotActionContext>>()
-        rootInfo.controllers.forEach {
-            it.actions.forEach {
-                actionList.add(
-                    ActionInfo(
-                        it.actionClass,
-                        it.actionMethod,
-                        it.creator()
-                    )
-                )
-            }
-        }
-
-//        botService.rootRouter = BotRootRouter(rootInfo.router, actionList)
-    }
+    override fun makeProcessInvoker(
+        controllerInfo: BotControllerProcessFlowInfo,
+        processClass: Class<*>,
+        processMethod: Method,
+        processInstance: ControllerInstanceGetter
+    ): ProcessInvoker<BotActionContext> = BotMethodInvoker(processMethod, processInstance).init()
 
     override fun makeAction(
         rootRouter: BotRootInfo,
-        controllerFlow: ControllerProcessFlowInfo<BotActionContext, BotRouter>,
+        controllerFlow: BotControllerProcessFlowInfo,
         controllerClass: Class<*>,
         actionMethod: Method,
         instanceGetter: ControllerInstanceGetter
-    ): ActionProcessFlowInfo<BotActionContext>? {
-        var path = ""
-        var channels: Array<MessageChannel> = emptyArray()
-        actionMethod.annotation<GroupAction> {
-            path = value
-            channels = arrayOf(MessageChannel.Group)
-        }
-        actionMethod.annotation<PrivateAction> {
-            path = value
-            channels = arrayOf(MessageChannel.GroupTemporary, MessageChannel.Friend)
-        }
-        actionMethod.annotation<FriendAction> {
-            path = value
-            channels = arrayOf(MessageChannel.Friend)
-        }
-        actionMethod.annotation<TemporaryAction> {
-            path = value
-            channels = arrayOf(MessageChannel.GroupTemporary)
-        }
-
+    ): ActionCreator<BotActionContext, BotActionInvoker>? {
+        val declaration = actionMethod.annotations.firstNotNullOfOrNull { annotation ->
+            when (annotation) {
+                is BotAction -> annotation.value to annotation.channel.toList()
+                is LegacyBotAction -> annotation.value to annotation.channel.toList()
+                is GroupAction -> annotation.value to listOf(MessageChannel.Group)
+                is LegacyGroupAction -> annotation.value to listOf(MessageChannel.Group)
+                is FriendAction -> annotation.value to listOf(MessageChannel.Friend)
+                is LegacyFriendAction -> annotation.value to listOf(MessageChannel.Friend)
+                is TemporaryAction -> annotation.value to listOf(MessageChannel.GroupTemporary)
+                is LegacyTemporaryAction -> annotation.value to listOf(MessageChannel.GroupTemporary)
+                is PrivateAction -> annotation.value to listOf(MessageChannel.Friend, MessageChannel.GroupTemporary)
+                is LegacyPrivateAction -> annotation.value to listOf(MessageChannel.Friend, MessageChannel.GroupTemporary)
+                else -> null
+            }
+        } ?: return null
+        val (path, declaredChannels) = declaration
+        val channels = declaredChannels.filter { it.channel in controllerFlow.controllerChannels }.toTypedArray()
         if (channels.isEmpty()) return null
-
-        val actionName = actionMethod.name
-
-        val actionFlow = ActionProcessFlowInfo<BotActionContext>(controllerClass, actionMethod)
-        val matchers = readPath(path)
-        fun checkPf(property: KProperty1<ProcessFlowInfo<BotActionContext>, MutableList<ProcessInfo<BotActionContext>>>): Array<ProcessInvoker<BotActionContext>> =
-            ArrayList<ProcessInfo<BotActionContext>>()
-                .apply {
-                    val checkPi = { it: ProcessInfo<BotActionContext> ->
-                        if (actionName !in it.except && it.only.isNotEmpty() && actionName in it.only) add(it)
-                    }
-                    property.get(rootRouter).forEach(checkPi)
-                    property.get(controllerFlow).forEach(checkPi)
-                    property.get(actionFlow).forEach(checkPi)
-                    sortBy { it.priority }
-                }
-                .map { it.invoker }
-                .toTypedArray()
-
-//        actionFlow.creator = ActionInvokerCreator {
-//            BotActionInvoker(
-//                channels,
-//                matchers,
-//                BotMethodInvoker(actionMethod, instanceGetter),
-//                checkPf(ProcessFlowInfo<BotActionContext>::beforeProcesses),
-//                checkPf(ProcessFlowInfo<BotActionContext>::afterProcesses),
-//                checkPf(ProcessFlowInfo<BotActionContext>::catchProcesses)
-//            )
-//        }
-        return actionFlow
+        val matchers = readPath(path.removePrefix("/"))
+        val parent = if (path.startsWith('/')) rootRouter.router else controllerFlow.controllerRouter
+        val router = pathToRouter(parent, matchers)
+        val action = BotMethodInvoker(actionMethod, instanceGetter).init()
+        return ActionCreator(controllerClass, actionMethod) { befores, afters, catches ->
+            BotActionInvoker(controllerClass, actionMethod, channels, matchers, action, befores, afters, catches)
+                .also { router.actions.add(it) }
+        }
     }
 
+    override fun buildRootRouter(router: BotRouter, actions: List<BotActionInvoker>): BotRootRouter =
+        BotRootRouter(router, actions)
+
+    override fun postLoad() {
+        // Loading can run once per triggering annotation; replace previously built invokers.
+        fun clearActions(router: BotRouter) {
+            router.actions.clear()
+            router.subRouters.forEach(::clearActions)
+        }
+        clearActions(rootInfo.router)
+        rootRouter = buildRootInfo(rootInfo) as BotRootRouter
+        context.getBean(BotService::class.java)?.rootRouter = rootRouter
+    }
 }

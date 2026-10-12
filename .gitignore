@@ -2,7 +2,7 @@
 /.idea
 /.gradle
 
-/build
+build/
 /target
 
 /log

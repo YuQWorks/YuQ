@@ -2,7 +2,6 @@ package com.icecreamqaq.yuq.controller
 
 import rain.controller.ControllerInstanceGetter
 import rain.controller.simple.SimpleKJReflectMethodInvoker
-import yuq.controller.BotActionContext
 import java.lang.reflect.Method
 
 open class BotMethodInvoker(

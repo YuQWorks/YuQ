@@ -1,7 +1,6 @@
 package com.icecreamqaq.yuq.message
 
 import com.icecreamqaq.yuq.contact.*
-import com.icecreamqaq.yuq.yuq
 
 interface MessageSource {
     val id: Int
@@ -32,6 +31,14 @@ interface GuildMessageSource : MessageSource {
 
 
 data class MessageFailByCancel(
+    override val id: Int,
+    override val sender: Long,
+    override val sendTime: Long,
+    override val sendTo: Long,
+    override val liteMsg: String,
+    override val groupCode: Long,
+    override val guildId: Long,
+    override val channelId: Long,
 ) : FriendMessageSource, GroupMessageSource, TempMessageSource, GuildMessageSource {
     override fun recall(): Int {
         return 0
@@ -39,7 +46,7 @@ data class MessageFailByCancel(
 
     constructor(contact: Friend, liteMsg: String) : this(
         -1,
-        yuq.botId,
+        contact.bot.botId,
         System.currentTimeMillis(),
         contact.id,
         liteMsg,
@@ -50,7 +57,7 @@ data class MessageFailByCancel(
 
     constructor(contact: Group, liteMsg: String) : this(
         -1,
-        yuq.botId,
+        contact.bot.botId,
         System.currentTimeMillis(),
         contact.id,
         liteMsg,
@@ -61,7 +68,7 @@ data class MessageFailByCancel(
 
     constructor(contact: GroupMember, liteMsg: String) : this(
         -1,
-        yuq.botId,
+        contact.bot.botId,
         System.currentTimeMillis(),
         contact.id,
         liteMsg,
@@ -72,7 +79,7 @@ data class MessageFailByCancel(
 
     constructor(contact: Channel, liteMsg: String) : this(
         -1,
-        yuq.botId,
+        contact.bot.botId,
         System.currentTimeMillis(),
         contact.id,
         liteMsg,
@@ -110,7 +117,7 @@ data class MessageFailByReadTimeOut(
 
     constructor(contact: Friend, liteMsg: String) : this(
         -1,
-        yuq.botId,
+        contact.bot.botId,
         System.currentTimeMillis(),
         contact.id,
         liteMsg,
@@ -121,7 +128,7 @@ data class MessageFailByReadTimeOut(
 
     constructor(contact: Group, liteMsg: String) : this(
         -1,
-        yuq.botId,
+        contact.bot.botId,
         System.currentTimeMillis(),
         contact.id,
         liteMsg,
@@ -132,7 +139,7 @@ data class MessageFailByReadTimeOut(
 
     constructor(contact: GroupMember, liteMsg: String) : this(
         -1,
-        yuq.botId,
+        contact.bot.botId,
         System.currentTimeMillis(),
         contact.id,
         liteMsg,
@@ -143,7 +150,7 @@ data class MessageFailByReadTimeOut(
 
     constructor(contact: Channel, liteMsg: String) : this(
         -1,
-        yuq.botId,
+        contact.bot.botId,
         System.currentTimeMillis(),
         contact.id,
         liteMsg,
@@ -181,7 +188,7 @@ data class FakeMessageSource(
 
     constructor(contact: Friend, liteMsg: String) : this(
         -1,
-        yuq.botId,
+        contact.bot.botId,
         System.currentTimeMillis(),
         contact.id,
         liteMsg,
@@ -192,7 +199,7 @@ data class FakeMessageSource(
 
     constructor(contact: Group, liteMsg: String) : this(
         -1,
-        yuq.botId,
+        contact.bot.botId,
         System.currentTimeMillis(),
         contact.id,
         liteMsg,
@@ -203,7 +210,7 @@ data class FakeMessageSource(
 
     constructor(contact: GroupMember, liteMsg: String) : this(
         -1,
-        yuq.botId,
+        contact.bot.botId,
         System.currentTimeMillis(),
         contact.id,
         liteMsg,
@@ -214,7 +221,7 @@ data class FakeMessageSource(
 
     constructor(contact: Channel, liteMsg: String) : this(
         -1,
-        yuq.botId,
+        contact.bot.botId,
         System.currentTimeMillis(),
         contact.id,
         liteMsg,

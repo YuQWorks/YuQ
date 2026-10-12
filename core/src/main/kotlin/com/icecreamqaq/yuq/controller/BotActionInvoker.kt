@@ -11,8 +11,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import rain.controller.ProcessInvoker
 import rain.controller.simple.SimpleActionInvoker
-import yuq.controller.BotActionContext
 import yuq.controller.MessageChannel
+import java.lang.reflect.Method
 
 
 class BotActionInvoker(
@@ -21,8 +21,10 @@ class BotActionInvoker(
     action: ProcessInvoker<BotActionContext>,
     beforeProcesses: Array<ProcessInvoker<BotActionContext>>,
     aftersProcesses: Array<ProcessInvoker<BotActionContext>>,
-    catchsProcesses: Array<ProcessInvoker<BotActionContext>>
-) : SimpleActionInvoker<BotActionContext>(action, beforeProcesses, aftersProcesses, catchsProcesses) {
+    catchsProcesses: Array<ProcessInvoker<BotActionContext>>,
+    actionClass: Class<*>? = null,
+    actionMethod: Method? = null
+) : SimpleActionInvoker<BotActionContext>(actionClass, actionMethod, action, beforeProcesses, aftersProcesses, catchsProcesses) {
 
 
     override suspend fun onActionResult(context: BotActionContext, result: Any?): Boolean {

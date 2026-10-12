@@ -1,5 +1,9 @@
+rain:
+  scanPackages:
+    - yuq
+    - com.icecreamqaq.yuq
+
 yu:
-  scanPackages: com.icecreamqaq.yuq
   cache:
     ehcaches:
       ContextSession:
