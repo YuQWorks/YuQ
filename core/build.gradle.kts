@@ -10,3 +10,7 @@ dependencies {
     api("com.IceCreamQAQ.Rain:job:$rainVersion")
     testImplementation(kotlin("test-junit"))
 }
+
+tasks.withType<JavaCompile>().configureEach {
+    options.encoding = "UTF-8"
+}

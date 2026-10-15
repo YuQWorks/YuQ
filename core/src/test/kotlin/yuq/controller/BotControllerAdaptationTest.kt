@@ -28,7 +28,8 @@ import yuq.message.items.Image
 import yuq.message.items.Text
 import yuq.controller.router.BotRouter
 import yuq.controller.router.ParameterMatcher
-import yuq.controller.router.StaticMatcher
+import yuq.controller.router.TextMatcher
+import yuq.controller.router.ConsumptionMatcher
 import java.io.File
 import java.lang.reflect.Method
 import kotlin.test.*
@@ -64,9 +65,10 @@ class BotControllerAdaptationTest {
         val context = context("admin add 20 22", MessageChannel.Group)
         assertTrue(router(context))
         assertEquals(listOf("42"), replies(context))
-        val absolute = context("status", MessageChannel.Group)
-        assertTrue(router(absolute))
-        assertEquals(listOf("ready"), replies(absolute))
+        val slash = context("admin/status", MessageChannel.Group)
+        assertTrue(router(slash))
+        assertEquals(listOf("ready"), replies(slash))
+        assertFalse(router(context("status", MessageChannel.Group)))
     }
 
     @Test
@@ -74,7 +76,7 @@ class BotControllerAdaptationTest {
         val router = load(BranchController()).rootRouter!!
         // Force a partial match to fail before trying an otherwise valid route.
         router.router.subRouters.add(0, BotRouter(ParameterMatcher("leaked")).apply {
-            subRouters.add(BotRouter(StaticMatcher("missing")))
+            subRouters.add(BotRouter(TextMatcher("missing")))
         })
         val context = context("value", MessageChannel.Friend)
         assertTrue(router(context))
@@ -86,9 +88,12 @@ class BotControllerAdaptationTest {
     fun `SkipMe restores the context before the next matching action`() = runBlocking {
         val controller = SkippingController()
         val router = load(controller).rootRouter!!
-        val skipped = router.router.subRouters.single { it.matcher == ParameterMatcher("skipped") }
-        router.router.subRouters.remove(skipped)
-        router.router.subRouters.add(0, skipped)
+        val controllerRouter = router.router.subRouters.single()
+        val skipped = controllerRouter.subRouters.single { node ->
+            (node.matcher as ConsumptionMatcher).parts.any { it is ParameterMatcher && it.name == "skipped" }
+        }
+        controllerRouter.subRouters.remove(skipped)
+        controllerRouter.subRouters.add(0, skipped)
         val context = context("value", MessageChannel.Friend)
         assertTrue(router(context))
         assertEquals(1, controller.skipCalls)

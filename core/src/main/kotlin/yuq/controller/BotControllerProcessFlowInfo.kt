@@ -13,7 +13,8 @@ class BotControllerProcessFlowInfo(
     actions: MutableList<ActionCreator<BotActionContext, BotActionInvoker>> = arrayListOf(),
     beforeProcesses: MutableList<ProcessInfo<BotActionContext>> = arrayListOf(),
     afterProcesses: MutableList<ProcessInfo<BotActionContext>> = arrayListOf(),
-    catchProcesses: MutableList<ProcessInfo<BotActionContext>> = arrayListOf()
+    catchProcesses: MutableList<ProcessInfo<BotActionContext>> = arrayListOf(),
+    val controllerPattern: String = ""
 ) : ControllerProcessFlowInfo<BotActionContext, BotRouter, BotActionInvoker>(
     controllerClass,
     controllerInstance,

@@ -8,5 +8,13 @@ class BotRootRouter(
     router: BotRouter,
     actions: List<BotActionInvoker>
 ) : RootRouter<BotActionContext, BotRouter, BotActionInvoker>(router, actions) {
-    suspend operator fun invoke(context: BotActionContext): Boolean = router(context)
+    suspend operator fun invoke(context: BotActionContext): Boolean {
+        val previousAttempts = context.attemptedActions
+        context.attemptedActions = HashSet()
+        try {
+            return router(context)
+        } finally {
+            context.attemptedActions = previousAttempts
+        }
+    }
 }

@@ -17,40 +17,32 @@ import rain.controller.annotation.Path
 import yuq.annotation.*
 import yuq.controller.router.BotRootRouter
 import yuq.controller.router.BotRouter
-import yuq.controller.router.ParameterMatcher
 import yuq.controller.router.RouterMatcher
-import yuq.controller.router.StaticMatcher
 import yuq.internal.BotService
 import java.lang.reflect.Method
 
 open class BotControllerLoader(
-    context: DiContext
+    context: DiContext,
+    val parameterConverter: BotParameterConverter = context.getBean(BotParameterConverter::class.java) ?: BotParameterConverter()
 ) : ControllerLoader<BotActionContext, BotRouter, BotRootInfo, BotActionInvoker, BotControllerProcessFlowInfo>(context) {
 
     private val rootInfo = BotRootInfo(BotRouter { true })
-
     var rootRouter: BotRootRouter? = null
         private set
 
     override fun findRootRouter(name: String): BotRootInfo = rootInfo
 
-    fun readPath(path: String): List<RouterMatcher> =
-        path.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }.map { token ->
-            if (token.startsWith('{') && token.endsWith('}')) {
-                val name = token.substring(1, token.lastIndex)
-                require(name.isNotBlank() && '{' !in name && '}' !in name) { "Invalid route parameter: $token" }
-                ParameterMatcher(name)
-            } else {
-                require('{' !in token && '}' !in token) { "Route parameters must occupy a whole token: $token" }
-                StaticMatcher(token)
-            }
-        }
+    /** Compile declaration groups without splitting or flattening the incoming message. */
+    open fun readPattern(pattern: String, method: BotMethodInvoker? = null): List<RouterMatcher> =
+        BotCommandPattern(parameterConverter, method).compile(pattern)
 
-    private fun pathToRouter(router: BotRouter, matchers: List<RouterMatcher>): BotRouter {
+    @Deprecated("Use readPattern; declarations describe message consumption groups.")
+    fun readPath(path: String): List<RouterMatcher> = readPattern(path)
+
+    private fun patternToRouter(router: BotRouter, matchers: List<RouterMatcher>): BotRouter {
         var current = router
         matchers.forEach { matcher ->
-            current = current.subRouters.firstOrNull { it.matcher == matcher }
-                ?: BotRouter(matcher).also { current.subRouters.add(it) }
+            current = BotRouter(matcher).also { current.subRouters.add(it) }
         }
         return current
     }
@@ -68,10 +60,13 @@ open class BotControllerLoader(
             is GuildController, is LegacyGuildController -> listOf(MessageChannel.Guild.channel)
             else -> MessageChannel.entries.map { it.channel }
         }
-        val router = pathToRouter(root.router, readPath(controllerClass.getAnnotation(Path::class.java)?.value ?: ""))
-        // DEV14's loader supplies a getter here, although the public signature accepts Any.
+        // Prefix bindings are compiled per action, after its generic parameter types are known.
+        val router = BotRouter { true }.also { root.router.subRouters.add(it) }
         val instance = if (controllerInstance is ControllerInstanceGetter) controllerInstance() else controllerInstance
-        return BotControllerProcessFlowInfo(controllerClass, instance, channels, router)
+        return BotControllerProcessFlowInfo(
+            controllerClass, instance, channels, router,
+            controllerPattern = controllerClass.getAnnotation(Path::class.java)?.value ?: ""
+        )
     }
 
     override fun makeProcessInvoker(
@@ -79,7 +74,7 @@ open class BotControllerLoader(
         processClass: Class<*>,
         processMethod: Method,
         processInstance: ControllerInstanceGetter
-    ): ProcessInvoker<BotActionContext> = BotMethodInvoker(processMethod, processInstance).init()
+    ): ProcessInvoker<BotActionContext> = BotMethodInvoker(processMethod, processInstance, parameterConverter).init()
 
     override fun makeAction(
         rootRouter: BotRootInfo,
@@ -103,13 +98,14 @@ open class BotControllerLoader(
                 else -> null
             }
         } ?: return null
-        val (path, declaredChannels) = declaration
+        val (pattern, declaredChannels) = declaration
         val channels = declaredChannels.filter { it.channel in controllerFlow.controllerChannels }.toTypedArray()
         if (channels.isEmpty()) return null
-        val matchers = readPath(path.removePrefix("/"))
-        val parent = if (path.startsWith('/')) rootRouter.router else controllerFlow.controllerRouter
-        val router = pathToRouter(parent, matchers)
-        val action = BotMethodInvoker(actionMethod, instanceGetter).init()
+        val action = BotMethodInvoker(actionMethod, instanceGetter, parameterConverter).apply { init() }
+        val prefix = controllerFlow.controllerPattern
+        val combined = if (prefix.isEmpty()) pattern else "$prefix $pattern"
+        val matchers = readPattern(combined, action)
+        val router = patternToRouter(controllerFlow.controllerRouter, matchers)
         return ActionCreator(controllerClass, actionMethod) { befores, afters, catches ->
             BotActionInvoker(controllerClass, actionMethod, channels, matchers, action, befores, afters, catches)
                 .also { router.actions.add(it) }
@@ -120,7 +116,6 @@ open class BotControllerLoader(
         BotRootRouter(router, actions)
 
     override fun postLoad() {
-        // Loading can run once per triggering annotation; replace previously built invokers.
         fun clearActions(router: BotRouter) {
             router.actions.clear()
             router.subRouters.forEach(::clearActions)

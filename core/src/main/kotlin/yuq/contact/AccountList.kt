@@ -9,7 +9,7 @@ interface AccountList<P, E : Account> : Map<String, E> {
     val platformIds: Set<P>
     val platformEntries: Set<Map.Entry<P, E>>
 
-    operator fun get(platformId: P): E?
+    fun getByPlatformId(platformId: P): E?
     fun containsPlatformId(platformId: P): Boolean = platformId in platformIds
 
 }
